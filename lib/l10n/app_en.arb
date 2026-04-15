@@ -1,0 +1,16 @@
+{
+  "appName": "Goalkeeper Trainer",
+  "homeTitle": "Main Menu",
+  "settingsTitle": "Settings",
+  "registrationTitle": "Registration",
+  "diaryTitle": "Goal Diary",
+  "game1Title": "Reaction Game",
+  "game2Title": "Accuracy Game",
+  "themeLight": "Light",
+  "themeDark": "Dark",
+  "soundEnabled": "Sound",
+  "volume": "Volume",
+  "language": "Language",
+  "save": "Save",
+  "back": "Back"
+}

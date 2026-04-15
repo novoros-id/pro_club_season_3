@@ -1,0 +1,16 @@
+{
+  "appName": "Тренировка Вратарей",
+  "homeTitle": "Главное меню",
+  "settingsTitle": "Настройки",
+  "registrationTitle": "Регистрация",
+  "diaryTitle": "Дневник голов",
+  "game1Title": "Игра: Реакция",
+  "game2Title": "Игра: Точность",
+  "themeLight": "Светлая",
+  "themeDark": "Тёмная",
+  "soundEnabled": "Звук",
+  "volume": "Громкость",
+  "language": "Язык",
+  "save": "Сохранить",
+  "back": "Назад"
+}

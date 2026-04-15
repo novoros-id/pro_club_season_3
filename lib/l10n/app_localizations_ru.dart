@@ -1,0 +1,52 @@
+// ignore: unused_import
+import 'package:intl/intl.dart' as intl;
+import 'app_localizations.dart';
+
+// ignore_for_file: type=lint
+
+/// The translations for Russian (`ru`).
+class AppLocalizationsRu extends AppLocalizations {
+  AppLocalizationsRu([String locale = 'ru']) : super(locale);
+
+  @override
+  String get appName => 'Тренировка Вратарей';
+
+  @override
+  String get homeTitle => 'Главное меню';
+
+  @override
+  String get settingsTitle => 'Настройки';
+
+  @override
+  String get registrationTitle => 'Регистрация';
+
+  @override
+  String get diaryTitle => 'Дневник голов';
+
+  @override
+  String get game1Title => 'Игра: Реакция';
+
+  @override
+  String get game2Title => 'Игра: Точность';
+
+  @override
+  String get themeLight => 'Светлая';
+
+  @override
+  String get themeDark => 'Тёмная';
+
+  @override
+  String get soundEnabled => 'Звук';
+
+  @override
+  String get volume => 'Громкость';
+
+  @override
+  String get language => 'Язык';
+
+  @override
+  String get save => 'Сохранить';
+
+  @override
+  String get back => 'Назад';
+}
