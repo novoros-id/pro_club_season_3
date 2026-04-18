@@ -137,7 +137,7 @@ abstract class AppLocalizations {
   /// No description provided for @game2Title.
   ///
   /// In en, this message translates to:
-  /// **'Accuracy Game'**
+  /// **'Air Hockey'**
   String get game2Title;
 
   /// No description provided for @themeLight.

@@ -27,7 +27,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get game1Title => 'Игра: Реакция';
 
   @override
-  String get game2Title => 'Игра: Точность';
+  String get game2Title => 'Игра: Аэрохоккей';
 
   @override
   String get themeLight => 'Светлая';

@@ -27,7 +27,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get game1Title => 'Reaction Game';
 
   @override
-  String get game2Title => 'Accuracy Game';
+  String get game2Title => 'Air Hockey';
 
   @override
   String get themeLight => 'Light';
