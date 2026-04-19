@@ -24,10 +24,26 @@ class AppLocalizationsRu extends AppLocalizations {
   String get diaryTitle => 'Дневник голов';
 
   @override
+  String get analyticsTitle => 'Аналитика голов';
+
+  @override
   String get game1Title => 'Игра: Реакция';
 
   @override
   String get game2Title => 'Игра: Аэрохоккей';
+
+  @override
+  String get authorsTitle => 'Авторы';
+
+  @override
+  String get developersClub =>
+      'Разработано в клубе разработчиков 1С ПРО Консалтинг';
+
+  @override
+  String get methodologyAuthor => 'Методика: Антон Шустов';
+
+  @override
+  String get programAuthors => 'Авторы программы:';
 
   @override
   String get themeLight => 'Светлая';

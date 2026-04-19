@@ -24,10 +24,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get diaryTitle => 'Goal Diary';
 
   @override
+  String get analyticsTitle => 'Goal Analytics';
+
+  @override
   String get game1Title => 'Reaction Game';
 
   @override
   String get game2Title => 'Air Hockey';
+
+  @override
+  String get authorsTitle => 'Authors';
+
+  @override
+  String get developersClub => 'Developed by 1C PRO Consulting Developers Club';
+
+  @override
+  String get methodologyAuthor => 'Methodology: Anton Shustov';
+
+  @override
+  String get programAuthors => 'Program Authors:';
 
   @override
   String get themeLight => 'Light';

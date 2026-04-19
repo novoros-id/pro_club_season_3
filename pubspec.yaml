@@ -42,6 +42,7 @@ dependencies:
   vector_math: ^2.1.4
   cupertino_icons: ^1.0.8
   audioplayers: ^6.1.0
+  url_launcher: ^6.3.0
 
 
 dev_dependencies:
@@ -71,6 +72,7 @@ flutter:
     - assets/app_icon.png
     - assets/audio/hit.mp3
     - assets/audio/goal.mp3
+    - assets/images/goalkeeper_banner.png
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg

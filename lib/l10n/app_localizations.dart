@@ -128,6 +128,12 @@ abstract class AppLocalizations {
   /// **'Goal Diary'**
   String get diaryTitle;
 
+  /// No description provided for @analyticsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Goal Analytics'**
+  String get analyticsTitle;
+
   /// No description provided for @game1Title.
   ///
   /// In en, this message translates to:
@@ -139,6 +145,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Air Hockey'**
   String get game2Title;
+
+  /// No description provided for @authorsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Authors'**
+  String get authorsTitle;
+
+  /// No description provided for @developersClub.
+  ///
+  /// In en, this message translates to:
+  /// **'Developed by 1C PRO Consulting Developers Club'**
+  String get developersClub;
+
+  /// No description provided for @methodologyAuthor.
+  ///
+  /// In en, this message translates to:
+  /// **'Methodology: Anton Shustov'**
+  String get methodologyAuthor;
+
+  /// No description provided for @programAuthors.
+  ///
+  /// In en, this message translates to:
+  /// **'Program Authors:'**
+  String get programAuthors;
 
   /// No description provided for @themeLight.
   ///

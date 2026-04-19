@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/services/storage_service.dart'; // Импорт сервиса
 import 'app.dart';
 
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
