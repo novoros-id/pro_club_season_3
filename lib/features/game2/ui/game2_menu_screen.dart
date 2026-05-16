@@ -156,7 +156,7 @@ class _Game2MenuScreenState extends ConsumerState<Game2MenuScreen> {
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            'Последняя игра',
+                            'Последняя игра.',
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
