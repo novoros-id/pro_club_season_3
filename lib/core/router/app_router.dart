@@ -8,6 +8,8 @@ import '../../features/game2/ui/game2_menu_screen.dart';
 import '../../features/game2/ui/game2_play_screen.dart';
 import '../../features/analytics/ui/analytics_screen.dart';
 import '../../features/authors/ui/authors_screen.dart';
+import '../../features/registration/ui/registration_screen.dart';
+import '../../features/registration/ui/add_edit_goalkeeper_screen.dart';
 
 final appRouter = GoRouter(
   initialLocation: '/',
@@ -21,5 +23,7 @@ final appRouter = GoRouter(
     GoRoute(path: '/game2/play', builder: (_, __) => const Game2PlayScreen()),
     GoRoute(path: '/analytics', builder: (_, __) => const AnalyticsScreen()),
     GoRoute(path: '/authors', builder: (_, __) => const AuthorsScreen()),
+    GoRoute(path: '/registration', builder: (_, __) => const RegistrationScreen()),
+    GoRoute(path: '/add-goalkeeper', builder: (_, __) => const AddEditGoalkeeperScreen()),
   ],
 );

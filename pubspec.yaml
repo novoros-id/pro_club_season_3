@@ -43,11 +43,18 @@ dependencies:
   cupertino_icons: ^1.0.8
   audioplayers: ^6.1.0
   url_launcher: ^6.3.0
+  drift: ^2.14.0
+  sqlite3_flutter_libs: ^0.5.18
+  path_provider: ^2.1.1
+  path: ^1.8.3
+  uuid: ^4.2.1
 
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  drift_dev: ^2.14.0
+  build_runner: ^2.4.6
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
@@ -73,6 +80,17 @@ flutter:
     - assets/audio/hit.mp3
     - assets/audio/goal.mp3
     - assets/images/goalkeeper_banner.png
+  fonts:
+    - family: Unbounded
+      fonts:
+        - asset: assets/fonts/Unbounded-Regular.ttf
+        - asset: assets/fonts/Unbounded-Bold.ttf
+          weight: 700
+    - family: Lato
+      fonts:
+        - asset: assets/fonts/Lato-Regular.ttf
+        - asset: assets/fonts/Lato-Bold.ttf
+          weight: 700
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg
