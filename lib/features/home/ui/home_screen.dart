@@ -45,6 +45,7 @@ class HomeScreen extends ConsumerWidget {
                   Image.asset(
                     'assets/images/goalkeeper_banner.png',
                     fit: BoxFit.cover,
+                    alignment: Alignment.topCenter,
                   ),
                   Container(
                     decoration: BoxDecoration(

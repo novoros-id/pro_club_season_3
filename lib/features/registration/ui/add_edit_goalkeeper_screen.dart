@@ -45,7 +45,10 @@ class _AddEditGoalkeeperScreenState extends ConsumerState<AddEditGoalkeeperScree
           email: email,
           birthDate: birthDate,
         );
-        if (mounted) context.pop(); // Возвращаемся назад
+        if (mounted) {
+          // ✅ ИСПРАВЛЕНО: Идем на главный экран, так как первый вратарь создан
+          context.go('/');
+        }// Возвращаемся назад
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Ошибка: $e')),
