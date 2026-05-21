@@ -4,7 +4,7 @@ import 'core/router/app_router.dart';
 import 'core/database/database_provider.dart';
 import 'l10n/app_localizations.dart';
 import 'core/services/storage_service.dart'; // Импорт сервиса
-//import 'app.dart';
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
