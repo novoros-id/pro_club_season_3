@@ -22,10 +22,44 @@ class _AddEditGoalkeeperScreenState extends ConsumerState<AddEditGoalkeeperScree
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: DateTime.now().subtract(const Duration(days: 365 * 10)),
+      initialDate: birthDate ?? DateTime.now().subtract(const Duration(days: 365 * 10)),
       firstDate: DateTime(1950),
       lastDate: DateTime.now(),
+      locale: const Locale('ru', 'RU'), // Чтобы было на русском (если поддерживается)
+
+      // ✅ НАСТРОЙКА ВНЕШНЕГО ВИДА КАЛЕНДАРЯ
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: const Color(0xFFBBF246), // ✅ Твой лаймовый акцент (выделение даты)
+              onPrimary: const Color(0xFF121212), // Цвет текста на выделенной дате
+              surface: Colors.white, // Фон календаря
+              onSurface: const Color(0xFF121212), // Основной цвет текста
+            ),
+            textTheme: const TextTheme(
+              headlineSmall: TextStyle(
+                fontFamily: 'Unbounded', // Шрифт заголовка (месяц/год)
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF121212),
+              ),
+              bodyLarge: TextStyle(
+                fontFamily: 'Lato', // Шрифт дней недели и чисел
+                color: Color(0xFF121212),
+              ),
+              labelLarge: TextStyle(
+                fontFamily: 'Unbounded', // Шрифт кнопок "ОТМЕНА" / "ОК"
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF121212),
+              ),
+            ),
+            dialogBackgroundColor: Colors.white, // Фон всего диалога
+          ),
+          child: child!,
+        );
+      },
     );
+
     if (picked != null && picked != birthDate) {
       setState(() {
         birthDate = picked;
