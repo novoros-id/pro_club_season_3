@@ -12,6 +12,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appName => 'Goalkeeper Trainer';
 
   @override
+  String get mainMenuTitle => 'MAIN MENU';
+
+  @override
   String get homeTitle => 'Main Menu';
 
   @override
@@ -19,6 +22,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get registrationTitle => 'Registration';
+
+  @override
+  String get goalkeepersTitle => 'Goalkeepers';
 
   @override
   String get diaryTitle => 'Goal Diary';
@@ -30,7 +36,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get game1Title => 'Reaction Game';
 
   @override
+  String get schulteTableTitle => 'Schulte Table';
+
+  @override
   String get game2Title => 'Air Hockey';
+
+  @override
+  String get aeroHockeyTitle => 'Air Hockey';
 
   @override
   String get authorsTitle => 'Authors';

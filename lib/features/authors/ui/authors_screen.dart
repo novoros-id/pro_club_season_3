@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:url_launcher/url_launcher.dart'; // Пакет для открытия ссылок
+import 'package:url_launcher/url_launcher.dart';
 import '../../../l10n/app_localizations.dart';
 
 class AuthorsScreen extends StatelessWidget {
   const AuthorsScreen({super.key});
 
-  // Функция для открытия URL
   Future<void> _launchUrl(String urlString) async {
     final Uri url = Uri.parse(urlString);
     if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
-      throw Exception('Could not launch $url');
+      debugPrint('Could not launch $url');
     }
   }
 
@@ -18,48 +17,83 @@ class AuthorsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
+    // Цвета из гайда
+    const Color darkBg = Color(0xFF121212);
+    const Color accentGreen = Color(0xFFBBF246);
+    const Color fieldBg = Color(0xFFF2F2F7);
+    const Color textColor = Color(0xFF121212);
+    const Color secondaryText = Color(0xFF9B9EA1);
+
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text(l10n.authorsTitle),
-        leading: BackButton(onPressed: () => context.pop()),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new, color: darkBg),
+          onPressed: () => context.pop(),
+        ),
+        title: Text(
+          l10n.authorsTitle.toUpperCase(),
+          style: const TextStyle(
+            fontFamily: 'Unbounded',
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: darkBg,
+          ),
+        ),
+        centerTitle: true,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24.0),
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Блок клуба разработчиков
-            _SectionTitle(title: l10n.developersClub),
-            const SizedBox(height: 8),
-            _LinkText(
+            // --- КЛУБ РАЗРАБОТЧИКОВ ---
+            _SectionHeader(title: l10n.developersClub),
+            const SizedBox(height: 12),
+            _LinkCard(
               text: '1cproconsulting.ru',
               url: 'https://1cproconsulting.ru/',
               onLaunch: _launchUrl,
             ),
 
-            const Divider(height: 32),
+            const SizedBox(height: 32),
 
-            // Блок методики
-            _SectionTitle(title: l10n.methodologyAuthor),
-            const SizedBox(height: 8),
-            _LinkText(
+            // --- МЕТОДИКА ---
+            _SectionHeader(title: l10n.methodologyAuthor),
+            const SizedBox(height: 12),
+            _LinkCard(
               text: 'antonshustov.ru',
               url: 'https://www.antonshustov.ru/',
               onLaunch: _launchUrl,
             ),
 
-            const Divider(height: 32),
+            const SizedBox(height: 32),
 
-            // Список авторов
-            _SectionTitle(title: l10n.programAuthors),
+            // --- АВТОРЫ ПРОГРАММЫ ---
+            _SectionHeader(title: l10n.programAuthors),
             const SizedBox(height: 16),
 
-            _AuthorItem(name: 'Иван Василишин', email: 'ivan.vasilishin@1cproconsulting.ru'),
-            _AuthorItem(name: 'Дмитрий Гришаев', email: 'dmitriy.grishaev@1cproconsulting.ru'),
-            _AuthorItem(name: 'Екатерина Еськова', email: 'ekaterina.eskova@1cproconsulting.ru'),
-            _AuthorItem(name: 'Эльвина Тазиева', email: 'elvina.tazieva@1cproconsulting.ru'),
-            _AuthorItem(name: 'Алексей Ваганов', email: 'aleksei.vaganov@1cproconsulting.ru'), // Исправил опечатку в email
-
+            _AuthorCard(
+              name: 'Иван Василишин',
+              email: 'ivan.vasilishin@1cproconsulting.ru',
+            ),
+            const SizedBox(height: 12),
+            _AuthorCard(
+              name: 'Екатерина Еськова',
+              email: 'ekaterina.eskova@1cproconsulting.ru',
+            ),
+            const SizedBox(height: 12),
+            _AuthorCard(
+              name: 'Алексей Ваганов',
+              email: 'aleksei.vaganov@1cproconsulting.ru',
+            ),
+            const SizedBox(height: 12),
+            _AuthorCard(
+              name: 'Дмитрий Гришаев',
+              email: 'dmitriy.grishaev@1cproconsulting.ru',
+            ),
           ],
         ),
       ),
@@ -67,70 +101,140 @@ class AuthorsScreen extends StatelessWidget {
   }
 }
 
-// Виджет заголовка раздела
-class _SectionTitle extends StatelessWidget {
+// Заголовок раздела с лаймовой полоской
+class _SectionHeader extends StatelessWidget {
   final String title;
-  const _SectionTitle({required this.title});
+  const _SectionHeader({required this.title});
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      title,
-      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-        fontWeight: FontWeight.bold,
-        color: Colors.blue[900],
-      ),
+    const Color darkBg = Color(0xFF121212);
+    const Color accentGreen = Color(0xFFBBF246);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(
+            fontFamily: 'Unbounded',
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: darkBg,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Container(
+          width: 40,
+          height: 4,
+          color: accentGreen,
+        ),
+      ],
     );
   }
 }
 
-// Виджет ссылки
-class _LinkText extends StatelessWidget {
+// Карточка ссылки (для сайтов)
+class _LinkCard extends StatelessWidget {
   final String text;
   final String url;
   final Function(String) onLaunch;
 
-  const _LinkText({required this.text, required this.url, required this.onLaunch});
+  const _LinkCard({
+    required this.text,
+    required this.url,
+    required this.onLaunch,
+  });
 
   @override
   Widget build(BuildContext context) {
+    const Color fieldBg = Color(0xFFF2F2F7);
+    const Color textColor = Color(0xFF121212);
+    const Color accentGreen = Color(0xFFBBF246);
+
     return InkWell(
       onTap: () => onLaunch(url),
-      child: Text(
-        text,
-        style: TextStyle(
-          color: Colors.blue[700],
-          decoration: TextDecoration.underline,
-          fontSize: 16,
+      borderRadius: BorderRadius.circular(15),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: fieldBg,
+          borderRadius: BorderRadius.circular(15),
+          border: Border.all(color: accentGreen.withOpacity(0.3)),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                text,
+                style: const TextStyle(
+                  fontFamily: 'Lato',
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: textColor,
+                ),
+              ),
+            ),
+            const Icon(Icons.open_in_new, size: 18, color: textColor),
+          ],
         ),
       ),
     );
   }
 }
 
-// Виджет автора с email
-class _AuthorItem extends StatelessWidget {
+// Карточка автора
+class _AuthorCard extends StatelessWidget {
   final String name;
   final String email;
 
-  const _AuthorItem({required this.name, required this.email});
+  const _AuthorCard({
+    required this.name,
+    required this.email,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+    const Color fieldBg = Color(0xFFF2F2F7);
+    const Color textColor = Color(0xFF121212);
+    const Color secondaryText = Color(0xFF9B9EA1);
+    const Color accentGreen = Color(0xFFBBF246);
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: fieldBg,
+        borderRadius: BorderRadius.circular(15),
+        border: Border.all(color: accentGreen.withOpacity(0.3)),
+      ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('● ', style: TextStyle(fontSize: 16)),
+          // Лаймовый буллит
+          Container(
+            margin: const EdgeInsets.only(top: 6),
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(
+              color: accentGreen,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   name,
-                  style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 16),
+                  style: const TextStyle(
+                    fontFamily: 'Lato',
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: textColor,
+                  ),
                 ),
+                const SizedBox(height: 4),
                 InkWell(
                   onTap: () async {
                     final Uri emailUri = Uri(
@@ -138,16 +242,23 @@ class _AuthorItem extends StatelessWidget {
                       path: email,
                     );
                     if (!await launchUrl(emailUri)) {
-                      throw Exception('Could not launch $emailUri');
+                      debugPrint('Could not launch mailto: $email');
                     }
                   },
-                  child: Text(
-                    email,
-                    style: TextStyle(
-                      color: Colors.grey[600],
-                      fontSize: 14,
-                      decoration: TextDecoration.underline,
-                    ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.mail_outline, size: 14, color: secondaryText),
+                      const SizedBox(width: 4),
+                      Text(
+                        email,
+                        style: const TextStyle(
+                          fontFamily: 'Lato',
+                          fontSize: 14,
+                          color: secondaryText,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
