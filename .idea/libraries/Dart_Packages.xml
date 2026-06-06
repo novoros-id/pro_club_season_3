@@ -677,7 +677,7 @@
         <entry key="sqlite3">
           <value>
             <list>
-              <option value="$USER_HOME$/.pub-cache/hosted/pub.dev/sqlite3-3.3.1/lib" />
+              <option value="$USER_HOME$/.pub-cache/hosted/pub.dev/sqlite3-3.3.2/lib" />
             </list>
           </value>
         </entry>
@@ -971,7 +971,7 @@
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/shelf_web_socket-3.0.0/lib" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/source_gen-4.2.3/lib" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/source_span-1.10.2/lib" />
-      <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/sqlite3-3.3.1/lib" />
+      <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/sqlite3-3.3.2/lib" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/sqlparser-0.44.4/lib" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/stack_trace-1.12.1/lib" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/state_notifier-1.0.0/lib" />

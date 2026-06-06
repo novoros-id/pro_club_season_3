@@ -12,6 +12,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get appName => 'Тренировка Вратарей';
 
   @override
+  String get mainMenuTitle => 'ОСНОВНОЕ МЕНЮ';
+
+  @override
   String get homeTitle => 'Главное меню';
 
   @override
@@ -19,6 +22,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get registrationTitle => 'Регистрация';
+
+  @override
+  String get goalkeepersTitle => 'Вратари';
 
   @override
   String get diaryTitle => 'Дневник голов';
@@ -30,7 +36,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get game1Title => 'Игра: Реакция';
 
   @override
+  String get schulteTableTitle => 'Таблица Шульте';
+
+  @override
   String get game2Title => 'Игра: Аэрохоккей';
+
+  @override
+  String get aeroHockeyTitle => 'Аэрохоккей';
 
   @override
   String get authorsTitle => 'Авторы';
