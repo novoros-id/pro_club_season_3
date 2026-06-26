@@ -104,6 +104,12 @@ abstract class AppLocalizations {
   /// **'Goalkeeper Trainer'**
   String get appName;
 
+  /// No description provided for @mainMenuTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'MAIN MENU'**
+  String get mainMenuTitle;
+
   /// No description provided for @homeTitle.
   ///
   /// In en, this message translates to:
@@ -121,6 +127,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Registration'**
   String get registrationTitle;
+
+  /// No description provided for @goalkeepersTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Goalkeepers'**
+  String get goalkeepersTitle;
 
   /// No description provided for @diaryTitle.
   ///
@@ -140,11 +152,23 @@ abstract class AppLocalizations {
   /// **'Reaction Game'**
   String get game1Title;
 
+  /// No description provided for @schulteTableTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Schulte Table'**
+  String get schulteTableTitle;
+
   /// No description provided for @game2Title.
   ///
   /// In en, this message translates to:
   /// **'Air Hockey'**
   String get game2Title;
+
+  /// No description provided for @aeroHockeyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Air Hockey'**
+  String get aeroHockeyTitle;
 
   /// No description provided for @authorsTitle.
   ///
