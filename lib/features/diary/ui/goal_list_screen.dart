@@ -6,8 +6,9 @@ import 'goal_input_wizard.dart';
 
 class GoalListScreen extends ConsumerStatefulWidget {
   final Matche match;
+  final String hand; // ✅ Добавляем поле для хвата
 
-  const GoalListScreen({super.key, required this.match});
+  const GoalListScreen({super.key, required this.match, this.hand = 'right',});
 
   @override
   ConsumerState<GoalListScreen> createState() => _GoalListScreenState();
@@ -44,7 +45,7 @@ class _GoalListScreenState extends ConsumerState<GoalListScreen> {
     final result = await Navigator.push<bool>(
       context,
       MaterialPageRoute(
-        builder: (context) => GoalInputWizard(match: widget.match),
+        builder: (context) => GoalInputWizard(match: widget.match,  hand: widget.hand, ),
       ),
     );
     if (result == true) {
@@ -59,6 +60,7 @@ class _GoalListScreenState extends ConsumerState<GoalListScreen> {
         builder: (context) => GoalInputWizard(
           match: widget.match,
           existingGoal: goal,
+          hand: widget.hand,
         ),
       ),
     );

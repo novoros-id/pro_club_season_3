@@ -15,13 +15,15 @@ class DiaryMainScreen extends ConsumerStatefulWidget {
 
 class _DiaryMainScreenState extends ConsumerState<DiaryMainScreen> {
   DateTime _selectedDate = DateTime.now();
-
   List<Goalkeeper> _goalkeepers = [];
   Goalkeeper? _selectedGoalkeeper;
   List<Matche> _matches = [];
   bool _isLoading = true;
 
-  // 🎨 Дизайн-система из твоего гайда
+  // ✅ НОВОЕ: Флаг для отображения всех игр или только за дату
+  bool _showAllMatches = false;
+
+  // 🎨 Дизайн-система
   static const Color primaryText = Color(0xFF121212);
   static const Color accentColor = Color(0xFFBBF246);
   static const Color inputBg = Color(0xFFF2F2F7);
@@ -38,39 +40,54 @@ class _DiaryMainScreenState extends ConsumerState<DiaryMainScreen> {
   Future<void> _loadData() async {
     final db = ref.read(databaseProvider);
 
-    // Загружаем вратарей
+    // 1. Загружаем вратарей
     final keepers = await db.getAllGoalkeepers();
 
-    // Выбираем текущего вратаря
-    Goalkeeper? currentKeeper =
-        keepers.where((k) => k.isCurrent).toList().firstOrNull;
+    // 2. Выбираем текущего вратаря
+    Goalkeeper? currentKeeper = keepers.where((k) => k.isCurrent).toList().firstOrNull;
     if (currentKeeper == null && keepers.isNotEmpty) {
       currentKeeper = keepers.first;
-    }
-
-    // Загружаем игры за выбранную дату
-    List<Matche> matches = [];
-    if (currentKeeper != null) {
-      matches = await db.getMatchesByDate(currentKeeper.id, _selectedDate);
     }
 
     setState(() {
       _goalkeepers = keepers;
       _selectedGoalkeeper = currentKeeper;
-      _matches = matches;
-      _isLoading = false;
     });
+
+    // 3. Загружаем игры
+    await _loadMatchesForDate();
   }
 
+  // ✅ ОБНОВЛЕННЫЙ МЕТОД ЗАГРУЗКИ ИГР
   Future<void> _loadMatchesForDate() async {
-    if (_selectedGoalkeeper == null) return;
+    if (_selectedGoalkeeper == null) {
+      setState(() {
+        _matches = [];
+        _isLoading = false;
+      });
+      return;
+    }
+
+    setState(() { _isLoading = true; });
 
     final db = ref.read(databaseProvider);
-    final matches =
-    await db.getMatchesByDate(_selectedGoalkeeper!.id, _selectedDate);
+    List<Matche> matches = [];
+
+    try {
+      if (_showAllMatches) {
+        // Если галочка стоит - грузим ВСЕ игры вратаря
+        matches = await db.getMatchesByGoalkeeper(_selectedGoalkeeper!.id);
+      } else {
+        // Если галочка снята - грузим только за выбранную дату
+        matches = await db.getMatchesByDate(_selectedGoalkeeper!.id, _selectedDate);
+      }
+    } catch (e) {
+      print('Ошибка загрузки игр: $e');
+    }
 
     setState(() {
       _matches = matches;
+      _isLoading = false;
     });
   }
 
@@ -81,17 +98,14 @@ class _DiaryMainScreenState extends ConsumerState<DiaryMainScreen> {
       );
       return;
     }
-
     final opponentController = TextEditingController();
     final teamScoreController = TextEditingController(text: '0');
     final opponentScoreController = TextEditingController(text: '0');
     final gameTimeController = TextEditingController(text: '60:00');
     final personalTasksController = TextEditingController();
-
     final goalsConcededController = TextEditingController(text: '0');
     final savesController = TextEditingController(text: '0');
     final commentsController = TextEditingController();
-
     int moodRating = 3;
     int warmupRating = 3;
     int confidenceRating = 3;
@@ -129,12 +143,8 @@ class _DiaryMainScreenState extends ConsumerState<DiaryMainScreen> {
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 20),
-
-                // Соперник
                 _buildTextField(opponentController, 'Соперник', Icons.sports_hockey),
                 const SizedBox(height: 12),
-
-                // 🏒 СЧЁТ (два поля рядом)
                 const Text(
                   'Счёт',
                   style: TextStyle(
@@ -168,17 +178,10 @@ class _DiaryMainScreenState extends ConsumerState<DiaryMainScreen> {
                   ],
                 ),
                 const SizedBox(height: 12),
-
-                // Игровое время
                 _buildTextField(gameTimeController, 'Игровое время', Icons.timer),
                 const SizedBox(height: 12),
-
-                // Личные задачи
                 _buildTextField(personalTasksController, 'Личные задачи на игру', Icons.task_alt, maxLines: 2),
-
                 const SizedBox(height: 16),
-
-                // Кнопка расширенных параметров
                 TextButton.icon(
                   onPressed: () {
                     setModalState(() {
@@ -199,7 +202,6 @@ class _DiaryMainScreenState extends ConsumerState<DiaryMainScreen> {
                     ),
                   ),
                 ),
-
                 if (showAdvanced) ...[
                   const Divider(height: 1, thickness: 1, color: Color(0xFFEEEEEE)),
                   const SizedBox(height: 16),
@@ -234,9 +236,7 @@ class _DiaryMainScreenState extends ConsumerState<DiaryMainScreen> {
                   const SizedBox(height: 16),
                   _buildTextField(commentsController, 'Комментарии к игре', Icons.comment, maxLines: 3),
                 ],
-
                 const SizedBox(height: 24),
-
                 ElevatedButton(
                   onPressed: () async {
                     if (opponentController.text.trim().isEmpty) {
@@ -245,12 +245,9 @@ class _DiaryMainScreenState extends ConsumerState<DiaryMainScreen> {
                       );
                       return;
                     }
-
-                    // Формируем счёт как строку "X:Y"
                     final teamScore = int.tryParse(teamScoreController.text) ?? 0;
                     final oppScore = int.tryParse(opponentScoreController.text) ?? 0;
                     final scoreString = '$teamScore:$oppScore';
-
                     await _addMatch(
                       goalkeeperId: _selectedGoalkeeper!.id,
                       date: _selectedDate,
@@ -272,7 +269,6 @@ class _DiaryMainScreenState extends ConsumerState<DiaryMainScreen> {
                           ? commentsController.text.trim()
                           : null,
                     );
-
                     if (mounted) Navigator.pop(context);
                   },
                   style: ElevatedButton.styleFrom(
@@ -301,7 +297,6 @@ class _DiaryMainScreenState extends ConsumerState<DiaryMainScreen> {
     );
   }
 
-  // Вспомогательный метод для создания слайдера рейтинга
   Widget _buildRatingSlider(
       BuildContext context,
       void Function(void Function()) setModalState,
@@ -386,8 +381,6 @@ class _DiaryMainScreenState extends ConsumerState<DiaryMainScreen> {
     String? comments,
   }) async {
     final db = ref.read(databaseProvider);
-
-    // Парсим игровое время
     int duration = 60;
     if (gameTime != null) {
       try {
@@ -397,14 +390,11 @@ class _DiaryMainScreenState extends ConsumerState<DiaryMainScreen> {
         duration = 60;
       }
     }
-
-    // Рассчитываем процент отражений
     double? savePercentage;
     final totalShots = goalsConceded + saves;
     if (totalShots > 0) {
       savePercentage = (saves / totalShots) * 100;
     }
-
     final match = MatchesCompanion.insert(
       goalkeeperId: goalkeeperId,
       date: date,
@@ -422,10 +412,7 @@ class _DiaryMainScreenState extends ConsumerState<DiaryMainScreen> {
       greatSavesRating: Value(greatSavesRating),
       comments: Value(comments),
     );
-
     await db.insertMatch(match);
-
-    // Перезагружаем список
     await _loadMatchesForDate();
   }
 
@@ -436,18 +423,19 @@ class _DiaryMainScreenState extends ConsumerState<DiaryMainScreen> {
   }
 
   void _navigateToGoalList(Matche match) {
+
+    final hand = _selectedGoalkeeper?.hand ?? 'right';
+
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => GoalListScreen(match: match),
+        builder: (context) => GoalListScreen(match: match, hand: hand,),
       ),
     ).then((_) => _loadMatchesForDate());
   }
 
   void _editMatch(Matche match) {
     final opponentController = TextEditingController(text: match.opponent);
-
-    // Парсим счёт из строки "X:Y"
     int teamScore = 0;
     int opponentScore = 0;
     if (match.score != null && match.score!.contains(':')) {
@@ -455,16 +443,13 @@ class _DiaryMainScreenState extends ConsumerState<DiaryMainScreen> {
       teamScore = int.tryParse(parts[0]) ?? 0;
       opponentScore = int.tryParse(parts[1]) ?? 0;
     }
-
     final teamScoreController = TextEditingController(text: teamScore.toString());
     final opponentScoreController = TextEditingController(text: opponentScore.toString());
-
     final gameTimeController = TextEditingController(text: match.gameTime ?? '60:00');
     final personalTasksController = TextEditingController(text: match.personalTasks ?? '');
     final goalsConcededController = TextEditingController(text: match.goalsConceded.toString());
     final savesController = TextEditingController(text: match.saves.toString());
     final commentsController = TextEditingController(text: match.comments ?? '');
-
     int moodRating = match.moodRating ?? 3;
     int warmupRating = match.warmupRating ?? 3;
     int confidenceRating = match.confidenceRating ?? 3;
@@ -502,11 +487,8 @@ class _DiaryMainScreenState extends ConsumerState<DiaryMainScreen> {
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 20),
-
                 _buildTextField(opponentController, 'Соперник', Icons.sports_hockey),
                 const SizedBox(height: 12),
-
-                // 🏒 СЧЁТ (два поля рядом)
                 const Text(
                   'Счёт',
                   style: TextStyle(
@@ -540,13 +522,10 @@ class _DiaryMainScreenState extends ConsumerState<DiaryMainScreen> {
                   ],
                 ),
                 const SizedBox(height: 12),
-
                 _buildTextField(gameTimeController, 'Игровое время', Icons.timer),
                 const SizedBox(height: 12),
                 _buildTextField(personalTasksController, 'Личные задачи на игру', Icons.task_alt, maxLines: 2),
-
                 const SizedBox(height: 16),
-
                 TextButton.icon(
                   onPressed: () => setModalState(() => showAdvanced = !showAdvanced),
                   icon: Icon(showAdvanced ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down, color: accentColor),
@@ -555,7 +534,6 @@ class _DiaryMainScreenState extends ConsumerState<DiaryMainScreen> {
                     style: TextStyle(fontFamily: 'Unbounded', fontSize: 14, fontWeight: FontWeight.w600, color: accentColor),
                   ),
                 ),
-
                 if (showAdvanced) ...[
                   const Divider(height: 1, thickness: 1, color: Color(0xFFEEEEEE)),
                   const SizedBox(height: 16),
@@ -574,9 +552,7 @@ class _DiaryMainScreenState extends ConsumerState<DiaryMainScreen> {
                   const SizedBox(height: 16),
                   _buildTextField(commentsController, 'Комментарии к игре', Icons.comment, maxLines: 3),
                 ],
-
                 const SizedBox(height: 24),
-
                 ElevatedButton(
                   onPressed: () async {
                     final db = ref.read(databaseProvider);
@@ -584,16 +560,12 @@ class _DiaryMainScreenState extends ConsumerState<DiaryMainScreen> {
                     try {
                       duration = int.parse(gameTimeController.text.split(':')[0]);
                     } catch (_) {}
-
                     final conceded = int.tryParse(goalsConcededController.text) ?? 0;
                     final saves = int.tryParse(savesController.text) ?? 0;
                     final total = conceded + saves;
-
-                    // Формируем счёт
                     final teamScore = int.tryParse(teamScoreController.text) ?? 0;
                     final oppScore = int.tryParse(opponentScoreController.text) ?? 0;
                     final scoreString = '$teamScore:$oppScore';
-
                     final updatedMatch = Matche(
                       id: match.id,
                       goalkeeperId: match.goalkeeperId,
@@ -613,7 +585,6 @@ class _DiaryMainScreenState extends ConsumerState<DiaryMainScreen> {
                       comments: commentsController.text.trim().isNotEmpty ? commentsController.text.trim() : null,
                       createdAt: match.createdAt,
                     );
-
                     await db.updateMatch(updatedMatch);
                     if (mounted) {
                       Navigator.pop(context);
@@ -636,7 +607,6 @@ class _DiaryMainScreenState extends ConsumerState<DiaryMainScreen> {
     );
   }
 
-// Вспомогательный метод для полей ввода (чтобы не дублировать код)
   Widget _buildTextField(TextEditingController controller, String label, IconData icon, {bool isNumber = false, int maxLines = 1}) {
     return TextField(
       controller: controller,
@@ -652,7 +622,6 @@ class _DiaryMainScreenState extends ConsumerState<DiaryMainScreen> {
     );
   }
 
-  // Вспомогательный метод для числовых полей
   Widget _buildNumberField(TextEditingController controller, String label) {
     return TextField(
       controller: controller,
@@ -712,41 +681,78 @@ class _DiaryMainScreenState extends ConsumerState<DiaryMainScreen> {
           : Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 📅 Блок с датой
+          //  Блок с датой и ГАЛОЧКОЙ
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-            child: InkWell(
-              onTap: () async {
-                final DateTime? picked = await showDatePicker(
-                  context: context,
-                  initialDate: _selectedDate,
-                  firstDate: DateTime(2020),
-                  lastDate: DateTime(2100),
-                );
-                if (picked != null && picked != _selectedDate) {
-                  setState(() => _selectedDate = picked);
-                  await _loadMatchesForDate();
-                }
-              },
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    '${dayFormat.format(_selectedDate)}, ${dateFormat.format(_selectedDate)}',
-                    style: const TextStyle(
-                      fontFamily: 'Unbounded',
-                      fontSize: 16,
-                      color: auxText,
+            child: Row(
+              children: [
+                // Клик по дате открывает календарь
+                Expanded(
+                  child: InkWell(
+                    onTap: () async {
+                      final DateTime? picked = await showDatePicker(
+                        context: context,
+                        initialDate: _selectedDate,
+                        firstDate: DateTime(2020),
+                        lastDate: DateTime(2100),
+                      );
+                      if (picked != null && picked != _selectedDate) {
+                        setState(() => _selectedDate = picked);
+                        // Если меняем дату, автоматически снимаем галочку "Все игры",
+                        // чтобы пользователь видел результат выбора даты
+                        if (_showAllMatches) {
+                          setState(() => _showAllMatches = false);
+                        }
+                        await _loadMatchesForDate();
+                      }
+                    },
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          '${dayFormat.format(_selectedDate)}, ${dateFormat.format(_selectedDate)}',
+                          style: const TextStyle(
+                            fontFamily: 'Unbounded',
+                            fontSize: 16,
+                            color: auxText,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        const Icon(
+                          Icons.calendar_today,
+                          color: auxText,
+                          size: 20,
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  const Icon(
-                    Icons.calendar_today,
-                    color: auxText,
-                    size: 20,
-                  ),
-                ],
-              ),
+                ),
+
+                // ✅ ГАЛОЧКА "ВСЕ ИГРЫ"
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                      'Все',
+                      style: TextStyle(
+                        fontFamily: 'Lato',
+                        fontSize: 14,
+                        color: auxText,
+                      ),
+                    ),
+                    Checkbox(
+                      value: _showAllMatches,
+                      activeColor: accentColor,
+                      onChanged: (val) {
+                        setState(() {
+                          _showAllMatches = val ?? false;
+                        });
+                        _loadMatchesForDate();
+                      },
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
 
@@ -760,8 +766,7 @@ class _DiaryMainScreenState extends ConsumerState<DiaryMainScreen> {
                 borderRadius: BorderRadius.circular(borderRadius),
               ),
               child: Padding(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 8, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 child: Row(
                   children: [
                     Container(
@@ -771,48 +776,25 @@ class _DiaryMainScreenState extends ConsumerState<DiaryMainScreen> {
                         color: Color(0xFFF5F5F5),
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(
-                        Icons.person,
-                        color: primaryText,
-                        size: 20,
-                      ),
+                      child: const Icon(Icons.person, color: primaryText, size: 20),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: _goalkeepers.isEmpty
-                          ? const Text(
-                        'Нет вратарей',
-                        style: TextStyle(
-                          fontFamily: 'Unbounded',
-                          fontSize: 16,
-                          color: auxText,
-                        ),
-                      )
+                          ? const Text('Нет вратарей', style: TextStyle(fontFamily: 'Unbounded', fontSize: 16, color: auxText))
                           : DropdownButtonHideUnderline(
                         child: DropdownButton<Goalkeeper>(
                           isExpanded: true,
                           value: _selectedGoalkeeper,
-                          style: const TextStyle(
-                            fontFamily: 'Unbounded',
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: primaryText,
-                          ),
-                          icon: const Icon(
-                            Icons.arrow_drop_down,
-                            color: accentColor,
-                          ),
+                          style: const TextStyle(fontFamily: 'Unbounded', fontSize: 16, fontWeight: FontWeight.bold, color: primaryText),
+                          icon: const Icon(Icons.arrow_drop_down, color: accentColor),
                           items: _goalkeepers.map((keeper) {
                             return DropdownMenuItem<Goalkeeper>(
                               value: keeper,
-                              child: Text(
-                                '${keeper.firstName} ${keeper.lastName}',
-                                overflow: TextOverflow.ellipsis,
-                              ),
+                              child: Text('${keeper.firstName} ${keeper.lastName}', overflow: TextOverflow.ellipsis),
                             );
                           }).toList(),
-                          onChanged:
-                              (Goalkeeper? newValue) async {
+                          onChanged: (Goalkeeper? newValue) async {
                             setState(() {
                               _selectedGoalkeeper = newValue;
                             });
@@ -826,13 +808,8 @@ class _DiaryMainScreenState extends ConsumerState<DiaryMainScreen> {
               ),
             ),
           ),
-
           const SizedBox(height: 16),
-          const Divider(
-            height: 1,
-            thickness: 1,
-            color: Color(0xFFEEEEEE),
-          ),
+          const Divider(height: 1, thickness: 1, color: Color(0xFFEEEEEE)),
 
           // 📋 Список игр
           Expanded(
@@ -841,18 +818,13 @@ class _DiaryMainScreenState extends ConsumerState<DiaryMainScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    Icons.sports_hockey,
-                    size: 64,
-                    color: Colors.grey.shade300,
-                  ),
+                  Icon(Icons.sports_hockey, size: 64, color: Colors.grey.shade300),
                   const SizedBox(height: 16),
                   Text(
-                    'Нет игр за ${dateFormat.format(_selectedDate)}',
-                    style: TextStyle(
-                      color: Colors.grey.shade600,
-                      fontSize: 16,
-                    ),
+                    _showAllMatches
+                        ? 'Нет игр у этого вратаря'
+                        : 'Нет игр за ${dateFormat.format(_selectedDate)}',
+                    style: TextStyle(color: Colors.grey.shade600, fontSize: 16),
                     textAlign: TextAlign.center,
                   ),
                 ],
@@ -863,73 +835,57 @@ class _DiaryMainScreenState extends ConsumerState<DiaryMainScreen> {
               itemCount: _matches.length,
               itemBuilder: (context, index) {
                 final match = _matches[index];
+                // Внутри ListView.builder -> itemBuilder
+
                 return Container(
                   margin: const EdgeInsets.only(bottom: 12),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
+                      BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
                     ],
                   ),
                   child: ListTile(
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
-                    leading: Container(
-                      width: 48,
-                      height: 48,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFFF5F5F5),
-                        shape: BoxShape.circle,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+
+                    // ✅ ИЗМЕНЕНИЕ: Иконка теперь кликабельна
+                    leading: InkWell(
+                      onTap: () => _navigateToGoalList(match), // Открывает форму ввода голов
+                      borderRadius: BorderRadius.circular(24), // Скругление области нажатия под круг
+                      child: Container(
+                        width: 48,
+                        height: 48,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFFF5F5F5),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.sports_hockey, // Или Icons.hockey_stick, если есть такая иконка
+                          color: Color(0xFF121212),
+                          size: 24,
+                        ),
                       ),
-                      child: const Icon(
-                        Icons.sports_hockey,
-                        color: Color(0xFF121212),
-                        size: 24,
-                      ),
                     ),
+
                     title: Text(
                       'ИГРА С ${match.opponent.toUpperCase()}',
-                      style: const TextStyle(
-                        fontFamily: 'Unbounded',
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF121212),
-                      ),
+                      style: const TextStyle(fontFamily: 'Unbounded', fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF121212)),
                     ),
                     subtitle: Text(
-                      match.score != null
-                          ? 'Счёт: ${match.score} | Время: ${match.gameTime ?? "60:00"}'
-                          : 'Время: ${match.gameTime ?? "60:00"}',
-                      style: const TextStyle(
-                        fontFamily: 'Lato',
-                        fontSize: 14,
-                        color: Color(0xFF9B9EA1),
-                      ),
+                      match.score != null ? 'Счёт: ${match.score} | Время: ${match.gameTime ?? "60:00"}' : 'Время: ${match.gameTime ?? "60:00"}',
+                      style: const TextStyle(fontFamily: 'Lato', fontSize: 14, color: Color(0xFF9B9EA1)),
                     ),
                     trailing: PopupMenuButton<String>(
                       onSelected: (value) {
-                        if (value == 'delete') {
-                          _deleteMatch(match);
-                        } else if (value == 'edit') {
-                          _editMatch(match);
-                        } else if (value == 'goals') {
-                          _navigateToGoalList(match);
-                        }
+                        if (value == 'delete') _deleteMatch(match);
+                        else if (value == 'edit') _editMatch(match);
+                        else if (value == 'goals') _navigateToGoalList(match);
                       },
                       itemBuilder: (context) => [
                         const PopupMenuItem(value: 'edit', child: Text('Редактировать')),
                         const PopupMenuItem(value: 'goals', child: Text('Указать голы')),
-                        const PopupMenuItem(
-                          value: 'delete',
-                          child: Text('Удалить', style: TextStyle(color: Colors.red)),
-                        ),
+                        const PopupMenuItem(value: 'delete', child: Text('Удалить', style: TextStyle(color: Colors.red))),
                       ],
                     ),
                   ),
@@ -944,17 +900,10 @@ class _DiaryMainScreenState extends ConsumerState<DiaryMainScreen> {
         child: FloatingActionButton.extended(
           onPressed: _showAddMatchDialog,
           backgroundColor: darkButton,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(50),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(50)),
           label: const Text(
             'ДОБАВИТЬ ИГРУ',
-            style: TextStyle(
-              fontFamily: 'Unbounded',
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: Colors.white,
-            ),
+            style: TextStyle(fontFamily: 'Unbounded', fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white),
           ),
           icon: const Icon(Icons.add, color: Colors.white),
         ),
