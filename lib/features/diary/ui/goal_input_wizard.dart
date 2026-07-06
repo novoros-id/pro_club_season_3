@@ -7,11 +7,13 @@ import 'package:drift/drift.dart' hide Column;
 class GoalInputWizard extends ConsumerStatefulWidget {
   final Matche match;
   final Goal? existingGoal;
+  final String hand; // Хват вратаря ('left' или 'right')
 
   const GoalInputWizard({
     super.key,
     required this.match,
     this.existingGoal,
+    this.hand = 'right',
   });
 
   @override
@@ -26,7 +28,10 @@ class _GoalInputWizardState extends ConsumerState<GoalInputWizard> {
   double? _fromZoneX;
   double? _fromZoneY;
 
-  // 🎨 Дизайн-система
+  // ✅ КЛЮЧ ДЛЯ ПОЛУЧЕНИЯ КООРДИНАТ КОНТЕЙНЕРА С КАРТИНКОЙ
+  final GlobalKey _imageContainerKey = GlobalKey();
+
+  //  Дизайн-система
   static const Color primaryText = Color(0xFF121212);
   static const Color accentColor = Color(0xFFBBF246);
   static const Color inputBg = Color(0xFFF2F2F7);
@@ -73,7 +78,6 @@ class _GoalInputWizardState extends ConsumerState<GoalInputWizard> {
 
   Future<void> _saveGoal() async {
     final db = ref.read(databaseProvider);
-
     if (widget.existingGoal != null) {
       // Редактирование
       final updated = Goal(
@@ -92,13 +96,12 @@ class _GoalInputWizardState extends ConsumerState<GoalInputWizard> {
       await db.insertGoal(GoalsCompanion.insert(
         matchId: widget.match.id,
         goalTypeId: _selectedGoalTypeId,
-        toZoneX: Value(_toZoneX),      // ✅ Обернули в Value()
-        toZoneY: Value(_toZoneY),      // ✅
-        fromZoneX: Value(_fromZoneX),  // ✅
-        fromZoneY: Value(_fromZoneY),  // ✅
+        toZoneX: Value(_toZoneX),
+        toZoneY: Value(_toZoneY),
+        fromZoneX: Value(_fromZoneX),
+        fromZoneY: Value(_fromZoneY),
       ));
     }
-
     if (mounted) {
       Navigator.pop(context, true);
     }
@@ -116,9 +119,7 @@ class _GoalInputWizardState extends ConsumerState<GoalInputWizard> {
           onPressed: _previousStep,
         ),
         title: Text(
-          widget.existingGoal != null
-              ? 'РЕДАКТИРОВАТЬ ГОЛ'
-              : 'НОВЫЙ ГОЛ',
+          widget.existingGoal != null ? 'РЕДАКТИРОВАТЬ ГОЛ' : 'НОВЫЙ ГОЛ',
           style: const TextStyle(
             fontFamily: 'Unbounded',
             fontSize: 18,
@@ -135,9 +136,19 @@ class _GoalInputWizardState extends ConsumerState<GoalInputWizard> {
             child: Row(
               children: [
                 _buildStepIndicator(1, 'Тип'),
-                Expanded(child: Container(height: 2, color: _currentStep >= 1 ? accentColor : Colors.grey.shade300)),
+                Expanded(
+                  child: Container(
+                    height: 2,
+                    color: _currentStep >= 1 ? accentColor : Colors.grey.shade300,
+                  ),
+                ),
                 _buildStepIndicator(2, 'В ворота'),
-                Expanded(child: Container(height: 2, color: _currentStep >= 2 ? accentColor : Colors.grey.shade300)),
+                Expanded(
+                  child: Container(
+                    height: 2,
+                    color: _currentStep >= 2 ? accentColor : Colors.grey.shade300,
+                  ),
+                ),
                 _buildStepIndicator(3, 'Откуда'),
               ],
             ),
@@ -156,7 +167,9 @@ class _GoalInputWizardState extends ConsumerState<GoalInputWizard> {
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         side: const BorderSide(color: primaryText),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(50)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(50),
+                        ),
                       ),
                       child: const Text(
                         'НАЗАД',
@@ -177,7 +190,9 @@ class _GoalInputWizardState extends ConsumerState<GoalInputWizard> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: primaryText,
                       padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(50)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(50),
+                      ),
                     ),
                     child: Text(
                       _currentStep == 2 ? 'ГОТОВО' : 'ДАЛЕЕ',
@@ -259,7 +274,9 @@ class _GoalInputWizardState extends ConsumerState<GoalInputWizard> {
         return Container(
           margin: const EdgeInsets.only(bottom: 12),
           decoration: BoxDecoration(
-            color: isSelected ? accentColor.withOpacity(0.2) : inputBg,
+            color: isSelected
+                ? accentColor.withValues(alpha: 0.2) // ✅ Исправлено withOpacity
+                : inputBg,
             borderRadius: BorderRadius.circular(borderRadius),
             border: Border.all(
               color: isSelected ? accentColor : Colors.transparent,
@@ -267,7 +284,8 @@ class _GoalInputWizardState extends ConsumerState<GoalInputWizard> {
             ),
           ),
           child: ListTile(
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             title: Text(
               '${goalType['id']}. ${goalType['name']}',
               style: const TextStyle(
@@ -293,6 +311,8 @@ class _GoalInputWizardState extends ConsumerState<GoalInputWizard> {
 
   // ШАГ 2: Куда забит гол
   Widget _buildToZoneStep() {
+    final bool isLeftHanded = widget.hand == 'left';
+
     return Column(
       children: [
         const Padding(
@@ -311,49 +331,83 @@ class _GoalInputWizardState extends ConsumerState<GoalInputWizard> {
         Expanded(
           child: GestureDetector(
             onTapDown: (details) {
-              final RenderBox box = context.findRenderObject() as RenderBox;
-              final size = box.size;
-              final tapPosition = details.localPosition;
-              setState(() {
-                _toZoneX = tapPosition.dx / size.width;
-                _toZoneY = tapPosition.dy / size.height;
-              });
+              // ✅ ИСПРАВЛЕНИЕ КООРДИНАТ ЧЕРЕЗ GLOBALKEY
+              final RenderBox? box =
+              _imageContainerKey.currentContext?.findRenderObject()
+              as RenderBox?;
+
+              if (box == null) return; // Если виджет еще не отрисован
+
+              // Глобальная позиция контейнера на экране
+              final Offset containerOffset = box.localToGlobal(Offset.zero);
+
+              // Позиция нажатия относительно левого верхнего угла контейнера
+              final double relativeX = details.globalPosition.dx - containerOffset.dx;
+              final double relativeY = details.globalPosition.dy - containerOffset.dy;
+
+              // Нормализуем от 0.0 до 1.0
+              final double normalizedX = relativeX / box.size.width;
+              final double normalizedY = relativeY / box.size.height;
+
+              // Проверяем границы (на всякий случай)
+              if (normalizedX >= 0 && normalizedX <= 1 && normalizedY >= 0 && normalizedY <= 1) {
+                setState(() {
+                  _toZoneX = normalizedX;
+                  _toZoneY = normalizedY;
+                });
+              }
             },
-            child: Container(
-              margin: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: inputBg,
-                borderRadius: BorderRadius.circular(borderRadius),
-                border: Border.all(color: Colors.grey.shade300),
-              ),
-              child: Stack(
-                children: [
-                  Center(
-                    child: Image.asset(
-                      'assets/images/goalie.png',
-                      fit: BoxFit.contain,
-                      width: 300, // можно ограничить размер
-                    ),
-                  ),
-                  if (_toZoneX != null && _toZoneY != null)
-                    Positioned(
-                      left: _toZoneX! * (MediaQuery.of(context).size.width - 64) - 10,
-                      top: _toZoneY! * (MediaQuery.of(context).size.height - 300) - 10,
-                      child: Container(
-                        width: 24,
-                        height: 24,
-                        decoration: const BoxDecoration(
-                          color: Color(0xFFE53935),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.close,
-                          color: Colors.white,
-                          size: 16,
+            child: Center(
+              child: Container(
+                key: _imageContainerKey, // ✅ Привязываем ключ
+                width: 300,
+                height: 380,
+                decoration: BoxDecoration(
+                  color: inputBg,
+                  borderRadius: BorderRadius.circular(borderRadius),
+                  border: Border.all(color: Colors.grey.shade300),
+                ),
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Positioned.fill(
+                      child: Transform.scale(
+                        scaleX: isLeftHanded ? -1.0 : 1.0,
+                        child: Image.asset(
+                          'assets/images/goalie.png',
+                          fit: BoxFit.contain,
+                          alignment: Alignment.bottomCenter,
                         ),
                       ),
                     ),
-                ],
+                    // Маркер попадания
+                    if (_toZoneX != null && _toZoneY != null)
+                      Positioned(
+                        left: _toZoneX! * 300 - 12, // 12 - половина ширины маркера (24/2)
+                        top: _toZoneY! * 380 - 12,
+                        child: Container(
+                          width: 24,
+                          height: 24,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFE53935),
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black26,
+                                blurRadius: 4,
+                                offset: Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: const Icon(
+                            Icons.close,
+                            color: Colors.white,
+                            size: 16,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -382,64 +436,89 @@ class _GoalInputWizardState extends ConsumerState<GoalInputWizard> {
         Expanded(
           child: GestureDetector(
             onTapDown: (details) {
-              final RenderBox box = context.findRenderObject() as RenderBox;
-              final size = box.size;
-              final tapPosition = details.localPosition;
-              setState(() {
-                _fromZoneX = tapPosition.dx / size.width;
-                _fromZoneY = tapPosition.dy / size.height;
-              });
+              // ✅ ИСПРАВЛЕНИЕ КООРДИНАТ ДЛЯ ШАГА 3
+              final RenderBox? box =
+              _imageContainerKey.currentContext?.findRenderObject()
+              as RenderBox?;
+
+              if (box == null) return;
+
+              final Offset containerOffset = box.localToGlobal(Offset.zero);
+              final double relativeX = details.globalPosition.dx - containerOffset.dx;
+              final double relativeY = details.globalPosition.dy - containerOffset.dy;
+
+              final double normalizedX = relativeX / box.size.width;
+              final double normalizedY = relativeY / box.size.height;
+
+              if (normalizedX >= 0 && normalizedX <= 1 && normalizedY >= 0 && normalizedY <= 1) {
+                setState(() {
+                  _fromZoneX = normalizedX;
+                  _fromZoneY = normalizedY;
+                });
+              }
             },
-            child: Container(
-              margin: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: inputBg,
-                borderRadius: BorderRadius.circular(borderRadius),
-                border: Border.all(color: Colors.grey.shade300),
-              ),
-              child: Stack(
-                children: [
-                  Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.sports_hockey,
-                          size: 100,
-                          color: Colors.grey.shade300,
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'Картинка площадки',
-                          style: TextStyle(color: Colors.grey.shade400, fontFamily: 'Lato'),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          '(assets/images/rink.png)',
-                          style: TextStyle(color: Colors.grey.shade400, fontSize: 12, fontFamily: 'Lato'),
-                        ),
-                      ],
-                    ),
-                  ),
-                  if (_fromZoneX != null && _fromZoneY != null)
-                    Positioned(
-                      left: _fromZoneX! * (MediaQuery.of(context).size.width - 64) - 10,
-                      top: _fromZoneY! * (MediaQuery.of(context).size.height - 300) - 10,
-                      child: Container(
-                        width: 24,
-                        height: 24,
-                        decoration: const BoxDecoration(
-                          color: Color(0xFF1E88E5),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.location_on,
-                          color: Colors.white,
-                          size: 16,
-                        ),
+            child: Center(
+              child: Container(
+                key: _imageContainerKey, // ✅ Тот же ключ для единообразия
+                width: 300,
+                height: 380,
+                decoration: BoxDecoration(
+                  color: inputBg,
+                  borderRadius: BorderRadius.circular(borderRadius),
+                  border: Border.all(color: Colors.grey.shade300),
+                ),
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    // Заглушка для площадки (можно заменить на Image.asset('assets/images/rink.png'))
+                    Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.sports_hockey,
+                            size: 100,
+                            color: Colors.grey.shade300,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Площадка',
+                            style: TextStyle(
+                              color: Colors.grey.shade400,
+                              fontFamily: 'Lato',
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                ],
+                    // Маркер броска
+                    if (_fromZoneX != null && _fromZoneY != null)
+                      Positioned(
+                        left: _fromZoneX! * 300 - 12,
+                        top: _fromZoneY! * 380 - 12,
+                        child: Container(
+                          width: 24,
+                          height: 24,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFF1E88E5),
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black26,
+                                blurRadius: 4,
+                                offset: Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: const Icon(
+                            Icons.location_on,
+                            color: Colors.white,
+                            size: 16,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
               ),
             ),
           ),
