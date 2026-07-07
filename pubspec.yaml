@@ -81,6 +81,8 @@ flutter:
     - assets/audio/goal.mp3
     - assets/images/goalkeeper_banner.png
     - assets/images/goalie.png
+    - assets/images/goalie_l.png
+    - assets/images/goalie_r.png
   fonts:
     - family: Unbounded
       fonts:
