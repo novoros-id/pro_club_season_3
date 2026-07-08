@@ -3,11 +3,25 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../logic/schulte_controller.dart';
 
-class SchulteScreen extends ConsumerWidget {
+class SchulteScreen extends ConsumerStatefulWidget {
   const SchulteScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SchulteScreen> createState() => _SchulteScreenState();
+}
+
+class _SchulteScreenState extends ConsumerState<SchulteScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      ref.read(schulteControllerProvider.notifier).startGame();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final state = ref.watch(schulteControllerProvider);
     final controller = ref.read(schulteControllerProvider.notifier);
 
@@ -35,42 +49,69 @@ class SchulteScreen extends ConsumerWidget {
                 child: Center(
                   child: AspectRatio(
                     aspectRatio: 1,
-                    child: GridView.builder(
-                      physics: const NeverScrollableScrollPhysics(),
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 5,
-                            mainAxisSpacing: 6,
-                            crossAxisSpacing: 6,
-                          ),
-                      itemCount: state.numbers.length,
-                      itemBuilder: (context, index) {
-                        final number = state.numbers[index];
-                        final isCorrect = state.highlightedNumber == number;
-                        final isWrong =
-                            state.highlightedWrongNumber == number;
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        GridView.builder(
+                          physics: const NeverScrollableScrollPhysics(),
+                          gridDelegate:
+                              SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: state.tableSize,
+                                mainAxisSpacing: 6,
+                                crossAxisSpacing: 6,
+                              ),
+                          itemCount: state.numbers.length,
+                          itemBuilder: (context, index) {
+                            final number = state.numbers[index];
+                            final isCorrect =
+                                state.highlightedNumber == number;
+                            final isWrong =
+                                state.highlightedWrongNumber == number;
+                            final isCenterCell =
+                                state.tableSize.isOdd &&
+                                index == state.numbers.length ~/ 2;
 
-                        return Material(
-                          color: isCorrect
-                              ? Colors.green
-                              : isWrong
-                              ? Colors.red
-                              : Theme.of(context).colorScheme.surfaceContainer,
-                          borderRadius: BorderRadius.circular(8),
-                          child: InkWell(
-                            onTap: state.isCompleted
-                                ? null
-                                : () => controller.selectNumber(number),
-                            borderRadius: BorderRadius.circular(8),
-                            child: Center(
-                              child: Text(
-                                '$number',
-                                style: Theme.of(context).textTheme.titleLarge,
+                            return Material(
+                              color: isCorrect
+                                  ? Colors.green
+                                  : isWrong
+                                  ? Colors.red
+                                  : Theme.of(
+                                      context,
+                                    ).colorScheme.surfaceContainer,
+                              borderRadius: BorderRadius.circular(8),
+                              child: InkWell(
+                                onTap: state.isCompleted
+                                    ? null
+                                    : () => controller.selectNumber(number),
+                                borderRadius: BorderRadius.circular(8),
+                                child: Align(
+                                  alignment: state.showCenterDot && isCenterCell
+                                      ? const Alignment(0, 0.55)
+                                      : Alignment.center,
+                                  child: Text(
+                                    '$number',
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.titleLarge,
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                        if (state.showCenterDot)
+                          IgnorePointer(
+                            child: Container(
+                              width: 7,
+                              height: 7,
+                              decoration: const BoxDecoration(
+                                color: Colors.black,
+                                shape: BoxShape.circle,
                               ),
                             ),
                           ),
-                        );
-                      },
+                      ],
                     ),
                   ),
                 ),
