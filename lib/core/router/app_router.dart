@@ -8,6 +8,7 @@ import '../../features/diary/ui/diary_main_screen.dart';
 import '../../features/game1/ui/game1_screen.dart';
 import '../../features/game2/ui/game2_menu_screen.dart';
 import '../../features/game2/ui/game2_play_screen.dart';
+import '../../features/game_schulte/ui/schulte_screen.dart';
 import '../../features/analytics/ui/analytics_screen.dart';
 import '../../features/authors/ui/authors_screen.dart';
 
@@ -28,6 +29,7 @@ GoRouter appRouter({required bool hasKeepers}) {
       GoRoute(path: '/game1', builder: (_, __) => const Game1Screen()),
       GoRoute(path: '/game2', builder: (_, __) => const Game2MenuScreen()),
       GoRoute(path: '/game2/play', builder: (_, __) => const Game2PlayScreen()),
+      GoRoute(path: '/game_schulte', builder: (_, __) => const SchulteScreen()),
       GoRoute(path: '/authors', builder: (_, __) => const AuthorsScreen()),
     ],
   );
