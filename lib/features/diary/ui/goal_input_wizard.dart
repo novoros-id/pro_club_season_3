@@ -22,6 +22,7 @@ class GoalInputWizard extends ConsumerStatefulWidget {
 }
 
 class _GoalInputWizardState extends ConsumerState<GoalInputWizard> {
+  final GlobalKey _rinkContainerKey = GlobalKey(); // Ключ для контейнера с полем
   int _currentStep = 0;
   int _selectedGoalTypeId = 1;
   double? _toZoneX;
@@ -110,7 +111,17 @@ class _GoalInputWizardState extends ConsumerState<GoalInputWizard> {
   }
 
   // ✅ МЕТОД РАСЧЕТА ЗОНЫ (теперь принимает размеры контейнера)
-  String? _calculateZone(double normalizedX, double normalizedY, double width, double height, double centerX, double centerY) {
+  // ✅ ОБНОВЛЕННЫЙ МЕТОД: Принимает радиусы явно
+  String? _calculateZone(
+      double normalizedX,
+      double normalizedY,
+      double width,
+      double height,
+      double centerX,
+      double centerY,
+      double maxRadius,   // ✅ Добавили параметр
+      double innerRadius, // ✅ Добавили параметр
+      ) {
     double px = normalizedX * width;
     double py = normalizedY * height;
 
@@ -118,9 +129,7 @@ class _GoalInputWizardState extends ConsumerState<GoalInputWizard> {
     double dy = py - centerY;
     double dist = math.sqrt(dx * dx + dy * dy);
 
-    double maxRadius = width * 0.35;
-    double innerRadius = width * 0.175;
-
+    // ✅ Используем переданные радиусы, а не хардкод
     if (dist > maxRadius) return null;
 
     String ring = (dist < innerRadius) ? '2' : '1';
@@ -268,22 +277,23 @@ class _GoalInputWizardState extends ConsumerState<GoalInputWizard> {
   }
 
   // ШАГ 2: Куда забит гол
+  // ШАГ 2: Куда забит гол
   Widget _buildToZoneStep() {
     final String goalieImage = widget.hand == 'left'
         ? 'assets/images/goalie_l.png'
         : 'assets/images/goalie_r.png';
 
-    // Динамический размер контейнера
+    // Динамический размер контейнера (растягиваем на ширину экрана)
     final double containerWidth = MediaQuery.of(context).size.width - 32;
     final double containerHeight = containerWidth * aspectRatio;
 
     // 🎯 НАСТРОЙКА ЦЕНТРА ЗОН
     final double centerX = containerWidth / 2;
-    // ✅ СМЕЩЕНИЕ ВНИЗ: 0.12 = 12% от высоты вниз от точной середины.
-    // Меняй это число: 0.05 (чуть ниже), 0.20 (сильно ниже), или добавь пиксели: + 15.0
+    // Сдвиг центра вниз (подбирай это число, если сетка не совпадает с картинкой)
+    // 0.085 означает сдвиг на 8.5% высоты вниз от середины
     final double centerY = (containerHeight / 2) + (containerHeight * 0.085);
 
-    // Радиусы пропорциональны ширине
+    // Радиусы пропорциональны ширине (должны совпадать с теми, что в Painter!)
     final double outerRadius = containerWidth * 0.51;
     final double innerRadius = containerWidth * 0.35;
 
@@ -311,13 +321,17 @@ class _GoalInputWizardState extends ConsumerState<GoalInputWizard> {
         Expanded(
           child: GestureDetector(
             onTapDown: (details) {
+              // Получаем реальные размеры и позицию контейнера через GlobalKey
               final RenderBox? box = _imageContainerKey.currentContext?.findRenderObject() as RenderBox?;
               if (box == null) return;
 
               final Offset containerOffset = box.localToGlobal(Offset.zero);
+
+              // Координаты нажатия относительно левого верхнего угла контейнера
               final double relativeX = details.globalPosition.dx - containerOffset.dx;
               final double relativeY = details.globalPosition.dy - containerOffset.dy;
 
+              // Нормализуем координаты (от 0.0 до 1.0)
               final double normalizedX = relativeX / box.size.width;
               final double normalizedY = relativeY / box.size.height;
 
@@ -325,15 +339,25 @@ class _GoalInputWizardState extends ConsumerState<GoalInputWizard> {
                 setState(() {
                   _toZoneX = normalizedX;
                   _toZoneY = normalizedY;
-                  // ✅ Передаём вычисленные centerX и centerY
-                  _currentZone = _calculateZone(normalizedX, normalizedY, box.size.width, box.size.height, centerX, centerY);
+
+                  // ✅ ВАЖНО: Передаем вычисленные радиусы в метод расчета!
+                  _currentZone = _calculateZone(
+                    normalizedX,
+                    normalizedY,
+                    box.size.width,
+                    box.size.height,
+                    centerX,
+                    centerY,
+                    outerRadius,   // Передаем внешний радиус
+                    innerRadius,   // Передаем внутренний радиус
+                  );
                 });
               }
             },
             child: Align(
               alignment: Alignment.topCenter,
               child: Container(
-                key: _imageContainerKey,
+                key: _imageContainerKey, // Ключ для точных координат
                 width: containerWidth,
                 height: containerHeight,
                 margin: const EdgeInsets.only(top: 10),
@@ -345,7 +369,7 @@ class _GoalInputWizardState extends ConsumerState<GoalInputWizard> {
                       child: Image.asset(goalieImage, fit: BoxFit.contain, alignment: Alignment.bottomCenter),
                     ),
 
-                    // ✅ ОТЛАДОЧНАЯ СЕТКА (с новым центром)
+                    // ✅ ОТЛАДОЧНАЯ СЕТКА (использует те же centerX, centerY и радиусы)
                     if (_showDebugGrid)
                       Positioned.fill(
                         child: CustomPaint(
@@ -397,29 +421,41 @@ class _GoalInputWizardState extends ConsumerState<GoalInputWizard> {
   final GlobalKey _imageContainerKey = GlobalKey();
   String? _currentZone;
 
-  // ШАГ 3: Откуда бросок (аналогично растягиваем)
   Widget _buildFromZoneStep() {
-    // Те же динамические размеры
+    // Динамический размер контейнера под поле
     final double containerWidth = MediaQuery.of(context).size.width - 32;
-    final double containerHeight = containerWidth * aspectRatio;
+    // Пропорции картинки pole.png (2617x2094)
+    final double containerHeight = containerWidth * (2094 / 2617);
 
     return Column(
       children: [
         const Padding(
           padding: EdgeInsets.all(16),
-          child: Text('Отметь откуда был бросок\n(нажми на площадку)',
-              style: TextStyle(fontFamily: 'Unbounded', fontSize: 14, fontWeight: FontWeight.w600, color: primaryText), textAlign: TextAlign.center),
+          child: Text(
+            'Отметь откуда был бросок\n(нажми на площадку)',
+            style: TextStyle(
+              fontFamily: 'Unbounded',
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: primaryText,
+            ),
+            textAlign: TextAlign.center,
+          ),
         ),
         Expanded(
           child: GestureDetector(
             onTapDown: (details) {
-              final RenderBox? box = _imageContainerKey.currentContext?.findRenderObject() as RenderBox?;
+              // Получаем координаты относительно контейнера с полем
+              final RenderBox? box = _rinkContainerKey.currentContext?.findRenderObject() as RenderBox?;
               if (box == null) return;
+
               final Offset containerOffset = box.localToGlobal(Offset.zero);
               final double relativeX = details.globalPosition.dx - containerOffset.dx;
               final double relativeY = details.globalPosition.dy - containerOffset.dy;
+
               final double normalizedX = relativeX / box.size.width;
               final double normalizedY = relativeY / box.size.height;
+
               if (normalizedX >= 0 && normalizedX <= 1 && normalizedY >= 0 && normalizedY <= 1) {
                 setState(() {
                   _fromZoneX = normalizedX;
@@ -430,32 +466,51 @@ class _GoalInputWizardState extends ConsumerState<GoalInputWizard> {
             child: Align(
               alignment: Alignment.topCenter,
               child: Container(
-                key: _imageContainerKey,
+                key: _rinkContainerKey, // Привязываем ключ
                 width: containerWidth,
                 height: containerHeight,
                 margin: const EdgeInsets.only(top: 10),
-                decoration: BoxDecoration(color: inputBg, borderRadius: BorderRadius.circular(borderRadius), border: Border.all(color: Colors.grey.shade300)),
+                decoration: BoxDecoration(
+                  color: inputBg,
+                  borderRadius: BorderRadius.circular(borderRadius),
+                  border: Border.all(color: Colors.grey.shade300),
+                ),
                 child: Stack(
                   clipBehavior: Clip.none,
                   children: [
-                    Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.sports_hockey, size: 100, color: Colors.grey.shade300),
-                          const SizedBox(height: 16),
-                          Text('Площадка', style: TextStyle(color: Colors.grey.shade400, fontFamily: 'Lato')),
-                        ],
+                    // Картинка поля
+                    Positioned.fill(
+                      child: Image.asset(
+                        'assets/images/pole.png',
+                        fit: BoxFit.contain,
+                        alignment: Alignment.center,
                       ),
                     ),
+
+                    // Маркер броска (синяя точка)
                     if (_fromZoneX != null && _fromZoneY != null)
                       Positioned(
                         left: _fromZoneX! * containerWidth - 12,
                         top: _fromZoneY! * containerHeight - 12,
                         child: Container(
-                          width: 24, height: 24,
-                          decoration: const BoxDecoration(color: Color(0xFF1E88E5), shape: BoxShape.circle, boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(0, 2))]),
-                          child: const Icon(Icons.location_on, color: Colors.white, size: 16),
+                          width: 24,
+                          height: 24,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFF1E88E5), // Синий цвет
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black26,
+                                blurRadius: 4,
+                                offset: Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: const Icon(
+                            Icons.location_on,
+                            color: Colors.white,
+                            size: 16,
+                          ),
                         ),
                       ),
                   ],
