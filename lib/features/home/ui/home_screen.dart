@@ -120,7 +120,7 @@ class HomeScreen extends ConsumerWidget {
                         ),
                         _StandardButton(
                           title: l10n.schulteTableTitle,
-                          onPressed: () => context.push('/game1'),
+                          onPressed: () => context.push('/game_schulte'),
                         ),
                       ],
                     ),
