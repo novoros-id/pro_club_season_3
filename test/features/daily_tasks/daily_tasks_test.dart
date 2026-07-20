@@ -1,10 +1,16 @@
 import 'package:drift/native.dart';
 import 'package:drift/drift.dart' show Value;
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
 import 'package:goalkeeper_trainer/core/database/app_database.dart';
+import 'package:goalkeeper_trainer/core/database/database_provider.dart';
 import 'package:goalkeeper_trainer/features/daily_tasks/data/daily_tasks_data.dart';
 import 'package:goalkeeper_trainer/features/daily_tasks/logic/daily_task_date.dart';
+import 'package:goalkeeper_trainer/features/daily_tasks/ui/daily_task_edit_screen.dart';
+import 'package:goalkeeper_trainer/l10n/app_localizations.dart';
 
 void main() {
   late AppDatabase db;
@@ -120,7 +126,137 @@ void main() {
     expect(stats.total, 2);
     expect(stats.completed, 1);
     expect(stats.pending, 1);
-    expect(stats.lastSevenDays, hasLength(7));
+    expect(stats.recentDays, hasLength(1));
+    expect(stats.recentDays.single.totalCount, 2);
+    expect(stats.recentDays.single.completedCount, 1);
+  });
+
+  test('returns no day statistics when there are no completions', () async {
+    final keeper = await addKeeper();
+    await data.createTask(
+      DailyTasksCompanion.insert(goalkeeperId: keeper, title: 'Без отметки'),
+    );
+
+    final stats = await data.stats(keeper, DateTime.now());
+    expect(stats.recentDays, isEmpty);
+  });
+
+  test(
+    'skips days without completions and returns at most three recent days',
+    () async {
+      final keeper = await addKeeper();
+      final today = normalizeOccurrenceDate(DateTime.now());
+      final taskId = await data.createTask(
+        DailyTasksCompanion.insert(
+          goalkeeperId: keeper,
+          title: 'История',
+          createdAt: Value(today.subtract(const Duration(days: 6))),
+        ),
+      );
+      for (final offset in [6, 4, 2, 0]) {
+        await data.complete(taskId, today.subtract(Duration(days: offset)));
+      }
+
+      final stats = await data.stats(keeper, today);
+      expect(stats.recentDays, hasLength(3));
+      expect(stats.recentDays.map((day) => day.date), [
+        today.subtract(const Duration(days: 4)),
+        today.subtract(const Duration(days: 2)),
+        today,
+      ]);
+    },
+  );
+
+  test('task created today is not counted in yesterday total', () async {
+    final keeper = await addKeeper();
+    final today = normalizeOccurrenceDate(DateTime.now());
+    final oldTask = await data.createTask(
+      DailyTasksCompanion.insert(
+        goalkeeperId: keeper,
+        title: 'Старая',
+        createdAt: Value(today.subtract(const Duration(days: 2))),
+      ),
+    );
+    await data.createTask(
+      DailyTasksCompanion.insert(
+        goalkeeperId: keeper,
+        title: 'Новая',
+        createdAt: Value(today.add(const Duration(hours: 1))),
+      ),
+    );
+    await data.complete(oldTask, today.subtract(const Duration(days: 1)));
+
+    final stats = await data.stats(keeper, today);
+    expect(stats.recentDays.single.totalCount, 1);
+  });
+
+  test(
+    'daily totals differ by task lifecycle and completions stay date-specific',
+    () async {
+      final keeper = await addKeeper();
+      final today = normalizeOccurrenceDate(DateTime.now());
+      final first = await data.createTask(
+        DailyTasksCompanion.insert(
+          goalkeeperId: keeper,
+          title: 'Первая',
+          createdAt: Value(today.subtract(const Duration(days: 2))),
+        ),
+      );
+      final second = await data.createTask(
+        DailyTasksCompanion.insert(
+          goalkeeperId: keeper,
+          title: 'Вторая',
+          createdAt: Value(today),
+        ),
+      );
+      await data.complete(first, today.subtract(const Duration(days: 1)));
+      await data.complete(second, today);
+
+      final stats = await data.stats(keeper, today);
+      expect(stats.recentDays.map((day) => day.totalCount), [1, 2]);
+      expect(stats.recentDays.map((day) => day.completedCount), [1, 1]);
+    },
+  );
+
+  testWidgets('description input saves only after Save is pressed', (
+    tester,
+  ) async {
+    final keeper = await addKeeper();
+    final taskId = await data.createTask(
+      DailyTasksCompanion.insert(goalkeeperId: keeper, title: 'Задача'),
+    );
+    final task = (await db.select(db.dailyTasks).get()).single;
+    final router = GoRouter(
+      routes: [
+        GoRoute(
+          path: '/',
+          builder: (_, _) => DailyTaskEditScreen(task: task),
+        ),
+      ],
+    );
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [databaseProvider.overrideWithValue(db)],
+        child: MaterialApp.router(
+          routerConfig: router,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    const description = 'Длинное описание без сохранения при вводе';
+    await tester.enterText(find.byType(TextFormField).at(1), description);
+    await tester.pump();
+    expect((await db.select(db.dailyTasks).get()).single.description, isNull);
+
+    await tester.tap(find.text('Save'));
+    await tester.pumpAndSettle();
+    final updated = (await db.select(db.dailyTasks).get()).single;
+    expect(updated.id, taskId);
+    expect(updated.goalkeeperId, keeper);
+    expect(updated.description, description);
   });
 
   test('migrates version 4 without losing goalkeeper data', () async {

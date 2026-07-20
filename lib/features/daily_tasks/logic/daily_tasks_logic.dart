@@ -19,11 +19,7 @@ class DailyTasksState {
     this.goalkeeperId,
     required this.date,
     this.tasks = const [],
-    this.stats = const DailyTaskStats(
-      total: 0,
-      completed: 0,
-      lastSevenDays: [],
-    ),
+    this.stats = const DailyTaskStats(total: 0, completed: 0, recentDays: []),
     this.isLoading = false,
     this.error,
   });
@@ -73,11 +69,7 @@ class DailyTasksController extends Notifier<DailyTasksState> {
         state = state.copyWith(
           clearGoalkeeper: true,
           tasks: [],
-          stats: const DailyTaskStats(
-            total: 0,
-            completed: 0,
-            lastSevenDays: [],
-          ),
+          stats: const DailyTaskStats(total: 0, completed: 0, recentDays: []),
           isLoading: false,
         );
         return;
@@ -106,7 +98,11 @@ class DailyTasksController extends Notifier<DailyTasksState> {
     await _load();
   }
 
-  Future<void> createTask({required String title, String? description}) async {
+  Future<void> createTask({
+    required String title,
+    String? description,
+    bool enabled = true,
+  }) async {
     final id = state.goalkeeperId;
     if (id == null) return;
     await _data.createTask(
@@ -114,6 +110,7 @@ class DailyTasksController extends Notifier<DailyTasksState> {
         goalkeeperId: id,
         title: title,
         description: Value(description),
+        isEnabled: Value(enabled),
       ),
     );
     await _load();
@@ -123,8 +120,10 @@ class DailyTasksController extends Notifier<DailyTasksState> {
     int taskId, {
     required String title,
     String? description,
+    bool? enabled,
   }) async {
     await _data.updateTask(taskId, title: title, description: description);
+    if (enabled != null) await _data.setEnabled(taskId, enabled);
     await _load();
   }
 

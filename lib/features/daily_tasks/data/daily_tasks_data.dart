@@ -95,38 +95,60 @@ class DailyTasksData {
   }
 
   Future<DailyTaskStats> stats(int goalkeeperId, DateTime date) async {
-    final active =
-        await (db.select(db.dailyTasks)..where(
-              (t) =>
-                  t.goalkeeperId.equals(goalkeeperId) &
-                  t.isEnabled.equals(true) &
-                  t.deletedAt.isNull(),
-            ))
-            .get();
-    final ids = active.map((task) => task.id).toList();
-    final days = <DailyTaskDayStats>[];
+    final tasks = await (db.select(
+      db.dailyTasks,
+    )..where((t) => t.goalkeeperId.equals(goalkeeperId))).get();
+    final daysWithCompletions = <DailyTaskDayStats>[];
     final today = normalizeOccurrenceDate(date);
     for (var offset = 6; offset >= 0; offset--) {
       final day = today.subtract(Duration(days: offset));
+      final tasksForDay = tasks.where((task) {
+        final nextDay = day.add(const Duration(days: 1));
+        final existedOnDay =
+            task.createdAt.isBefore(nextDay) &&
+            (task.deletedAt == null || task.deletedAt!.isAfter(day));
+
+        // The database has no isEnabled history. For past days we therefore
+        // only use creation and deletion dates, avoiding false assumptions.
+        final isCurrentDay = day == normalizeOccurrenceDate(DateTime.now());
+        return existedOnDay && (!isCurrentDay || task.isEnabled);
+      }).toList();
+      final ids = tasksForDay.map((task) => task.id).toList();
       final completions = ids.isEmpty
           ? <DailyTaskCompletion>[]
           : await (db.select(db.dailyTaskCompletions)..where(
                   (c) => c.occurrenceDate.equals(day) & c.taskId.isIn(ids),
                 ))
                 .get();
-      days.add(
+      if (completions.isEmpty) continue;
+      daysWithCompletions.add(
         DailyTaskDayStats(
           date: day,
-          total: active.length,
-          completed: completions.length,
+          totalCount: tasksForDay.length,
+          completedCount: completions.length,
         ),
       );
     }
-    final current = days.last;
+    final currentTasks = tasks.where(
+      (task) =>
+          task.createdAt.isBefore(today.add(const Duration(days: 1))) &&
+          task.isEnabled &&
+          task.deletedAt == null,
+    );
+    final currentIds = currentTasks.map((task) => task.id).toList();
+    final currentCompletions = currentIds.isEmpty
+        ? <DailyTaskCompletion>[]
+        : await (db.select(db.dailyTaskCompletions)..where(
+                (c) =>
+                    c.occurrenceDate.equals(today) & c.taskId.isIn(currentIds),
+              ))
+              .get();
     return DailyTaskStats(
-      total: current.total,
-      completed: current.completed,
-      lastSevenDays: days,
+      total: currentIds.length,
+      completed: currentCompletions.length,
+      recentDays: daysWithCompletions.length <= 3
+          ? daysWithCompletions
+          : daysWithCompletions.sublist(daysWithCompletions.length - 3),
     );
   }
 }

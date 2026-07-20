@@ -75,5 +75,70 @@ class AppLocalizationsEn extends AppLocalizations {
   String get save => 'Save';
 
   @override
+  String get cancel => 'Cancel';
+
+  @override
   String get back => 'Back';
+
+  @override
+  String get dailyTasksTitle => 'Daily Tasks';
+
+  @override
+  String get dailyTasksAdd => 'Add task';
+
+  @override
+  String get dailyTasksEdit => 'Edit task';
+
+  @override
+  String get dailyTasksTaskTitle => 'Task title';
+
+  @override
+  String get dailyTasksDescription => 'Description';
+
+  @override
+  String get dailyTasksActive => 'Active';
+
+  @override
+  String get delete => 'Delete';
+
+  @override
+  String get dailyTasksDelete => 'Delete task';
+
+  @override
+  String get dailyTasksDeleteConfirmation => 'Delete this task?';
+
+  @override
+  String get dailyTasksEmpty => 'No daily tasks yet. Add your first task.';
+
+  @override
+  String get dailyTasksNoGoalkeeper =>
+      'Select a goalkeeper to view daily tasks.';
+
+  @override
+  String get dailyTasksLoadError => 'Could not load daily tasks.';
+
+  @override
+  String get dailyTasksSaveError => 'Could not save the task.';
+
+  @override
+  String get dailyTasksTitleRequired => 'Enter a task title.';
+
+  @override
+  String get dailyTasksStatistics => 'Statistics';
+
+  @override
+  String get dailyTasksCompletedToday => 'Completed today';
+
+  @override
+  String get dailyTasksActiveTotal => 'Active tasks';
+
+  @override
+  String get dailyTasksCompletionPercent => 'Completed today';
+
+  @override
+  String get dailyTasksLastSevenDays => 'Recent completed days';
+
+  @override
+  String get dailyTasksNoCompletedStatistics =>
+      'No completed task statistics yet';
 }

@@ -51,7 +51,9 @@ class HomeScreen extends ConsumerWidget {
                         end: Alignment.bottomCenter,
                         colors: [
                           Colors.transparent,
-                          Colors.black.withValues(alpha: 0.4), // Чуть светлее, так как текста нет
+                          Colors.black.withValues(
+                            alpha: 0.4,
+                          ), // Чуть светлее, так как текста нет
                         ],
                       ),
                     ),
@@ -64,7 +66,10 @@ class HomeScreen extends ConsumerWidget {
             // --- 2. Основной контент (Скроллящийся) ---
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 24,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -83,11 +88,7 @@ class HomeScreen extends ConsumerWidget {
                           ),
                         ),
                         const SizedBox(height: 4),
-                        Container(
-                          width: 60,
-                          height: 6,
-                          color: accentGreen,
-                        ),
+                        Container(width: 60, height: 6, color: accentGreen),
                       ],
                     ),
 
@@ -122,6 +123,10 @@ class HomeScreen extends ConsumerWidget {
                           title: l10n.schulteTableTitle,
                           onPressed: () => context.push('/game_schulte'),
                         ),
+                        _StandardButton(
+                          title: l10n.dailyTasksTitle,
+                          onPressed: () => context.push('/daily-tasks'),
+                        ),
                       ],
                     ),
                   ],
@@ -148,10 +153,7 @@ class _StandardButton extends StatelessWidget {
   final String title;
   final VoidCallback onPressed;
 
-  const _StandardButton({
-    required this.title,
-    required this.onPressed,
-  });
+  const _StandardButton({required this.title, required this.onPressed});
 
   @override
   Widget build(BuildContext context) {

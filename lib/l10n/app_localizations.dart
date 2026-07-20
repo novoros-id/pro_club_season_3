@@ -230,11 +230,137 @@ abstract class AppLocalizations {
   /// **'Save'**
   String get save;
 
+  /// No description provided for @cancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get cancel;
+
   /// No description provided for @back.
   ///
   /// In en, this message translates to:
   /// **'Back'**
   String get back;
+
+  /// No description provided for @dailyTasksTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily Tasks'**
+  String get dailyTasksTitle;
+
+  /// No description provided for @dailyTasksAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add task'**
+  String get dailyTasksAdd;
+
+  /// No description provided for @dailyTasksEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit task'**
+  String get dailyTasksEdit;
+
+  /// No description provided for @dailyTasksTaskTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Task title'**
+  String get dailyTasksTaskTitle;
+
+  /// No description provided for @dailyTasksDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get dailyTasksDescription;
+
+  /// No description provided for @dailyTasksActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get dailyTasksActive;
+
+  /// No description provided for @delete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get delete;
+
+  /// No description provided for @dailyTasksDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete task'**
+  String get dailyTasksDelete;
+
+  /// No description provided for @dailyTasksDeleteConfirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this task?'**
+  String get dailyTasksDeleteConfirmation;
+
+  /// No description provided for @dailyTasksEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No daily tasks yet. Add your first task.'**
+  String get dailyTasksEmpty;
+
+  /// No description provided for @dailyTasksNoGoalkeeper.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a goalkeeper to view daily tasks.'**
+  String get dailyTasksNoGoalkeeper;
+
+  /// No description provided for @dailyTasksLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load daily tasks.'**
+  String get dailyTasksLoadError;
+
+  /// No description provided for @dailyTasksSaveError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save the task.'**
+  String get dailyTasksSaveError;
+
+  /// No description provided for @dailyTasksTitleRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a task title.'**
+  String get dailyTasksTitleRequired;
+
+  /// No description provided for @dailyTasksStatistics.
+  ///
+  /// In en, this message translates to:
+  /// **'Statistics'**
+  String get dailyTasksStatistics;
+
+  /// No description provided for @dailyTasksCompletedToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed today'**
+  String get dailyTasksCompletedToday;
+
+  /// No description provided for @dailyTasksActiveTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Active tasks'**
+  String get dailyTasksActiveTotal;
+
+  /// No description provided for @dailyTasksCompletionPercent.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed today'**
+  String get dailyTasksCompletionPercent;
+
+  /// No description provided for @dailyTasksLastSevenDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent completed days'**
+  String get dailyTasksLastSevenDays;
+
+  /// No description provided for @dailyTasksNoCompletedStatistics.
+  ///
+  /// In en, this message translates to:
+  /// **'No completed task statistics yet'**
+  String get dailyTasksNoCompletedStatistics;
 }
 
 class _AppLocalizationsDelegate
