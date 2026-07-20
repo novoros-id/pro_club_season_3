@@ -1,0 +1,8 @@
+[mcp_servers.serena]
+startup_timeout_sec = 30
+command = "C:\\Users\\Admin\\.local\\bin\\serena.exe"
+args = [
+  "start-mcp-server",
+  "--project-from-cwd",
+  "--context=codex"
+]
