@@ -10,6 +10,7 @@ import 'package:goalkeeper_trainer/core/database/database_provider.dart';
 import 'package:goalkeeper_trainer/features/daily_tasks/data/daily_tasks_data.dart';
 import 'package:goalkeeper_trainer/features/daily_tasks/logic/daily_task_date.dart';
 import 'package:goalkeeper_trainer/features/daily_tasks/ui/daily_task_edit_screen.dart';
+import 'package:goalkeeper_trainer/features/daily_tasks/ui/daily_tasks_screen.dart';
 import 'package:goalkeeper_trainer/l10n/app_localizations.dart';
 
 void main() {
@@ -257,6 +258,71 @@ void main() {
     expect(updated.id, taskId);
     expect(updated.goalkeeperId, keeper);
     expect(updated.description, description);
+  });
+
+  testWidgets('edit form fits a small viewport with the keyboard open', (
+    tester,
+  ) async {
+    final keeper = await addKeeper();
+    final taskId = await data.createTask(
+      DailyTasksCompanion.insert(
+        goalkeeperId: keeper,
+        title: 'Очень длинное название задачи для маленького экрана',
+        description: Value('Очень длинное описание задачи ' * 8),
+      ),
+    );
+    final task = (await db.select(db.dailyTasks).get()).single;
+    expect(task.id, taskId);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [databaseProvider.overrideWithValue(db)],
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: MediaQuery(
+            data: const MediaQueryData(size: Size(320, 568)),
+            child: DailyTaskEditScreen(task: task),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.showKeyboard(find.byType(TextFormField).at(1));
+    await tester.pump();
+
+    expect(find.text('Save'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('task list renders without overflow', (tester) async {
+    final keeper = await addKeeper();
+    await data.createTask(
+      DailyTasksCompanion.insert(
+        goalkeeperId: keeper,
+        title: 'Задача с длинным названием для проверки карточки',
+        description: Value('Описание задачи'),
+      ),
+    );
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [databaseProvider.overrideWithValue(db)],
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const DailyTasksScreen(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('Задача с длинным названием для проверки карточки'),
+      findsOneWidget,
+    );
+    expect(find.text('Описание задачи'), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 
   test('migrates version 4 without losing goalkeeper data', () async {

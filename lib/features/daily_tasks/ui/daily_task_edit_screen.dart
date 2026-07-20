@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/database/app_database.dart';
 import '../../../l10n/app_localizations.dart';
 import '../logic/daily_tasks_logic.dart';
+import 'daily_tasks_styles.dart';
 
 class DailyTaskEditScreen extends ConsumerStatefulWidget {
   final DailyTask? task;
@@ -75,10 +76,18 @@ class _DailyTaskEditScreenState extends ConsumerState<DailyTaskEditScreen> {
             actions: [
               TextButton(
                 onPressed: () => context.pop(false),
+                style: TextButton.styleFrom(
+                  foregroundColor: DailyTasksStyles.dark,
+                  textStyle: const TextStyle(
+                    fontFamily: 'Unbounded',
+                    fontSize: 12,
+                  ),
+                ),
                 child: Text(l10n.cancel),
               ),
               FilledButton(
                 onPressed: () => context.pop(true),
+                style: DailyTasksStyles.primaryButton,
                 child: Text(l10n.delete),
               ),
             ],
@@ -107,7 +116,11 @@ class _DailyTaskEditScreenState extends ConsumerState<DailyTaskEditScreen> {
     return Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
+        backgroundColor: Colors.white,
+        foregroundColor: DailyTasksStyles.dark,
+        elevation: 0,
         title: Text(editing ? l10n.dailyTasksEdit : l10n.dailyTasksAdd),
+        titleTextStyle: DailyTasksStyles.screenTitle,
       ),
       body: SafeArea(
         child: Form(
@@ -121,7 +134,7 @@ class _DailyTaskEditScreenState extends ConsumerState<DailyTaskEditScreen> {
                 textInputAction: TextInputAction.next,
                 autocorrect: false,
                 enableSuggestions: false,
-                decoration: InputDecoration(
+                decoration: DailyTasksStyles.inputDecoration.copyWith(
                   labelText: l10n.dailyTasksTaskTitle,
                 ),
                 validator: (value) => value == null || value.trim().isEmpty
@@ -138,41 +151,61 @@ class _DailyTaskEditScreenState extends ConsumerState<DailyTaskEditScreen> {
                 enableSuggestions: false,
                 minLines: 3,
                 maxLines: 6,
-                decoration: InputDecoration(
+                decoration: DailyTasksStyles.inputDecoration.copyWith(
                   labelText: l10n.dailyTasksDescription,
                 ),
                 onSaved: (value) => _description = value ?? '',
               ),
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
-                title: Text(l10n.dailyTasksActive),
+                title: Text(
+                  l10n.dailyTasksActive,
+                  style: DailyTasksStyles.body,
+                ),
                 value: _enabled,
+                activeThumbColor: DailyTasksStyles.dark,
+                activeTrackColor: DailyTasksStyles.accent,
+                inactiveThumbColor: DailyTasksStyles.secondaryText,
+                inactiveTrackColor: DailyTasksStyles.fieldBackground,
                 onChanged: (value) => setState(() => _enabled = value),
               ),
               const SizedBox(height: 16),
               FilledButton(
                 onPressed: _saving ? null : _save,
+                style: DailyTasksStyles.primaryButton,
                 child: _saving
                     ? const SizedBox(
                         width: 18,
                         height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: DailyTasksStyles.accent,
+                        ),
                       )
                     : Text(l10n.save),
               ),
               TextButton(
                 onPressed: _saving ? null : () => context.pop(),
+                style: TextButton.styleFrom(
+                  foregroundColor: DailyTasksStyles.dark,
+                  textStyle: const TextStyle(
+                    fontFamily: 'Unbounded',
+                    fontSize: 12,
+                  ),
+                ),
                 child: Text(l10n.cancel),
               ),
               if (editing)
                 TextButton(
                   onPressed: _saving ? null : _delete,
-                  child: Text(
-                    l10n.delete,
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.error,
+                  style: TextButton.styleFrom(
+                    foregroundColor: Colors.redAccent,
+                    textStyle: const TextStyle(
+                      fontFamily: 'Unbounded',
+                      fontSize: 12,
                     ),
                   ),
+                  child: Text(l10n.delete),
                 ),
             ],
           ),
