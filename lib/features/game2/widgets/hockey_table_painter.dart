@@ -11,19 +11,21 @@ class HockeyTablePainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final Paint paint = Paint();
 
-    // Фон стола
-    paint.color = Colors.lightBlue[50]!;
+    // 1. Фон стола (Светло-серый, как inputBg в приложении)
+    paint.color = const Color(0xFFF2F2F7);
     canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), paint);
 
-    // Границы стола
-    paint.color = Colors.blue[900]!;
+    // 2. Границы стола (Черные, тонкие)
+    paint.color = const Color(0xFF121212);
     paint.style = PaintingStyle.stroke;
-    paint.strokeWidth = 8;
-    canvas.drawRect(Rect.fromLTWH(4, 4, size.width - 8, size.height - 8), paint);
+    paint.strokeWidth = 4;
+    canvas.drawRect(Rect.fromLTWH(2, 2, size.width - 4, size.height - 4), paint);
+
+    // 3. Разметка (Серая, auxText)
+    paint.color = const Color(0xFF9B9EA1);
+    paint.strokeWidth = 2;
 
     // Центральная линия
-    paint.color = Colors.red[400]!;
-    paint.strokeWidth = 3;
     canvas.drawLine(
       Offset(0, size.height / 2),
       Offset(size.width, size.height / 2),
@@ -37,51 +39,42 @@ class HockeyTablePainter extends CustomPainter {
       paint,
     );
 
-    // Точка в центре
+    // Точка в центре (Лаймовая)
     paint.style = PaintingStyle.fill;
+    paint.color = const Color(0xFFBBF246);
     canvas.drawCircle(
       Offset(size.width / 2, size.height / 2),
-      8,
+      6,
       paint,
     );
 
-    // Зоны ворот
+    // 4. Зоны ворот (Черные прямоугольники)
     paint.style = PaintingStyle.stroke;
+    paint.color = const Color(0xFF121212);
+    paint.strokeWidth = 3;
+
     final goalWidth = 120.0;
     final goalDepth = 10.0;
 
     // Верхние ворота (AI)
     canvas.drawRect(
-      Rect.fromLTWH(
-        size.width / 2 - goalWidth / 2,
-        0,
-        goalWidth,
-        goalDepth,
-      ),
+      Rect.fromLTWH(size.width / 2 - goalWidth / 2, 0, goalWidth, goalDepth),
       paint,
     );
 
     // Нижние ворота (Игрок)
     canvas.drawRect(
-      Rect.fromLTWH(
-        size.width / 2 - goalWidth / 2,
-        size.height - goalDepth,
-        goalWidth,
-        goalDepth,
-      ),
+      Rect.fromLTWH(size.width / 2 - goalWidth / 2, size.height - goalDepth, goalWidth, goalDepth),
       paint,
     );
 
-    // Полукруги у ворот
+    // Полукруги у ворот (Серые)
+    paint.color = const Color(0xFF9B9EA1);
     paint.style = PaintingStyle.stroke;
+
     // Верхний полукруг
     canvas.drawArc(
-      Rect.fromLTWH(
-        size.width / 2 - 100,
-        20,
-        200,
-        100,
-      ),
+      Rect.fromLTWH(size.width / 2 - 100, 20, 200, 100),
       3.14,
       3.14,
       false,
@@ -90,57 +83,48 @@ class HockeyTablePainter extends CustomPainter {
 
     // Нижний полукруг
     canvas.drawArc(
-      Rect.fromLTWH(
-        size.width / 2 - 100,
-        size.height - 120,
-        200,
-        100,
-      ),
+      Rect.fromLTWH(size.width / 2 - 100, size.height - 120, 200, 100),
       0,
       3.14,
       false,
       paint,
     );
 
-    // Круги в углах
+    // Круги в углах (Декор)
     final cornerRadius = 40.0;
     final cornerOffset = 80.0;
-
     paint.style = PaintingStyle.stroke;
-    // Верхний левый
+
     canvas.drawCircle(Offset(cornerOffset, cornerOffset), cornerRadius, paint);
-    // Верхний правый
     canvas.drawCircle(Offset(size.width - cornerOffset, cornerOffset), cornerRadius, paint);
-    // Нижний левый
     canvas.drawCircle(Offset(cornerOffset, size.height - cornerOffset), cornerRadius, paint);
-    // Нижний правый
     canvas.drawCircle(Offset(size.width - cornerOffset, size.height - cornerOffset), cornerRadius, paint);
 
-    // Бита игрока (красная)
+    // 5. Бита игрока (Черная с Лаймом)
     _drawPaddle(
       canvas,
       gameState.playerPaddlePos,
-      Colors.red[600]!,
-      Colors.red[800]!,
+      const Color(0xFF121212), // Основной цвет
+      const Color(0xFFBBF246), // Акцент (кольцо)
     );
 
-    // Бита AI (синяя)
+    // 6. Бита AI (Серая с Черным)
     _drawPaddle(
       canvas,
       gameState.aiPaddlePos,
-      Colors.blue[600]!,
-      Colors.blue[800]!,
+      const Color(0xFF9B9EA1), // Основной цвет
+      const Color(0xFF121212), // Акцент
     );
 
-    // Шайба (зеленая/черная)
+    // 7. Шайба (Черная)
     _drawPuck(canvas, gameState.puckPos);
   }
 
-  void _drawPaddle(Canvas canvas, Offset position, Color mainColor, Color darkColor) {
+  void _drawPaddle(Canvas canvas, Offset position, Color mainColor, Color accentColor) {
     final Paint paint = Paint();
 
     // Тень
-    paint.color = Colors.black26;
+    paint.color = Colors.black.withOpacity(0.15);
     paint.style = PaintingStyle.fill;
     canvas.drawCircle(
       position + const Offset(3, 3),
@@ -148,24 +132,27 @@ class HockeyTablePainter extends CustomPainter {
       paint,
     );
 
-    // Основная часть
+    // Основная часть (Черная или Серая)
     paint.color = mainColor;
     canvas.drawCircle(position, Game2Controller.paddleRadius, paint);
 
-    // Внутренний круг
-    paint.color = darkColor;
-    canvas.drawCircle(position, Game2Controller.paddleRadius * 0.6, paint);
+    // Внутреннее кольцо (Акцентное)
+    paint.color = accentColor;
+    paint.style = PaintingStyle.stroke;
+    paint.strokeWidth = 4;
+    canvas.drawCircle(position, Game2Controller.paddleRadius * 0.7, paint);
 
-    // Ручка
+    // Ручка/Центр (Белая точка)
+    paint.style = PaintingStyle.fill;
     paint.color = Colors.white;
-    canvas.drawCircle(position, Game2Controller.paddleRadius * 0.3, paint);
+    canvas.drawCircle(position, Game2Controller.paddleRadius * 0.2, paint);
   }
 
   void _drawPuck(Canvas canvas, Offset position) {
     final Paint paint = Paint();
 
     // Тень
-    paint.color = Colors.black26;
+    paint.color = Colors.black.withOpacity(0.2);
     paint.style = PaintingStyle.fill;
     canvas.drawCircle(
       position + const Offset(2, 2),
@@ -173,19 +160,12 @@ class HockeyTablePainter extends CustomPainter {
       paint,
     );
 
-    // Основная шайба
-    final gradient = RadialGradient(
-      colors: [Colors.green[400]!, Colors.green[700]!],
-      center: Alignment.topLeft,
-    );
-
-    paint.shader = gradient.createShader(
-      Rect.fromCircle(center: position, radius: Game2Controller.puckRadius),
-    );
+    // Основная шайба (Черная)
+    paint.color = const Color(0xFF121212);
     canvas.drawCircle(position, Game2Controller.puckRadius, paint);
 
-    // Блик
-    paint.color = Colors.white.withOpacity(0.6);
+    // Блик (для объема)
+    paint.color = Colors.white.withOpacity(0.3);
     canvas.drawCircle(
       position - const Offset(4, 4),
       Game2Controller.puckRadius * 0.3,

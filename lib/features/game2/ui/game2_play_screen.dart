@@ -19,13 +19,17 @@ class _Game2PlayScreenState extends ConsumerState<Game2PlayScreen>
   late AnimationController _victoryController;
   bool _showVictoryDialog = false;
 
+  // 🎨 Дизайн-система
+  static const Color primaryText = Color(0xFF121212);
+  static const Color accentColor = Color(0xFFBBF246);
+  static const Color bgLight = Color(0xFFF2F2F7);
+
   @override
   void initState() {
     super.initState();
-
     _gameLoopController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 16), // ~60 FPS
+      duration: const Duration(milliseconds: 16),
     )..addListener(_updateGame);
 
     _victoryController = AnimationController(
@@ -33,7 +37,6 @@ class _Game2PlayScreenState extends ConsumerState<Game2PlayScreen>
       duration: const Duration(milliseconds: 300),
     );
 
-    // Запускаем игру через небольшую задержку
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(game2ControllerProvider.notifier).startGame();
       _gameLoopController.repeat();
@@ -49,7 +52,6 @@ class _Game2PlayScreenState extends ConsumerState<Game2PlayScreen>
 
   void _updateGame() {
     ref.read(game2ControllerProvider.notifier).updateGame();
-
     final state = ref.read(game2ControllerProvider);
     if (state.isGameOver && !_showVictoryDialog) {
       _showVictoryDialog = true;
@@ -64,25 +66,27 @@ class _Game2PlayScreenState extends ConsumerState<Game2PlayScreen>
 
   void _showEndGameDialog(GameState state) {
     final isWin = state.playerScore > state.aiScore;
-
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
+        backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Row(
           children: [
             Icon(
               isWin ? Icons.emoji_events : Icons.sentiment_dissatisfied,
-              color: isWin ? Colors.amber : Colors.grey,
+              color: isWin ? accentColor : primaryText,
               size: 40,
             ),
             const SizedBox(width: 12),
             Text(
-              isWin ? 'Победа!' : 'Игра окончена',
+              isWin ? 'ПОБЕДА!' : 'ИГРА ОКОНЧЕНА',
               style: TextStyle(
+                fontFamily: 'Unbounded',
                 fontWeight: FontWeight.bold,
-                color: isWin ? Colors.amber[700] : Colors.grey[800],
+                color: primaryText,
+                fontSize: 20,
               ),
             ),
           ],
@@ -93,22 +97,25 @@ class _Game2PlayScreenState extends ConsumerState<Game2PlayScreen>
             Text(
               'Финальный счет',
               style: TextStyle(
+                fontFamily: 'Lato',
                 fontSize: 16,
-                color: Colors.grey[600],
+                color: const Color(0xFF9B9EA1),
               ),
             ),
             const SizedBox(height: 16),
             Text(
               '${state.playerScore} : ${state.aiScore}',
               style: const TextStyle(
+                fontFamily: 'Unbounded',
                 fontSize: 48,
                 fontWeight: FontWeight.bold,
+                color: primaryText,
               ),
             ),
             const SizedBox(height: 8),
             Text(
               isWin ? '🎉 Отличная игра!' : 'Попробуйте еще раз!',
-              style: const TextStyle(fontSize: 16),
+              style: const TextStyle(fontFamily: 'Lato', fontSize: 16, color: primaryText),
             ),
           ],
         ),
@@ -118,7 +125,10 @@ class _Game2PlayScreenState extends ConsumerState<Game2PlayScreen>
               context.pop();
               context.pop();
             },
-            child: const Text('В меню'),
+            child: const Text(
+              'В МЕНЮ',
+              style: TextStyle(color: Color(0xFF9B9EA1), fontFamily: 'Unbounded'),
+            ),
           ),
           ElevatedButton(
             onPressed: () {
@@ -129,12 +139,17 @@ class _Game2PlayScreenState extends ConsumerState<Game2PlayScreen>
               ref.read(game2ControllerProvider.notifier).startGame();
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blue,
+              backgroundColor: primaryText, // Черная кнопка
+              foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(50),
               ),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             ),
-            child: const Text('Играть снова'),
+            child: const Text(
+              'ИГРАТЬ СНОВА',
+              style: TextStyle(fontFamily: 'Unbounded', fontWeight: FontWeight.w600),
+            ),
           ),
         ],
       ),
@@ -146,11 +161,19 @@ class _Game2PlayScreenState extends ConsumerState<Game2PlayScreen>
     final gameState = ref.watch(game2ControllerProvider);
 
     return Scaffold(
-      backgroundColor: Colors.blue[50],
+      backgroundColor: Colors.white, // ✅ Белый фон
       appBar: AppBar(
-        title: const Text('Аэрохоккей'),
-        backgroundColor: Colors.blue[900],
-        foregroundColor: Colors.white,
+        title: const Text(
+          'АЭРОХОККЕЙ',
+          style: TextStyle(
+            fontFamily: 'Unbounded',
+            fontWeight: FontWeight.bold,
+            color: primaryText,
+          ),
+        ),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        foregroundColor: primaryText,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
@@ -163,60 +186,47 @@ class _Game2PlayScreenState extends ConsumerState<Game2PlayScreen>
         child: Column(
           children: [
             const SizedBox(height: 16),
-
             // Счет
             ScoreBoard(
               playerScore: gameState.playerScore,
               aiScore: gameState.aiScore,
               winningScore: Game2Controller.winningScore,
             ),
-
             const SizedBox(height: 16),
-
             // Инструкции
             Text(
               'Первый до ${Game2Controller.winningScore} голов!',
               style: TextStyle(
+                fontFamily: 'Lato',
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
-                color: Colors.blue[900],
+                color: const Color(0xFF9B9EA1),
               ),
             ),
-
             const SizedBox(height: 16),
-
-            // Игровое поле
-            // Внутри build метода класса _Game2PlayScreenState
             // Игровое поле
             Expanded(
               child: Center(
                 child: FittedBox(
-                  fit: BoxFit.contain, // Идеально вписывает поле в экран, сохраняя пропорции
+                  fit: BoxFit.contain,
                   child: SizedBox(
                     width: Game2Controller.tableWidth,
                     height: Game2Controller.tableHeight,
                     child: GestureDetector(
                       onPanUpdate: (details) {
-                        // Получаем координаты относительно ЭТОГО КОНКРЕТНОГО ПОЛЯ
                         final RenderBox box = context.findRenderObject() as RenderBox;
                         final Offset localPosition = box.globalToLocal(details.globalPosition);
-
-                        // Так как FittedBox уже сделал всю работу по масштабированию визуальной части,
-                        // а размер SizedBox равен логическому (400x600),
-                        // то localPosition.dx/dy УЖЕ являются логическими координатами!
-                        // Нам НЕ нужно делить на scale.
-
                         ref
                             .read(game2ControllerProvider.notifier)
                             .updatePlayerPaddle(localPosition);
                       },
                       child: Container(
                         decoration: BoxDecoration(
-                          color: Colors.lightBlue[50]!,
+                          color: bgLight, // Светло-серый фон контейнера поля
                           borderRadius: BorderRadius.circular(16),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.2),
+                              color: Colors.black.withOpacity(0.05),
                               blurRadius: 12,
                               offset: const Offset(0, 6),
                             ),
@@ -233,7 +243,6 @@ class _Game2PlayScreenState extends ConsumerState<Game2PlayScreen>
                 ),
               ),
             ),
-
             const SizedBox(height: 16),
           ],
         ),
