@@ -1,0 +1,15 @@
+targets:
+  $default:
+    builders:
+      sqlite3_flutter_libs:
+        options:
+          android:
+            enabled: false
+          ios:
+            enabled: false
+          linux:
+            enabled: false
+          macos:
+            enabled: false
+          windows:
+            enabled: false
