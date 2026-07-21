@@ -15,16 +15,24 @@ class DailyTaskDayStats {
 }
 
 class DailyTaskStats {
-  final int total;
-  final int completed;
+  final int totalTasksToday;
+  final int completedToday;
   final List<DailyTaskDayStats> recentDays;
 
   const DailyTaskStats({
-    required this.total,
-    required this.completed,
+    required this.totalTasksToday,
+    required this.completedToday,
     required this.recentDays,
   });
 
-  int get pending => total - completed;
-  double get completionPercent => total == 0 ? 0 : completed / total * 100;
+  int get remainingActiveTasksToday => totalTasksToday - completedToday;
+  double get completionPercentToday => totalTasksToday == 0
+      ? 0
+      : completedToday / totalTasksToday * 100;
+
+  // Kept as aliases for existing consumers of the model.
+  int get total => totalTasksToday;
+  int get completed => completedToday;
+  int get pending => remainingActiveTasksToday;
+  double get completionPercent => completionPercentToday;
 }

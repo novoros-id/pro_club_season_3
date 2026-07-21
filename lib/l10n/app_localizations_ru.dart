@@ -137,6 +137,18 @@ class AppLocalizationsRu extends AppLocalizations {
   String get dailyTasksCompletionPercent => 'Процент выполнения сегодня';
 
   @override
+  String get dailyTasksCompletedTodayLabel => 'Выполнено\nсегодня';
+
+  @override
+  String get dailyTasksActiveTasksLabel => 'Активные\nзадачи';
+
+  @override
+  String get dailyTasksCompletionPercentLabel => 'Процент\nсегодня';
+
+  @override
+  String get dailyTasksRecentCompletedDays => 'Последние выполненные дни';
+
+  @override
   String get dailyTasksLastSevenDays => 'Последние выполненные дни';
 
   @override

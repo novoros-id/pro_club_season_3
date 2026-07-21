@@ -1,9 +1,12 @@
 # Data model
 
-- Drift database: `lib/core/database/app_database.dart`; `AppDatabase` is annotated with `@DriftDatabase(tables: [Goalkeepers, Matches, Goals])`.
-- `Goalkeepers`: auto-increment `id`, unique `uuid`, identity/contact fields, optional `birthDate` and `photoPath`, `isCurrent`.
-- `Matches`: auto-increment `id`, foreign key `goalkeeperId -> Goalkeepers.id`, date/opponent/score and match-performance fields, `createdAt`.
-- `Goals`: auto-increment `id`, foreign key `matchId -> Matches.id`, goal coordinates/type and `createdAt`.
-- Schema version is 4. Database file is `goalkeeper_db.sqlite`, opened through Drift `NativeDatabase.createInBackground`.
-- Current schema has no DailyTask or DailyTaskCompletion tables.
-- Source: `lib/core/database/app_database.dart`.
+- Drift schema version: 5.
+- Existing `Goalkeepers`, `Matches`, and `Goals` remain in the schema.
+- `DailyTasks`: auto-increment task id, `goalkeeperId`, title/description, recurrence type, `isEnabled`, `createdAt`, `updatedAt`, nullable `deletedAt`.
+- `DailyTaskCompletions`: `taskId`, normalized `occurrenceDate`, `completedAt`; no separate completion id.
+- Composite primary key: `(taskId, occurrenceDate)`.
+- Migration 4 -> 5 creates the two daily-task tables and preserves existing tables/data.
+- Soft delete preserves completion history.
+- Historical daily total uses task `createdAt` and `deletedAt`; enable/disable history is not stored, so past `isEnabled` state cannot be reconstructed.
+- Statistics query tasks are filtered by `goalkeeperId`; completion counts are matched only to task ids belonging to that goalkeeper.
+- Daily statistics query only `today - 2 days ... today`; older completions are excluded.

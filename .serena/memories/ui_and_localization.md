@@ -1,9 +1,7 @@
 # UI and localization
 
-- Localization source ARB files: `lib/l10n/app_en.arb` and `lib/l10n/app_ru.arb`.
-- Localization configuration: `l10n.yaml`; ARB directory `lib/l10n`, template `app_en.arb`, output `app_localizations.dart`.
-- Generated localization files exist under `lib/l10n` and `lib/l10n/generated`; they are generated artifacts and must not be edited for feature work.
-- `MaterialApp.router` uses `AppLocalizations.localizationsDelegates` and `AppLocalizations.supportedLocales`.
-- Default locale provider value is `Locale('ru')`; default theme is light; sound defaults to enabled with volume `0.8`.
-- Main font configured in `GoalkeeperApp` is `Lato`.
-- Sources: `l10n.yaml`, `lib/main.dart`, `lib/core/providers/settings_provider.dart`.
+- ARB sources: `lib/l10n/app_en.arb` and `lib/l10n/app_ru.arb`; generated Dart localization files are outputs.
+- Daily-task user-facing strings use ARB keys with RU and EN values; no new hardcoded UI strings were found in the feature.
+- Daily metrics use distinct keys for completed count, remaining/active tasks, and completion percentage; compact labels are separate keys.
+- Daily-task UI strings include create/edit/delete, validation, empty/no-goalkeeper/error states, statistics, recent completed days, and no-statistics state.
+- Keep generated localization files synchronized by `flutter gen-l10n`; do not hand-edit them.

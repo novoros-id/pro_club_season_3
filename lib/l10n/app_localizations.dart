@@ -347,8 +347,32 @@ abstract class AppLocalizations {
   /// No description provided for @dailyTasksCompletionPercent.
   ///
   /// In en, this message translates to:
-  /// **'Completed today'**
+  /// **'Completion today'**
   String get dailyTasksCompletionPercent;
+
+  /// No description provided for @dailyTasksCompletedTodayLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed\ntoday'**
+  String get dailyTasksCompletedTodayLabel;
+
+  /// No description provided for @dailyTasksActiveTasksLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Active\ntasks'**
+  String get dailyTasksActiveTasksLabel;
+
+  /// No description provided for @dailyTasksCompletionPercentLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Completion\ntoday'**
+  String get dailyTasksCompletionPercentLabel;
+
+  /// No description provided for @dailyTasksRecentCompletedDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent completed days'**
+  String get dailyTasksRecentCompletedDays;
 
   /// No description provided for @dailyTasksLastSevenDays.
   ///

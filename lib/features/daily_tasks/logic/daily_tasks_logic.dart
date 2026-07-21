@@ -19,7 +19,11 @@ class DailyTasksState {
     this.goalkeeperId,
     required this.date,
     this.tasks = const [],
-    this.stats = const DailyTaskStats(total: 0, completed: 0, recentDays: []),
+    this.stats = const DailyTaskStats(
+      totalTasksToday: 0,
+      completedToday: 0,
+      recentDays: [],
+    ),
     this.isLoading = false,
     this.error,
   });
@@ -69,7 +73,11 @@ class DailyTasksController extends Notifier<DailyTasksState> {
         state = state.copyWith(
           clearGoalkeeper: true,
           tasks: [],
-          stats: const DailyTaskStats(total: 0, completed: 0, recentDays: []),
+          stats: const DailyTaskStats(
+            totalTasksToday: 0,
+            completedToday: 0,
+            recentDays: [],
+          ),
           isLoading: false,
         );
         return;

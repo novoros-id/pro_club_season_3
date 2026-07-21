@@ -133,7 +133,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dailyTasksActiveTotal => 'Active tasks';
 
   @override
-  String get dailyTasksCompletionPercent => 'Completed today';
+  String get dailyTasksCompletionPercent => 'Completion today';
+
+  @override
+  String get dailyTasksCompletedTodayLabel => 'Completed\ntoday';
+
+  @override
+  String get dailyTasksActiveTasksLabel => 'Active\ntasks';
+
+  @override
+  String get dailyTasksCompletionPercentLabel => 'Completion\ntoday';
+
+  @override
+  String get dailyTasksRecentCompletedDays => 'Recent completed days';
 
   @override
   String get dailyTasksLastSevenDays => 'Recent completed days';

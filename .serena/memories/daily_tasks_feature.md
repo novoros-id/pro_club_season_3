@@ -1,20 +1,14 @@
 # Daily tasks feature
 
-Status: MVP specification only; no `DailyTask` or `DailyTaskCompletion` implementation exists in the current codebase.
-
-- Tasks belong to the current goalkeeper through `goalkeeperId`.
-- Do not create a separate user entity.
-- MVP includes daily tasks only.
-- One-time tasks are deferred.
-- Weekday-based repetition is deferred.
-- Completion is tied to the actual local calendar date.
-- Manual shifting of the completion date is not supported.
-- Completion after the specified time is allowed.
-- Completion after the specified time is recorded as late.
-- Notifications are implemented after the main MVP.
-- Storage is local through Drift.
-- Backend and synchronization are absent from the MVP.
-- `DailyTask` and `DailyTaskCompletion` are separate entities.
-- Do not create physical task copies for each day.
-- Preliminary completion uniqueness: `taskId + occurrenceDate`.
-- Existing-code fact checked with Serena search across `lib`: no matching symbols/tables were found.
+- MVP: local Drift daily tasks scoped by current goalkeeper; no backend/sync.
+- Structure: `lib/features/daily_tasks/{data,logic,models,ui}`.
+- Data operations: create, edit title/description, enable/disable, soft delete, complete/uncomplete.
+- Completion uses normalized local calendar date `DateTime(year, month, day)`; uniqueness is `taskId + occurrenceDate`; repeated completion preserves `completedAt`.
+- Today stats expose `completedToday`, `totalTasksToday`, `remainingActiveTasksToday`, and zero-safe `completionPercentToday`.
+- Day statistics use strictly today, yesterday, and two days ago; completions older than two days ago are excluded; days without completion are hidden; maximum is three cards.
+- All statistics are isolated by `goalkeeperId`.
+- Past-day totals use task `createdAt`/`deletedAt`; no historical `isEnabled` data exists.
+- UI uses Unbounded headings, Lato body text, dark/lime/light-gray palette, compact metric row, square day cards, horizontal scrolling, and scrollable task/edit layouts.
+- Routes: `/daily-tasks`, `/daily-tasks/new`, `/daily-tasks/edit/:id`; entry from the home menu.
+- Tests: `test/features/daily_tasks/daily_tasks_test.dart`, 20 tests.
+- MVP limits: no one-time/weekday recurrence, notifications, late/isLate model, or manual completion-date shifting.

@@ -41,7 +41,11 @@
   "dailyTasksStatistics": "Statistics",
   "dailyTasksCompletedToday": "Completed today",
   "dailyTasksActiveTotal": "Active tasks",
-  "dailyTasksCompletionPercent": "Completed today",
+  "dailyTasksCompletionPercent": "Completion today",
+  "dailyTasksCompletedTodayLabel": "Completed\ntoday",
+  "dailyTasksActiveTasksLabel": "Active\ntasks",
+  "dailyTasksCompletionPercentLabel": "Completion\ntoday",
+  "dailyTasksRecentCompletedDays": "Recent completed days",
   "dailyTasksLastSevenDays": "Recent completed days",
   "dailyTasksNoCompletedStatistics": "No completed task statistics yet"
 }

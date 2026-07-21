@@ -42,6 +42,10 @@
   "dailyTasksCompletedToday": "Выполнено сегодня",
   "dailyTasksActiveTotal": "Всего активных задач",
   "dailyTasksCompletionPercent": "Процент выполнения сегодня",
+  "dailyTasksCompletedTodayLabel": "Выполнено\nсегодня",
+  "dailyTasksActiveTasksLabel": "Активные\nзадачи",
+  "dailyTasksCompletionPercentLabel": "Процент\nсегодня",
+  "dailyTasksRecentCompletedDays": "Последние выполненные дни",
   "dailyTasksLastSevenDays": "Последние выполненные дни",
   "dailyTasksNoCompletedStatistics": "Статистики выполненных задач пока нет"
 }

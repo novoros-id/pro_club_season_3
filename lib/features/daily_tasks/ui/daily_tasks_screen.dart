@@ -179,30 +179,54 @@ class _StatsCard extends StatelessWidget {
             style: DailyTasksStyles.screenTitle.copyWith(fontSize: 16),
           ),
           const SizedBox(height: 12),
-          Wrap(
-            spacing: 18,
-            runSpacing: 8,
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _Metric(
-                label: l10n.dailyTasksCompletedToday,
-                value: '${stats.completed}',
+                label: l10n.dailyTasksCompletedTodayLabel,
+                value: '${stats.completedToday}',
               ),
               _Metric(
-                label: l10n.dailyTasksActiveTotal,
-                value: '${stats.total}',
+                label: l10n.dailyTasksActiveTasksLabel,
+                value: '${stats.remainingActiveTasksToday}',
               ),
               _Metric(
-                label: l10n.dailyTasksCompletionPercent,
-                value: '${stats.completionPercent.toStringAsFixed(0)}%',
+                label: l10n.dailyTasksCompletionPercentLabel,
+                value: '${stats.completionPercentToday.toStringAsFixed(0)}%',
               ),
             ],
           ),
           const SizedBox(height: 12),
-          Text(l10n.dailyTasksLastSevenDays, style: DailyTasksStyles.helper),
+          Text(
+            l10n.dailyTasksRecentCompletedDays,
+            style: DailyTasksStyles.helper,
+          ),
           if (stats.recentDays.isEmpty)
             Text(l10n.dailyTasksNoCompletedStatistics)
           else
-            ...stats.recentDays.map((day) => _DayStat(day: day)),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                const gap = 8.0;
+                final adaptiveWidth = (constraints.maxWidth - gap * 2) / 3;
+                final cardWidth = adaptiveWidth.clamp(64.0, 88.0).toDouble();
+                return SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: List.generate(stats.recentDays.length, (index) {
+                      return Padding(
+                        padding: EdgeInsets.only(
+                          right: index == stats.recentDays.length - 1 ? 0 : gap,
+                        ),
+                        child: _DayStat(
+                          day: stats.recentDays[index],
+                          width: cardWidth,
+                        ),
+                      );
+                    }),
+                  ),
+                );
+              },
+            ),
         ],
       ),
     ),
@@ -215,43 +239,84 @@ class _Metric extends StatelessWidget {
   const _Metric({required this.label, required this.value});
 
   @override
-  Widget build(BuildContext context) => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Text(value, style: DailyTasksStyles.screenTitle.copyWith(fontSize: 20)),
-      Text(label, style: DailyTasksStyles.helper),
-    ],
+  Widget build(BuildContext context) => Expanded(
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(value, style: DailyTasksStyles.screenTitle.copyWith(fontSize: 20)),
+        Text(
+          label,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: DailyTasksStyles.helper,
+        ),
+      ],
+    ),
   );
 }
 
 class _DayStat extends StatelessWidget {
   final DailyTaskDayStats day;
-  const _DayStat({required this.day});
+  final double width;
+  const _DayStat({required this.day, required this.width});
+
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(top: 3),
-    child: Row(
-      children: [
-        SizedBox(
-          width: 54,
-          child: Text(
-            '${day.date.day}.${day.date.month}',
-            style: DailyTasksStyles.helper,
-          ),
+    padding: const EdgeInsets.only(top: 8),
+    child: SizedBox(
+      width: width,
+      height: width,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: DailyTasksStyles.accent, width: 1.2),
         ),
-        Expanded(
-          child: LinearProgressIndicator(
-            minHeight: 5,
-            backgroundColor: Colors.white,
-            color: DailyTasksStyles.accent,
-            value: day.totalCount == 0
-                ? 0
-                : day.completedCount / day.totalCount,
-          ),
+        child: Stack(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  SizedBox(
+                    width: double.infinity,
+                    child: Text(
+                      '${day.date.day}.${day.date.month}',
+                      textAlign: TextAlign.center,
+                      style: DailyTasksStyles.screenTitle.copyWith(
+                        fontSize: (width * 0.2).clamp(14.0, 18.0),
+                        fontWeight: FontWeight.normal,
+                      ),
+                    ),
+                  ),
+                  const Spacer(),
+                  SizedBox(
+                    width: double.infinity,
+                    child: Text(
+                      '${day.completedCount}/${day.totalCount}',
+                      textAlign: TextAlign.center,
+                      style: DailyTasksStyles.screenTitle.copyWith(
+                        fontSize: (width * 0.2).clamp(14.0, 18.0),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Positioned(
+              left: 4,
+              right: 4,
+              top: width / 2,
+              child: const Divider(
+                height: 1,
+                thickness: 1,
+                color: DailyTasksStyles.accent,
+              ),
+            ),
+          ],
         ),
-        const SizedBox(width: 8),
-        Text('${day.completedCount}/${day.totalCount}'),
-      ],
+      ),
     ),
   );
 }

@@ -1,7 +1,10 @@
 # Navigation and UI
 
-- Router function: `appRouter({required bool hasKeepers})` in `lib/core/router/app_router.dart`.
-- Initial location is `/` when `hasKeepers == true`, otherwise `/onboarding`.
-- Registered routes: `/`, `/onboarding`, `/registration`, `/add-goalkeeper`, `/settings`, `/diary`, `/analytics`, `/game1`, `/game2`, `/game2/play`, `/game_schulte`, `/game_schulte/play`, `/game_schulte/settings`, `/authors`.
-- UI screens are under feature `ui` directories.
-- Source: `lib/core/router/app_router.dart`; app wiring: `lib/main.dart`.
+- Router: `appRouter({required bool hasKeepers})`; stable instance is held by `GoalkeeperApp`.
+- Daily-task routes: `/daily-tasks`, `/daily-tasks/new`, `/daily-tasks/edit/:id`.
+- Home menu opens `/daily-tasks`.
+- Daily-task screens use Unbounded headings and Lato body text with `#121212`, `#BBF246`, `#F2F2F7`, and `#9B9EA1` palette.
+- Stats metrics share a three-column alignment; labels are capped at two lines.
+- Day cards are equal square sizes; narrow layouts use horizontal scrolling.
+- Task and edit pages are scrollable; FAB is present only when a current goalkeeper exists.
+- Existing non-daily routes remain unchanged.
