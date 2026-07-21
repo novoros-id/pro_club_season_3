@@ -76,5 +76,82 @@ class AppLocalizationsRu extends AppLocalizations {
   String get save => 'Сохранить';
 
   @override
+  String get cancel => 'Отмена';
+
+  @override
   String get back => 'Назад';
+
+  @override
+  String get dailyTasksTitle => 'Ежедневные задачи';
+
+  @override
+  String get dailyTasksAdd => 'Добавить задачу';
+
+  @override
+  String get dailyTasksEdit => 'Редактировать задачу';
+
+  @override
+  String get dailyTasksTaskTitle => 'Название задачи';
+
+  @override
+  String get dailyTasksDescription => 'Описание';
+
+  @override
+  String get dailyTasksActive => 'Активна';
+
+  @override
+  String get delete => 'Удалить';
+
+  @override
+  String get dailyTasksDelete => 'Удалить задачу';
+
+  @override
+  String get dailyTasksDeleteConfirmation => 'Удалить эту задачу?';
+
+  @override
+  String get dailyTasksEmpty => 'Задач пока нет. Добавьте первую задачу.';
+
+  @override
+  String get dailyTasksNoGoalkeeper =>
+      'Выберите вратаря, чтобы увидеть ежедневные задачи.';
+
+  @override
+  String get dailyTasksLoadError => 'Не удалось загрузить ежедневные задачи.';
+
+  @override
+  String get dailyTasksSaveError => 'Не удалось сохранить задачу.';
+
+  @override
+  String get dailyTasksTitleRequired => 'Введите название задачи.';
+
+  @override
+  String get dailyTasksStatistics => 'Статистика';
+
+  @override
+  String get dailyTasksCompletedToday => 'Выполнено сегодня';
+
+  @override
+  String get dailyTasksActiveTotal => 'Всего активных задач';
+
+  @override
+  String get dailyTasksCompletionPercent => 'Процент выполнения сегодня';
+
+  @override
+  String get dailyTasksCompletedTodayLabel => 'Выполнено\nсегодня';
+
+  @override
+  String get dailyTasksActiveTasksLabel => 'Активные\nзадачи';
+
+  @override
+  String get dailyTasksCompletionPercentLabel => 'Процент\nсегодня';
+
+  @override
+  String get dailyTasksRecentCompletedDays => 'Последние выполненные дни';
+
+  @override
+  String get dailyTasksLastSevenDays => 'Последние выполненные дни';
+
+  @override
+  String get dailyTasksNoCompletedStatistics =>
+      'Статистики выполненных задач пока нет';
 }

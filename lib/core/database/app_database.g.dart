@@ -2044,12 +2044,859 @@ class GoalsCompanion extends UpdateCompanion<Goal> {
   }
 }
 
+class $DailyTasksTable extends DailyTasks
+    with TableInfo<$DailyTasksTable, DailyTask> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $DailyTasksTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _goalkeeperIdMeta = const VerificationMeta(
+    'goalkeeperId',
+  );
+  @override
+  late final GeneratedColumn<int> goalkeeperId = GeneratedColumn<int>(
+    'goalkeeper_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES goalkeepers (id)',
+    ),
+  );
+  static const VerificationMeta _titleMeta = const VerificationMeta('title');
+  @override
+  late final GeneratedColumn<String> title = GeneratedColumn<String>(
+    'title',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _descriptionMeta = const VerificationMeta(
+    'description',
+  );
+  @override
+  late final GeneratedColumn<String> description = GeneratedColumn<String>(
+    'description',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _recurrenceTypeMeta = const VerificationMeta(
+    'recurrenceType',
+  );
+  @override
+  late final GeneratedColumn<String> recurrenceType = GeneratedColumn<String>(
+    'recurrence_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('daily'),
+  );
+  static const VerificationMeta _isEnabledMeta = const VerificationMeta(
+    'isEnabled',
+  );
+  @override
+  late final GeneratedColumn<bool> isEnabled = GeneratedColumn<bool>(
+    'is_enabled',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_enabled" IN (0, 1))',
+    ),
+    defaultValue: const Constant(true),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    goalkeeperId,
+    title,
+    description,
+    recurrenceType,
+    isEnabled,
+    createdAt,
+    updatedAt,
+    deletedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'daily_tasks';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<DailyTask> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('goalkeeper_id')) {
+      context.handle(
+        _goalkeeperIdMeta,
+        goalkeeperId.isAcceptableOrUnknown(
+          data['goalkeeper_id']!,
+          _goalkeeperIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_goalkeeperIdMeta);
+    }
+    if (data.containsKey('title')) {
+      context.handle(
+        _titleMeta,
+        title.isAcceptableOrUnknown(data['title']!, _titleMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_titleMeta);
+    }
+    if (data.containsKey('description')) {
+      context.handle(
+        _descriptionMeta,
+        description.isAcceptableOrUnknown(
+          data['description']!,
+          _descriptionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('recurrence_type')) {
+      context.handle(
+        _recurrenceTypeMeta,
+        recurrenceType.isAcceptableOrUnknown(
+          data['recurrence_type']!,
+          _recurrenceTypeMeta,
+        ),
+      );
+    }
+    if (data.containsKey('is_enabled')) {
+      context.handle(
+        _isEnabledMeta,
+        isEnabled.isAcceptableOrUnknown(data['is_enabled']!, _isEnabledMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  DailyTask map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return DailyTask(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      goalkeeperId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}goalkeeper_id'],
+      )!,
+      title: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}title'],
+      )!,
+      description: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}description'],
+      ),
+      recurrenceType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}recurrence_type'],
+      )!,
+      isEnabled: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_enabled'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
+    );
+  }
+
+  @override
+  $DailyTasksTable createAlias(String alias) {
+    return $DailyTasksTable(attachedDatabase, alias);
+  }
+}
+
+class DailyTask extends DataClass implements Insertable<DailyTask> {
+  final int id;
+  final int goalkeeperId;
+  final String title;
+  final String? description;
+  final String recurrenceType;
+  final bool isEnabled;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
+  const DailyTask({
+    required this.id,
+    required this.goalkeeperId,
+    required this.title,
+    this.description,
+    required this.recurrenceType,
+    required this.isEnabled,
+    required this.createdAt,
+    required this.updatedAt,
+    this.deletedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['goalkeeper_id'] = Variable<int>(goalkeeperId);
+    map['title'] = Variable<String>(title);
+    if (!nullToAbsent || description != null) {
+      map['description'] = Variable<String>(description);
+    }
+    map['recurrence_type'] = Variable<String>(recurrenceType);
+    map['is_enabled'] = Variable<bool>(isEnabled);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    return map;
+  }
+
+  DailyTasksCompanion toCompanion(bool nullToAbsent) {
+    return DailyTasksCompanion(
+      id: Value(id),
+      goalkeeperId: Value(goalkeeperId),
+      title: Value(title),
+      description: description == null && nullToAbsent
+          ? const Value.absent()
+          : Value(description),
+      recurrenceType: Value(recurrenceType),
+      isEnabled: Value(isEnabled),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+    );
+  }
+
+  factory DailyTask.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return DailyTask(
+      id: serializer.fromJson<int>(json['id']),
+      goalkeeperId: serializer.fromJson<int>(json['goalkeeperId']),
+      title: serializer.fromJson<String>(json['title']),
+      description: serializer.fromJson<String?>(json['description']),
+      recurrenceType: serializer.fromJson<String>(json['recurrenceType']),
+      isEnabled: serializer.fromJson<bool>(json['isEnabled']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'goalkeeperId': serializer.toJson<int>(goalkeeperId),
+      'title': serializer.toJson<String>(title),
+      'description': serializer.toJson<String?>(description),
+      'recurrenceType': serializer.toJson<String>(recurrenceType),
+      'isEnabled': serializer.toJson<bool>(isEnabled),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+    };
+  }
+
+  DailyTask copyWith({
+    int? id,
+    int? goalkeeperId,
+    String? title,
+    Value<String?> description = const Value.absent(),
+    String? recurrenceType,
+    bool? isEnabled,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
+  }) => DailyTask(
+    id: id ?? this.id,
+    goalkeeperId: goalkeeperId ?? this.goalkeeperId,
+    title: title ?? this.title,
+    description: description.present ? description.value : this.description,
+    recurrenceType: recurrenceType ?? this.recurrenceType,
+    isEnabled: isEnabled ?? this.isEnabled,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+  );
+  DailyTask copyWithCompanion(DailyTasksCompanion data) {
+    return DailyTask(
+      id: data.id.present ? data.id.value : this.id,
+      goalkeeperId: data.goalkeeperId.present
+          ? data.goalkeeperId.value
+          : this.goalkeeperId,
+      title: data.title.present ? data.title.value : this.title,
+      description: data.description.present
+          ? data.description.value
+          : this.description,
+      recurrenceType: data.recurrenceType.present
+          ? data.recurrenceType.value
+          : this.recurrenceType,
+      isEnabled: data.isEnabled.present ? data.isEnabled.value : this.isEnabled,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DailyTask(')
+          ..write('id: $id, ')
+          ..write('goalkeeperId: $goalkeeperId, ')
+          ..write('title: $title, ')
+          ..write('description: $description, ')
+          ..write('recurrenceType: $recurrenceType, ')
+          ..write('isEnabled: $isEnabled, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    goalkeeperId,
+    title,
+    description,
+    recurrenceType,
+    isEnabled,
+    createdAt,
+    updatedAt,
+    deletedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is DailyTask &&
+          other.id == this.id &&
+          other.goalkeeperId == this.goalkeeperId &&
+          other.title == this.title &&
+          other.description == this.description &&
+          other.recurrenceType == this.recurrenceType &&
+          other.isEnabled == this.isEnabled &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt);
+}
+
+class DailyTasksCompanion extends UpdateCompanion<DailyTask> {
+  final Value<int> id;
+  final Value<int> goalkeeperId;
+  final Value<String> title;
+  final Value<String?> description;
+  final Value<String> recurrenceType;
+  final Value<bool> isEnabled;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
+  const DailyTasksCompanion({
+    this.id = const Value.absent(),
+    this.goalkeeperId = const Value.absent(),
+    this.title = const Value.absent(),
+    this.description = const Value.absent(),
+    this.recurrenceType = const Value.absent(),
+    this.isEnabled = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+  });
+  DailyTasksCompanion.insert({
+    this.id = const Value.absent(),
+    required int goalkeeperId,
+    required String title,
+    this.description = const Value.absent(),
+    this.recurrenceType = const Value.absent(),
+    this.isEnabled = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+  }) : goalkeeperId = Value(goalkeeperId),
+       title = Value(title);
+  static Insertable<DailyTask> custom({
+    Expression<int>? id,
+    Expression<int>? goalkeeperId,
+    Expression<String>? title,
+    Expression<String>? description,
+    Expression<String>? recurrenceType,
+    Expression<bool>? isEnabled,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (goalkeeperId != null) 'goalkeeper_id': goalkeeperId,
+      if (title != null) 'title': title,
+      if (description != null) 'description': description,
+      if (recurrenceType != null) 'recurrence_type': recurrenceType,
+      if (isEnabled != null) 'is_enabled': isEnabled,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+    });
+  }
+
+  DailyTasksCompanion copyWith({
+    Value<int>? id,
+    Value<int>? goalkeeperId,
+    Value<String>? title,
+    Value<String?>? description,
+    Value<String>? recurrenceType,
+    Value<bool>? isEnabled,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
+  }) {
+    return DailyTasksCompanion(
+      id: id ?? this.id,
+      goalkeeperId: goalkeeperId ?? this.goalkeeperId,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      recurrenceType: recurrenceType ?? this.recurrenceType,
+      isEnabled: isEnabled ?? this.isEnabled,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (goalkeeperId.present) {
+      map['goalkeeper_id'] = Variable<int>(goalkeeperId.value);
+    }
+    if (title.present) {
+      map['title'] = Variable<String>(title.value);
+    }
+    if (description.present) {
+      map['description'] = Variable<String>(description.value);
+    }
+    if (recurrenceType.present) {
+      map['recurrence_type'] = Variable<String>(recurrenceType.value);
+    }
+    if (isEnabled.present) {
+      map['is_enabled'] = Variable<bool>(isEnabled.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DailyTasksCompanion(')
+          ..write('id: $id, ')
+          ..write('goalkeeperId: $goalkeeperId, ')
+          ..write('title: $title, ')
+          ..write('description: $description, ')
+          ..write('recurrenceType: $recurrenceType, ')
+          ..write('isEnabled: $isEnabled, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $DailyTaskCompletionsTable extends DailyTaskCompletions
+    with TableInfo<$DailyTaskCompletionsTable, DailyTaskCompletion> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $DailyTaskCompletionsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _taskIdMeta = const VerificationMeta('taskId');
+  @override
+  late final GeneratedColumn<int> taskId = GeneratedColumn<int>(
+    'task_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES daily_tasks (id)',
+    ),
+  );
+  static const VerificationMeta _occurrenceDateMeta = const VerificationMeta(
+    'occurrenceDate',
+  );
+  @override
+  late final GeneratedColumn<DateTime> occurrenceDate =
+      GeneratedColumn<DateTime>(
+        'occurrence_date',
+        aliasedName,
+        false,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: true,
+      );
+  static const VerificationMeta _completedAtMeta = const VerificationMeta(
+    'completedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> completedAt = GeneratedColumn<DateTime>(
+    'completed_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [taskId, occurrenceDate, completedAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'daily_task_completions';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<DailyTaskCompletion> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('task_id')) {
+      context.handle(
+        _taskIdMeta,
+        taskId.isAcceptableOrUnknown(data['task_id']!, _taskIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_taskIdMeta);
+    }
+    if (data.containsKey('occurrence_date')) {
+      context.handle(
+        _occurrenceDateMeta,
+        occurrenceDate.isAcceptableOrUnknown(
+          data['occurrence_date']!,
+          _occurrenceDateMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_occurrenceDateMeta);
+    }
+    if (data.containsKey('completed_at')) {
+      context.handle(
+        _completedAtMeta,
+        completedAt.isAcceptableOrUnknown(
+          data['completed_at']!,
+          _completedAtMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {taskId, occurrenceDate};
+  @override
+  DailyTaskCompletion map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return DailyTaskCompletion(
+      taskId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}task_id'],
+      )!,
+      occurrenceDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}occurrence_date'],
+      )!,
+      completedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}completed_at'],
+      )!,
+    );
+  }
+
+  @override
+  $DailyTaskCompletionsTable createAlias(String alias) {
+    return $DailyTaskCompletionsTable(attachedDatabase, alias);
+  }
+}
+
+class DailyTaskCompletion extends DataClass
+    implements Insertable<DailyTaskCompletion> {
+  final int taskId;
+  final DateTime occurrenceDate;
+  final DateTime completedAt;
+  const DailyTaskCompletion({
+    required this.taskId,
+    required this.occurrenceDate,
+    required this.completedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['task_id'] = Variable<int>(taskId);
+    map['occurrence_date'] = Variable<DateTime>(occurrenceDate);
+    map['completed_at'] = Variable<DateTime>(completedAt);
+    return map;
+  }
+
+  DailyTaskCompletionsCompanion toCompanion(bool nullToAbsent) {
+    return DailyTaskCompletionsCompanion(
+      taskId: Value(taskId),
+      occurrenceDate: Value(occurrenceDate),
+      completedAt: Value(completedAt),
+    );
+  }
+
+  factory DailyTaskCompletion.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return DailyTaskCompletion(
+      taskId: serializer.fromJson<int>(json['taskId']),
+      occurrenceDate: serializer.fromJson<DateTime>(json['occurrenceDate']),
+      completedAt: serializer.fromJson<DateTime>(json['completedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'taskId': serializer.toJson<int>(taskId),
+      'occurrenceDate': serializer.toJson<DateTime>(occurrenceDate),
+      'completedAt': serializer.toJson<DateTime>(completedAt),
+    };
+  }
+
+  DailyTaskCompletion copyWith({
+    int? taskId,
+    DateTime? occurrenceDate,
+    DateTime? completedAt,
+  }) => DailyTaskCompletion(
+    taskId: taskId ?? this.taskId,
+    occurrenceDate: occurrenceDate ?? this.occurrenceDate,
+    completedAt: completedAt ?? this.completedAt,
+  );
+  DailyTaskCompletion copyWithCompanion(DailyTaskCompletionsCompanion data) {
+    return DailyTaskCompletion(
+      taskId: data.taskId.present ? data.taskId.value : this.taskId,
+      occurrenceDate: data.occurrenceDate.present
+          ? data.occurrenceDate.value
+          : this.occurrenceDate,
+      completedAt: data.completedAt.present
+          ? data.completedAt.value
+          : this.completedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DailyTaskCompletion(')
+          ..write('taskId: $taskId, ')
+          ..write('occurrenceDate: $occurrenceDate, ')
+          ..write('completedAt: $completedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(taskId, occurrenceDate, completedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is DailyTaskCompletion &&
+          other.taskId == this.taskId &&
+          other.occurrenceDate == this.occurrenceDate &&
+          other.completedAt == this.completedAt);
+}
+
+class DailyTaskCompletionsCompanion
+    extends UpdateCompanion<DailyTaskCompletion> {
+  final Value<int> taskId;
+  final Value<DateTime> occurrenceDate;
+  final Value<DateTime> completedAt;
+  final Value<int> rowid;
+  const DailyTaskCompletionsCompanion({
+    this.taskId = const Value.absent(),
+    this.occurrenceDate = const Value.absent(),
+    this.completedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  DailyTaskCompletionsCompanion.insert({
+    required int taskId,
+    required DateTime occurrenceDate,
+    this.completedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : taskId = Value(taskId),
+       occurrenceDate = Value(occurrenceDate);
+  static Insertable<DailyTaskCompletion> custom({
+    Expression<int>? taskId,
+    Expression<DateTime>? occurrenceDate,
+    Expression<DateTime>? completedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (taskId != null) 'task_id': taskId,
+      if (occurrenceDate != null) 'occurrence_date': occurrenceDate,
+      if (completedAt != null) 'completed_at': completedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  DailyTaskCompletionsCompanion copyWith({
+    Value<int>? taskId,
+    Value<DateTime>? occurrenceDate,
+    Value<DateTime>? completedAt,
+    Value<int>? rowid,
+  }) {
+    return DailyTaskCompletionsCompanion(
+      taskId: taskId ?? this.taskId,
+      occurrenceDate: occurrenceDate ?? this.occurrenceDate,
+      completedAt: completedAt ?? this.completedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (taskId.present) {
+      map['task_id'] = Variable<int>(taskId.value);
+    }
+    if (occurrenceDate.present) {
+      map['occurrence_date'] = Variable<DateTime>(occurrenceDate.value);
+    }
+    if (completedAt.present) {
+      map['completed_at'] = Variable<DateTime>(completedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DailyTaskCompletionsCompanion(')
+          ..write('taskId: $taskId, ')
+          ..write('occurrenceDate: $occurrenceDate, ')
+          ..write('completedAt: $completedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
   late final $GoalkeepersTable goalkeepers = $GoalkeepersTable(this);
   late final $MatchesTable matches = $MatchesTable(this);
   late final $GoalsTable goals = $GoalsTable(this);
+  late final $DailyTasksTable dailyTasks = $DailyTasksTable(this);
+  late final $DailyTaskCompletionsTable dailyTaskCompletions =
+      $DailyTaskCompletionsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -2058,6 +2905,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     goalkeepers,
     matches,
     goals,
+    dailyTasks,
+    dailyTaskCompletions,
   ];
 }
 
@@ -2094,7 +2943,7 @@ final class $$GoalkeepersTableReferences
     _$AppDatabase db,
   ) => MultiTypedResultKey.fromTable(
     db.matches,
-    aliasName: $_aliasNameGenerator(db.goalkeepers.id, db.matches.goalkeeperId),
+    aliasName: 'goalkeepers__id__matches__goalkeeper_id',
   );
 
   $$MatchesTableProcessedTableManager get matchesRefs {
@@ -2104,6 +2953,24 @@ final class $$GoalkeepersTableReferences
     ).filter((f) => f.goalkeeperId.id.sqlEquals($_itemColumn<int>('id')!));
 
     final cache = $_typedResult.readTableOrNull(_matchesRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$DailyTasksTable, List<DailyTask>>
+  _dailyTasksRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.dailyTasks,
+    aliasName: 'goalkeepers__id__daily_tasks__goalkeeper_id',
+  );
+
+  $$DailyTasksTableProcessedTableManager get dailyTasksRefs {
+    final manager = $$DailyTasksTableTableManager(
+      $_db,
+      $_db.dailyTasks,
+    ).filter((f) => f.goalkeeperId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_dailyTasksRefsTable($_db));
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
     );
@@ -2180,6 +3047,31 @@ class $$GoalkeepersTableFilterComposer
           }) => $$MatchesTableFilterComposer(
             $db: $db,
             $table: $db.matches,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> dailyTasksRefs(
+    Expression<bool> Function($$DailyTasksTableFilterComposer f) f,
+  ) {
+    final $$DailyTasksTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.dailyTasks,
+      getReferencedColumn: (t) => t.goalkeeperId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$DailyTasksTableFilterComposer(
+            $db: $db,
+            $table: $db.dailyTasks,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -2305,6 +3197,31 @@ class $$GoalkeepersTableAnnotationComposer
     );
     return f(composer);
   }
+
+  Expression<T> dailyTasksRefs<T extends Object>(
+    Expression<T> Function($$DailyTasksTableAnnotationComposer a) f,
+  ) {
+    final $$DailyTasksTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.dailyTasks,
+      getReferencedColumn: (t) => t.goalkeeperId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$DailyTasksTableAnnotationComposer(
+            $db: $db,
+            $table: $db.dailyTasks,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$GoalkeepersTableTableManager
@@ -2320,7 +3237,7 @@ class $$GoalkeepersTableTableManager
           $$GoalkeepersTableUpdateCompanionBuilder,
           (Goalkeeper, $$GoalkeepersTableReferences),
           Goalkeeper,
-          PrefetchHooks Function({bool matchesRefs})
+          PrefetchHooks Function({bool matchesRefs, bool dailyTasksRefs})
         > {
   $$GoalkeepersTableTableManager(_$AppDatabase db, $GoalkeepersTable table)
     : super(
@@ -2385,38 +3302,63 @@ class $$GoalkeepersTableTableManager
                 ),
               )
               .toList(),
-          prefetchHooksCallback: ({matchesRefs = false}) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [if (matchesRefs) db.matches],
-              addJoins: null,
-              getPrefetchedDataCallback: (items) async {
-                return [
-                  if (matchesRefs)
-                    await $_getPrefetchedData<
-                      Goalkeeper,
-                      $GoalkeepersTable,
-                      Matche
-                    >(
-                      currentTable: table,
-                      referencedTable: $$GoalkeepersTableReferences
-                          ._matchesRefsTable(db),
-                      managerFromTypedResult: (p0) =>
-                          $$GoalkeepersTableReferences(
-                            db,
-                            table,
-                            p0,
-                          ).matchesRefs,
-                      referencedItemsForCurrentItem: (item, referencedItems) =>
-                          referencedItems.where(
-                            (e) => e.goalkeeperId == item.id,
-                          ),
-                      typedResults: items,
-                    ),
-                ];
+          prefetchHooksCallback:
+              ({matchesRefs = false, dailyTasksRefs = false}) {
+                return PrefetchHooks(
+                  db: db,
+                  explicitlyWatchedTables: [
+                    if (matchesRefs) db.matches,
+                    if (dailyTasksRefs) db.dailyTasks,
+                  ],
+                  addJoins: null,
+                  getPrefetchedDataCallback: (items) async {
+                    return [
+                      if (matchesRefs)
+                        await $_getPrefetchedData<
+                          Goalkeeper,
+                          $GoalkeepersTable,
+                          Matche
+                        >(
+                          currentTable: table,
+                          referencedTable: $$GoalkeepersTableReferences
+                              ._matchesRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$GoalkeepersTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).matchesRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.goalkeeperId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (dailyTasksRefs)
+                        await $_getPrefetchedData<
+                          Goalkeeper,
+                          $GoalkeepersTable,
+                          DailyTask
+                        >(
+                          currentTable: table,
+                          referencedTable: $$GoalkeepersTableReferences
+                              ._dailyTasksRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$GoalkeepersTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).dailyTasksRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.goalkeeperId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                    ];
+                  },
+                );
               },
-            );
-          },
         ),
       );
 }
@@ -2433,7 +3375,7 @@ typedef $$GoalkeepersTableProcessedTableManager =
       $$GoalkeepersTableUpdateCompanionBuilder,
       (Goalkeeper, $$GoalkeepersTableReferences),
       Goalkeeper,
-      PrefetchHooks Function({bool matchesRefs})
+      PrefetchHooks Function({bool matchesRefs, bool dailyTasksRefs})
     >;
 typedef $$MatchesTableCreateCompanionBuilder =
     MatchesCompanion Function({
@@ -2481,9 +3423,7 @@ final class $$MatchesTableReferences
   $$MatchesTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
   static $GoalkeepersTable _goalkeeperIdTable(_$AppDatabase db) =>
-      db.goalkeepers.createAlias(
-        $_aliasNameGenerator(db.matches.goalkeeperId, db.goalkeepers.id),
-      );
+      db.goalkeepers.createAlias('matches__goalkeeper_id__goalkeepers__id');
 
   $$GoalkeepersTableProcessedTableManager get goalkeeperId {
     final $_column = $_itemColumn<int>('goalkeeper_id')!;
@@ -2503,7 +3443,7 @@ final class $$MatchesTableReferences
     _$AppDatabase db,
   ) => MultiTypedResultKey.fromTable(
     db.goals,
-    aliasName: $_aliasNameGenerator(db.matches.id, db.goals.matchId),
+    aliasName: 'matches__id__goals__match_id',
   );
 
   $$GoalsTableProcessedTableManager get goalsRefs {
@@ -3101,8 +4041,8 @@ final class $$GoalsTableReferences
     extends BaseReferences<_$AppDatabase, $GoalsTable, Goal> {
   $$GoalsTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
-  static $MatchesTable _matchIdTable(_$AppDatabase db) => db.matches
-      .createAlias($_aliasNameGenerator(db.goals.matchId, db.matches.id));
+  static $MatchesTable _matchIdTable(_$AppDatabase db) =>
+      db.matches.createAlias('goals__match_id__matches__id');
 
   $$MatchesTableProcessedTableManager get matchId {
     final $_column = $_itemColumn<int>('match_id')!;
@@ -3441,6 +4381,804 @@ typedef $$GoalsTableProcessedTableManager =
       Goal,
       PrefetchHooks Function({bool matchId})
     >;
+typedef $$DailyTasksTableCreateCompanionBuilder =
+    DailyTasksCompanion Function({
+      Value<int> id,
+      required int goalkeeperId,
+      required String title,
+      Value<String?> description,
+      Value<String> recurrenceType,
+      Value<bool> isEnabled,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+    });
+typedef $$DailyTasksTableUpdateCompanionBuilder =
+    DailyTasksCompanion Function({
+      Value<int> id,
+      Value<int> goalkeeperId,
+      Value<String> title,
+      Value<String?> description,
+      Value<String> recurrenceType,
+      Value<bool> isEnabled,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+    });
+
+final class $$DailyTasksTableReferences
+    extends BaseReferences<_$AppDatabase, $DailyTasksTable, DailyTask> {
+  $$DailyTasksTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $GoalkeepersTable _goalkeeperIdTable(_$AppDatabase db) =>
+      db.goalkeepers.createAlias('daily_tasks__goalkeeper_id__goalkeepers__id');
+
+  $$GoalkeepersTableProcessedTableManager get goalkeeperId {
+    final $_column = $_itemColumn<int>('goalkeeper_id')!;
+
+    final manager = $$GoalkeepersTableTableManager(
+      $_db,
+      $_db.goalkeepers,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_goalkeeperIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static MultiTypedResultKey<
+    $DailyTaskCompletionsTable,
+    List<DailyTaskCompletion>
+  >
+  _dailyTaskCompletionsRefsTable(_$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.dailyTaskCompletions,
+        aliasName: 'daily_tasks__id__daily_task_completions__task_id',
+      );
+
+  $$DailyTaskCompletionsTableProcessedTableManager
+  get dailyTaskCompletionsRefs {
+    final manager = $$DailyTaskCompletionsTableTableManager(
+      $_db,
+      $_db.dailyTaskCompletions,
+    ).filter((f) => f.taskId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _dailyTaskCompletionsRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+}
+
+class $$DailyTasksTableFilterComposer
+    extends Composer<_$AppDatabase, $DailyTasksTable> {
+  $$DailyTasksTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get recurrenceType => $composableBuilder(
+    column: $table.recurrenceType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isEnabled => $composableBuilder(
+    column: $table.isEnabled,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$GoalkeepersTableFilterComposer get goalkeeperId {
+    final $$GoalkeepersTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.goalkeeperId,
+      referencedTable: $db.goalkeepers,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$GoalkeepersTableFilterComposer(
+            $db: $db,
+            $table: $db.goalkeepers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  Expression<bool> dailyTaskCompletionsRefs(
+    Expression<bool> Function($$DailyTaskCompletionsTableFilterComposer f) f,
+  ) {
+    final $$DailyTaskCompletionsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.dailyTaskCompletions,
+      getReferencedColumn: (t) => t.taskId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$DailyTaskCompletionsTableFilterComposer(
+            $db: $db,
+            $table: $db.dailyTaskCompletions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$DailyTasksTableOrderingComposer
+    extends Composer<_$AppDatabase, $DailyTasksTable> {
+  $$DailyTasksTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get recurrenceType => $composableBuilder(
+    column: $table.recurrenceType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isEnabled => $composableBuilder(
+    column: $table.isEnabled,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$GoalkeepersTableOrderingComposer get goalkeeperId {
+    final $$GoalkeepersTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.goalkeeperId,
+      referencedTable: $db.goalkeepers,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$GoalkeepersTableOrderingComposer(
+            $db: $db,
+            $table: $db.goalkeepers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$DailyTasksTableAnnotationComposer
+    extends Composer<_$AppDatabase, $DailyTasksTable> {
+  $$DailyTasksTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get title =>
+      $composableBuilder(column: $table.title, builder: (column) => column);
+
+  GeneratedColumn<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get recurrenceType => $composableBuilder(
+    column: $table.recurrenceType,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isEnabled =>
+      $composableBuilder(column: $table.isEnabled, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  $$GoalkeepersTableAnnotationComposer get goalkeeperId {
+    final $$GoalkeepersTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.goalkeeperId,
+      referencedTable: $db.goalkeepers,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$GoalkeepersTableAnnotationComposer(
+            $db: $db,
+            $table: $db.goalkeepers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  Expression<T> dailyTaskCompletionsRefs<T extends Object>(
+    Expression<T> Function($$DailyTaskCompletionsTableAnnotationComposer a) f,
+  ) {
+    final $$DailyTaskCompletionsTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.dailyTaskCompletions,
+          getReferencedColumn: (t) => t.taskId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$DailyTaskCompletionsTableAnnotationComposer(
+                $db: $db,
+                $table: $db.dailyTaskCompletions,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
+}
+
+class $$DailyTasksTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $DailyTasksTable,
+          DailyTask,
+          $$DailyTasksTableFilterComposer,
+          $$DailyTasksTableOrderingComposer,
+          $$DailyTasksTableAnnotationComposer,
+          $$DailyTasksTableCreateCompanionBuilder,
+          $$DailyTasksTableUpdateCompanionBuilder,
+          (DailyTask, $$DailyTasksTableReferences),
+          DailyTask,
+          PrefetchHooks Function({
+            bool goalkeeperId,
+            bool dailyTaskCompletionsRefs,
+          })
+        > {
+  $$DailyTasksTableTableManager(_$AppDatabase db, $DailyTasksTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$DailyTasksTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$DailyTasksTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$DailyTasksTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> goalkeeperId = const Value.absent(),
+                Value<String> title = const Value.absent(),
+                Value<String?> description = const Value.absent(),
+                Value<String> recurrenceType = const Value.absent(),
+                Value<bool> isEnabled = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+              }) => DailyTasksCompanion(
+                id: id,
+                goalkeeperId: goalkeeperId,
+                title: title,
+                description: description,
+                recurrenceType: recurrenceType,
+                isEnabled: isEnabled,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int goalkeeperId,
+                required String title,
+                Value<String?> description = const Value.absent(),
+                Value<String> recurrenceType = const Value.absent(),
+                Value<bool> isEnabled = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+              }) => DailyTasksCompanion.insert(
+                id: id,
+                goalkeeperId: goalkeeperId,
+                title: title,
+                description: description,
+                recurrenceType: recurrenceType,
+                isEnabled: isEnabled,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$DailyTasksTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback:
+              ({goalkeeperId = false, dailyTaskCompletionsRefs = false}) {
+                return PrefetchHooks(
+                  db: db,
+                  explicitlyWatchedTables: [
+                    if (dailyTaskCompletionsRefs) db.dailyTaskCompletions,
+                  ],
+                  addJoins:
+                      <
+                        T extends TableManagerState<
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic
+                        >
+                      >(state) {
+                        if (goalkeeperId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.goalkeeperId,
+                                    referencedTable: $$DailyTasksTableReferences
+                                        ._goalkeeperIdTable(db),
+                                    referencedColumn:
+                                        $$DailyTasksTableReferences
+                                            ._goalkeeperIdTable(db)
+                                            .id,
+                                  )
+                                  as T;
+                        }
+
+                        return state;
+                      },
+                  getPrefetchedDataCallback: (items) async {
+                    return [
+                      if (dailyTaskCompletionsRefs)
+                        await $_getPrefetchedData<
+                          DailyTask,
+                          $DailyTasksTable,
+                          DailyTaskCompletion
+                        >(
+                          currentTable: table,
+                          referencedTable: $$DailyTasksTableReferences
+                              ._dailyTaskCompletionsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$DailyTasksTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).dailyTaskCompletionsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.taskId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                    ];
+                  },
+                );
+              },
+        ),
+      );
+}
+
+typedef $$DailyTasksTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $DailyTasksTable,
+      DailyTask,
+      $$DailyTasksTableFilterComposer,
+      $$DailyTasksTableOrderingComposer,
+      $$DailyTasksTableAnnotationComposer,
+      $$DailyTasksTableCreateCompanionBuilder,
+      $$DailyTasksTableUpdateCompanionBuilder,
+      (DailyTask, $$DailyTasksTableReferences),
+      DailyTask,
+      PrefetchHooks Function({bool goalkeeperId, bool dailyTaskCompletionsRefs})
+    >;
+typedef $$DailyTaskCompletionsTableCreateCompanionBuilder =
+    DailyTaskCompletionsCompanion Function({
+      required int taskId,
+      required DateTime occurrenceDate,
+      Value<DateTime> completedAt,
+      Value<int> rowid,
+    });
+typedef $$DailyTaskCompletionsTableUpdateCompanionBuilder =
+    DailyTaskCompletionsCompanion Function({
+      Value<int> taskId,
+      Value<DateTime> occurrenceDate,
+      Value<DateTime> completedAt,
+      Value<int> rowid,
+    });
+
+final class $$DailyTaskCompletionsTableReferences
+    extends
+        BaseReferences<
+          _$AppDatabase,
+          $DailyTaskCompletionsTable,
+          DailyTaskCompletion
+        > {
+  $$DailyTaskCompletionsTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $DailyTasksTable _taskIdTable(_$AppDatabase db) => db.dailyTasks
+      .createAlias('daily_task_completions__task_id__daily_tasks__id');
+
+  $$DailyTasksTableProcessedTableManager get taskId {
+    final $_column = $_itemColumn<int>('task_id')!;
+
+    final manager = $$DailyTasksTableTableManager(
+      $_db,
+      $_db.dailyTasks,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_taskIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$DailyTaskCompletionsTableFilterComposer
+    extends Composer<_$AppDatabase, $DailyTaskCompletionsTable> {
+  $$DailyTaskCompletionsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<DateTime> get occurrenceDate => $composableBuilder(
+    column: $table.occurrenceDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get completedAt => $composableBuilder(
+    column: $table.completedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$DailyTasksTableFilterComposer get taskId {
+    final $$DailyTasksTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.taskId,
+      referencedTable: $db.dailyTasks,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$DailyTasksTableFilterComposer(
+            $db: $db,
+            $table: $db.dailyTasks,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$DailyTaskCompletionsTableOrderingComposer
+    extends Composer<_$AppDatabase, $DailyTaskCompletionsTable> {
+  $$DailyTaskCompletionsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<DateTime> get occurrenceDate => $composableBuilder(
+    column: $table.occurrenceDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get completedAt => $composableBuilder(
+    column: $table.completedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$DailyTasksTableOrderingComposer get taskId {
+    final $$DailyTasksTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.taskId,
+      referencedTable: $db.dailyTasks,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$DailyTasksTableOrderingComposer(
+            $db: $db,
+            $table: $db.dailyTasks,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$DailyTaskCompletionsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $DailyTaskCompletionsTable> {
+  $$DailyTaskCompletionsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<DateTime> get occurrenceDate => $composableBuilder(
+    column: $table.occurrenceDate,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get completedAt => $composableBuilder(
+    column: $table.completedAt,
+    builder: (column) => column,
+  );
+
+  $$DailyTasksTableAnnotationComposer get taskId {
+    final $$DailyTasksTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.taskId,
+      referencedTable: $db.dailyTasks,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$DailyTasksTableAnnotationComposer(
+            $db: $db,
+            $table: $db.dailyTasks,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$DailyTaskCompletionsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $DailyTaskCompletionsTable,
+          DailyTaskCompletion,
+          $$DailyTaskCompletionsTableFilterComposer,
+          $$DailyTaskCompletionsTableOrderingComposer,
+          $$DailyTaskCompletionsTableAnnotationComposer,
+          $$DailyTaskCompletionsTableCreateCompanionBuilder,
+          $$DailyTaskCompletionsTableUpdateCompanionBuilder,
+          (DailyTaskCompletion, $$DailyTaskCompletionsTableReferences),
+          DailyTaskCompletion,
+          PrefetchHooks Function({bool taskId})
+        > {
+  $$DailyTaskCompletionsTableTableManager(
+    _$AppDatabase db,
+    $DailyTaskCompletionsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$DailyTaskCompletionsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$DailyTaskCompletionsTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$DailyTaskCompletionsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> taskId = const Value.absent(),
+                Value<DateTime> occurrenceDate = const Value.absent(),
+                Value<DateTime> completedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => DailyTaskCompletionsCompanion(
+                taskId: taskId,
+                occurrenceDate: occurrenceDate,
+                completedAt: completedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required int taskId,
+                required DateTime occurrenceDate,
+                Value<DateTime> completedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => DailyTaskCompletionsCompanion.insert(
+                taskId: taskId,
+                occurrenceDate: occurrenceDate,
+                completedAt: completedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$DailyTaskCompletionsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({taskId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (taskId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.taskId,
+                                referencedTable:
+                                    $$DailyTaskCompletionsTableReferences
+                                        ._taskIdTable(db),
+                                referencedColumn:
+                                    $$DailyTaskCompletionsTableReferences
+                                        ._taskIdTable(db)
+                                        .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$DailyTaskCompletionsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $DailyTaskCompletionsTable,
+      DailyTaskCompletion,
+      $$DailyTaskCompletionsTableFilterComposer,
+      $$DailyTaskCompletionsTableOrderingComposer,
+      $$DailyTaskCompletionsTableAnnotationComposer,
+      $$DailyTaskCompletionsTableCreateCompanionBuilder,
+      $$DailyTaskCompletionsTableUpdateCompanionBuilder,
+      (DailyTaskCompletion, $$DailyTaskCompletionsTableReferences),
+      DailyTaskCompletion,
+      PrefetchHooks Function({bool taskId})
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -3451,4 +5189,8 @@ class $AppDatabaseManager {
       $$MatchesTableTableManager(_db, _db.matches);
   $$GoalsTableTableManager get goals =>
       $$GoalsTableTableManager(_db, _db.goals);
+  $$DailyTasksTableTableManager get dailyTasks =>
+      $$DailyTasksTableTableManager(_db, _db.dailyTasks);
+  $$DailyTaskCompletionsTableTableManager get dailyTaskCompletions =>
+      $$DailyTaskCompletionsTableTableManager(_db, _db.dailyTaskCompletions);
 }
