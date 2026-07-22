@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'core/router/app_router.dart';
 import 'core/database/database_provider.dart';
 import 'l10n/app_localizations.dart';
 import 'core/services/storage_service.dart'; // Импорт сервиса
-
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -21,19 +21,30 @@ void main() async {
   final keepers = await db.getAllGoalkeepers();
   final hasKeepers = keepers.isNotEmpty;
 
-  // Очищаем контейнер, так как он больше не нужен (или передаем его в runApp, если нужно)
-  // Но проще просто запустить приложение с новым роутером
-
   runApp(
-    ProviderScope(
+    UncontrolledProviderScope(
+      container: container,
       child: GoalkeeperApp(hasKeepers: hasKeepers),
     ),
   );
 }
 
-class GoalkeeperApp extends StatelessWidget {
+class GoalkeeperApp extends StatefulWidget {
   final bool hasKeepers;
   const GoalkeeperApp({super.key, required this.hasKeepers});
+
+  @override
+  State<GoalkeeperApp> createState() => _GoalkeeperAppState();
+}
+
+class _GoalkeeperAppState extends State<GoalkeeperApp> {
+  late final GoRouter _router;
+
+  @override
+  void initState() {
+    super.initState();
+    _router = appRouter(hasKeepers: widget.hasKeepers);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -45,7 +56,7 @@ class GoalkeeperApp extends StatelessWidget {
       ),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
-      routerConfig: appRouter(hasKeepers: hasKeepers), // Передаем флаг в роутер
+      routerConfig: _router,
     );
   }
 }

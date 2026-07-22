@@ -16,6 +16,12 @@ class _Game2MenuScreenState extends ConsumerState<Game2MenuScreen> {
   GameResult? _lastResult;
   bool _isLoading = true;
 
+  // 🎨 Дизайн-система
+  static const Color primaryText = Color(0xFF121212);
+  static const Color accentColor = Color(0xFFBBF246);
+  static const Color auxText = Color(0xFF9B9EA1);
+  static const Color bgLight = Color(0xFFF2F2F7);
+
   @override
   void initState() {
     super.initState();
@@ -35,7 +41,6 @@ class _Game2MenuScreenState extends ConsumerState<Game2MenuScreen> {
   String _formatDate(DateTime date) {
     final now = DateTime.now();
     final difference = now.difference(date);
-
     if (difference.inDays == 0) {
       if (difference.inHours == 0) {
         return '${difference.inMinutes} мин. назад';
@@ -51,12 +56,19 @@ class _Game2MenuScreenState extends ConsumerState<Game2MenuScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.blue[50],
+      backgroundColor: Colors.white, // ✅ Белый фон
       appBar: AppBar(
-        title: const Text('Аэрохоккей'),
-        backgroundColor: Colors.blue[900],
-        foregroundColor: Colors.white,
+        title: const Text(
+          'АЭРОХОККЕЙ',
+          style: TextStyle(
+            fontFamily: 'Unbounded',
+            fontWeight: FontWeight.bold,
+            color: primaryText,
+          ),
+        ),
+        backgroundColor: Colors.white,
         elevation: 0,
+        foregroundColor: primaryText,
       ),
       body: SafeArea(
         child: Padding(
@@ -65,49 +77,45 @@ class _Game2MenuScreenState extends ConsumerState<Game2MenuScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const SizedBox(height: 20),
-
-              // Заголовок
+              // Иконка
               Icon(
                 Icons.sports_hockey,
                 size: 80,
-                color: Colors.blue[900],
+                color: primaryText, // Черная иконка
               ),
-
               const SizedBox(height: 16),
-
               Text(
-                'Давай сыграем в аэрохоккей!',
+                'Давай сыграем!',
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  fontFamily: 'Unbounded',
                   fontWeight: FontWeight.bold,
-                  color: Colors.blue[900],
+                  color: primaryText,
                 ),
               ),
-
               const SizedBox(height: 12),
-
               Text(
                 'Забей 10 голов первым и победи компьютер!',
                 textAlign: TextAlign.center,
                 style: TextStyle(
+                  fontFamily: 'Lato',
                   fontSize: 16,
-                  color: Colors.grey[700],
+                  color: auxText,
                 ),
               ),
-
               const SizedBox(height: 40),
 
               // Кнопка Играть
               ElevatedButton(
                 onPressed: () => context.push('/game2/play'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue[900],
+                  backgroundColor: primaryText, // Черная кнопка
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 20),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(50),
                   ),
-                  elevation: 4,
+                  elevation: 0,
                 ),
                 child: const Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -115,9 +123,10 @@ class _Game2MenuScreenState extends ConsumerState<Game2MenuScreen> {
                     Icon(Icons.play_arrow, size: 28),
                     SizedBox(width: 12),
                     Text(
-                      'Играть',
+                      'ИГРАТЬ',
                       style: TextStyle(
-                        fontSize: 22,
+                        fontFamily: 'Unbounded',
+                        fontSize: 20,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -129,20 +138,14 @@ class _Game2MenuScreenState extends ConsumerState<Game2MenuScreen> {
 
               // Последняя игра
               if (_isLoading)
-                const Center(child: CircularProgressIndicator())
+                const Center(child: CircularProgressIndicator(color: accentColor))
               else if (_lastResult != null)
                 Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 8,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
+                    color: bgLight, // Светло-серый фон карточки
+                    borderRadius: BorderRadius.circular(15),
+                    border: Border.all(color: accentColor.withOpacity(0.3)),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -151,16 +154,17 @@ class _Game2MenuScreenState extends ConsumerState<Game2MenuScreen> {
                         children: [
                           Icon(
                             Icons.history,
-                            color: Colors.blue[900],
+                            color: primaryText,
                             size: 24,
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            'Последняя игра.',
+                            'Последняя игра',
                             style: TextStyle(
+                              fontFamily: 'Unbounded',
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
-                              color: Colors.blue[900],
+                              color: primaryText,
                             ),
                           ),
                         ],
@@ -175,7 +179,8 @@ class _Game2MenuScreenState extends ConsumerState<Game2MenuScreen> {
                               Text(
                                 'Счет',
                                 style: TextStyle(
-                                  color: Colors.grey[600],
+                                  fontFamily: 'Lato',
+                                  color: auxText,
                                   fontSize: 14,
                                 ),
                               ),
@@ -183,8 +188,10 @@ class _Game2MenuScreenState extends ConsumerState<Game2MenuScreen> {
                               Text(
                                 '${_lastResult!.playerScore} : ${_lastResult!.aiScore}',
                                 style: const TextStyle(
+                                  fontFamily: 'Unbounded',
                                   fontSize: 32,
                                   fontWeight: FontWeight.bold,
+                                  color: primaryText,
                                 ),
                               ),
                             ],
@@ -193,9 +200,10 @@ class _Game2MenuScreenState extends ConsumerState<Game2MenuScreen> {
                           Column(
                             children: [
                               Text(
-                                'Результат',
+                                'Итог',
                                 style: TextStyle(
-                                  color: Colors.grey[600],
+                                  fontFamily: 'Lato',
+                                  color: auxText,
                                   fontSize: 14,
                                 ),
                               ),
@@ -203,11 +211,10 @@ class _Game2MenuScreenState extends ConsumerState<Game2MenuScreen> {
                               Text(
                                 _lastResult!.resultText,
                                 style: TextStyle(
-                                  fontSize: 20,
+                                  fontFamily: 'Unbounded',
+                                  fontSize: 18,
                                   fontWeight: FontWeight.bold,
-                                  color: _lastResult!.isWin
-                                      ? Colors.green[700]
-                                      : Colors.red[700],
+                                  color: _lastResult!.isWin ? accentColor : Colors.redAccent,
                                 ),
                               ),
                             ],
@@ -215,7 +222,7 @@ class _Game2MenuScreenState extends ConsumerState<Game2MenuScreen> {
                         ],
                       ),
                       const SizedBox(height: 12),
-                      Divider(color: Colors.grey[300]),
+                      Divider(color: Colors.grey.shade300),
                       const SizedBox(height: 8),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -223,13 +230,14 @@ class _Game2MenuScreenState extends ConsumerState<Game2MenuScreen> {
                           Icon(
                             Icons.access_time,
                             size: 16,
-                            color: Colors.grey[600],
+                            color: auxText,
                           ),
                           const SizedBox(width: 8),
                           Text(
                             _formatDate(_lastResult!.date),
                             style: TextStyle(
-                              color: Colors.grey[600],
+                              fontFamily: 'Lato',
+                              color: auxText,
                               fontSize: 14,
                             ),
                           ),
@@ -242,27 +250,24 @@ class _Game2MenuScreenState extends ConsumerState<Game2MenuScreen> {
                 Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.5),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: Colors.blue[200]!,
-                      width: 2,
-                      style: BorderStyle.solid,
-                    ),
+                    color: bgLight,
+                    borderRadius: BorderRadius.circular(15),
+                    border: Border.all(color: Colors.grey.shade300),
                   ),
                   child: Row(
                     children: [
                       Icon(
                         Icons.info_outline,
-                        color: Colors.blue[700],
+                        color: auxText,
                         size: 24,
                       ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          'Здесь будет отображаться результат вашей последней игры',
+                          'Здесь будет результат вашей последней игры',
                           style: TextStyle(
-                            color: Colors.blue[900],
+                            fontFamily: 'Lato',
+                            color: auxText,
                             fontSize: 14,
                           ),
                         ),
@@ -270,7 +275,6 @@ class _Game2MenuScreenState extends ConsumerState<Game2MenuScreen> {
                     ],
                   ),
                 ),
-
               const SizedBox(height: 24),
             ],
           ),

@@ -65,50 +65,98 @@ class Goals extends Table {
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
 }
 
+class DailyTasks extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get goalkeeperId => integer().references(Goalkeepers, #id)();
+  TextColumn get title => text()();
+  TextColumn get description => text().nullable()();
+  TextColumn get recurrenceType =>
+      text().withDefault(const Constant('daily'))();
+  BoolColumn get isEnabled => boolean().withDefault(const Constant(true))();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get deletedAt => dateTime().nullable()();
+}
+
+class DailyTaskCompletions extends Table {
+  IntColumn get taskId => integer().references(DailyTasks, #id)();
+  DateTimeColumn get occurrenceDate => dateTime()();
+  DateTimeColumn get completedAt =>
+      dateTime().withDefault(currentDateAndTime)();
+
+  @override
+  Set<Column> get primaryKey => {taskId, occurrenceDate};
+}
+
 // 4. Подключение всех таблиц
-@DriftDatabase(tables: [Goalkeepers, Matches, Goals])
+@DriftDatabase(
+  tables: [Goalkeepers, Matches, Goals, DailyTasks, DailyTaskCompletions],
+)
 class AppDatabase extends _$AppDatabase {
-  AppDatabase() : super(_openConnection());
+  AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
   int get schemaVersion => 5;
+  MigrationStrategy get migration => MigrationStrategy(
+    onCreate: (m) => m.createAll(),
+    onUpgrade: (m, from, to) async {
+      if (from < 5) {
+        await m.createTable(dailyTasks);
+        await m.createTable(dailyTaskCompletions);
+      }
+    },
+  );
 
   // ========== Методы для вратарей ==========
   Future<List<Goalkeeper>> getAllGoalkeepers() => select(goalkeepers).get();
-  Future<int> insertGoalkeeper(GoalkeepersCompanion entry) => into(goalkeepers).insert(entry);
-  Future<bool> updateGoalkeeper(Goalkeeper entry) => update(goalkeepers).replace(entry);
-  Future<int> deleteGoalkeeper(int id) => (delete(goalkeepers)..where((tbl) => tbl.id.equals(id))).go();
+  Future<int> insertGoalkeeper(GoalkeepersCompanion entry) =>
+      into(goalkeepers).insert(entry);
+  Future<bool> updateGoalkeeper(Goalkeeper entry) =>
+      update(goalkeepers).replace(entry);
+  Future<int> deleteGoalkeeper(int id) =>
+      (delete(goalkeepers)..where((tbl) => tbl.id.equals(id))).go();
 
   Future<void> setCurrentGoalkeeper(int newCurrentId) async {
     await transaction(() async {
-      await (update(goalkeepers)..where((t) => t.isCurrent.equals(true)))
-          .write(const GoalkeepersCompanion(isCurrent: Value(false)));
+      await (update(goalkeepers)..where((t) => t.isCurrent.equals(true))).write(
+        const GoalkeepersCompanion(isCurrent: Value(false)),
+      );
       await (update(goalkeepers)..where((t) => t.id.equals(newCurrentId)))
           .write(const GoalkeepersCompanion(isCurrent: Value(true)));
     });
   }
 
   Future<Goalkeeper?> getCurrentGoalkeeper() async {
-    final list = await (select(goalkeepers)..where((t) => t.isCurrent.equals(true))).get();
+    final list = await (select(
+      goalkeepers,
+    )..where((t) => t.isCurrent.equals(true))).get();
     return list.isNotEmpty ? list.first : null;
   }
 
   // ========== Методы для игр ==========
   Future<List<Matche>> getAllMatches() => select(matches).get();
   Future<List<Matche>> getMatchesByGoalkeeper(int goalkeeperId) {
-    return (select(matches)..where((m) => m.goalkeeperId.equals(goalkeeperId))).get();
+    return (select(
+      matches,
+    )..where((m) => m.goalkeeperId.equals(goalkeeperId))).get();
   }
+
   Future<List<Matche>> getMatchesByDate(int goalkeeperId, DateTime date) {
-    return (select(matches)
-      ..where((m) => m.goalkeeperId.equals(goalkeeperId) &
-      m.date.year.equals(date.year) &
-      m.date.month.equals(date.month) &
-      m.date.day.equals(date.day)))
+    return (select(matches)..where(
+          (m) =>
+              m.goalkeeperId.equals(goalkeeperId) &
+              m.date.year.equals(date.year) &
+              m.date.month.equals(date.month) &
+              m.date.day.equals(date.day),
+        ))
         .get();
   }
-  Future<int> insertMatch(MatchesCompanion match) => into(matches).insert(match);
+
+  Future<int> insertMatch(MatchesCompanion match) =>
+      into(matches).insert(match);
   Future<bool> updateMatch(Matche match) => update(matches).replace(match);
-  Future<int> deleteMatch(int id) => (delete(matches)..where((m) => m.id.equals(id))).go();
+  Future<int> deleteMatch(int id) =>
+      (delete(matches)..where((m) => m.id.equals(id))).go();
   Future<Matche?> getMatchById(int id) async {
     final list = await (select(matches)..where((m) => m.id.equals(id))).get();
     return list.isNotEmpty ? list.first : null;
@@ -123,7 +171,8 @@ class AppDatabase extends _$AppDatabase {
 
   Future<bool> updateGoal(Goal goal) => update(goals).replace(goal);
 
-  Future<int> deleteGoal(int id) => (delete(goals)..where((g) => g.id.equals(id))).go();
+  Future<int> deleteGoal(int id) =>
+      (delete(goals)..where((g) => g.id.equals(id))).go();
 
   Future<void> deleteGoalsByMatch(int matchId) async {
     await (delete(goals)..where((g) => g.matchId.equals(matchId))).go();
