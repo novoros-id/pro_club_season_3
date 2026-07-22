@@ -60,6 +60,8 @@ class Goals extends Table {
   RealColumn get fromZoneX => real().nullable()();
   RealColumn get fromZoneY => real().nullable()();
 
+  TextColumn get zone => text().nullable()();
+
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
 }
 
@@ -95,8 +97,6 @@ class AppDatabase extends _$AppDatabase {
 
   @override
   int get schemaVersion => 5;
-
-  @override
   MigrationStrategy get migration => MigrationStrategy(
     onCreate: (m) => m.createAll(),
     onUpgrade: (m, from, to) async {

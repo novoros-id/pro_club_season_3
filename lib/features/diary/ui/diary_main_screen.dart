@@ -5,6 +5,7 @@ import 'package:drift/drift.dart' hide Column;
 import '../../../core/database/database_provider.dart';
 import '../../../core/database/app_database.dart';
 import 'goal_list_screen.dart';
+import 'package:flutter/services.dart';
 
 class DiaryMainScreen extends ConsumerStatefulWidget {
   const DiaryMainScreen({super.key});
@@ -19,8 +20,6 @@ class _DiaryMainScreenState extends ConsumerState<DiaryMainScreen> {
   Goalkeeper? _selectedGoalkeeper;
   List<Matche> _matches = [];
   bool _isLoading = true;
-
-  // ✅ НОВОЕ: Флаг для отображения всех игр или только за дату
   bool _showAllMatches = false;
 
   // 🎨 Дизайн-система
@@ -625,11 +624,11 @@ class _DiaryMainScreenState extends ConsumerState<DiaryMainScreen> {
   Widget _buildNumberField(TextEditingController controller, String label) {
     return TextField(
       controller: controller,
-      keyboardType: TextInputType.number,
+      keyboardType: TextInputType.number, // ✅ Открывает цифровую клавиатуру
       textAlign: TextAlign.center,
       style: const TextStyle(
         fontFamily: 'Unbounded',
-        fontSize: 18,
+        fontSize: 24, // ✅ Чуть крупнее для удобства нажатия
         fontWeight: FontWeight.bold,
         color: primaryText,
       ),
@@ -646,8 +645,19 @@ class _DiaryMainScreenState extends ConsumerState<DiaryMainScreen> {
           borderRadius: BorderRadius.circular(borderRadius),
           borderSide: BorderSide.none,
         ),
-        contentPadding: const EdgeInsets.symmetric(vertical: 12),
+        contentPadding: const EdgeInsets.symmetric(vertical: 16),
       ),
+      // ✅ ПРИ ТАПЕ выделяет весь текущий текст (не нужно вручную стирать "0")
+      onTap: () {
+        controller.selection = TextSelection(
+          baseOffset: 0,
+          extentOffset: controller.text.length,
+        );
+      },
+      // ✅ Блокирует ввод всего, кроме цифр
+      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+      // ✅ По нажатию "Далее" переводит фокус на следующее поле
+      textInputAction: TextInputAction.next,
     );
   }
 
