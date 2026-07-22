@@ -1620,6 +1620,15 @@ class $GoalsTable extends Goals with TableInfo<$GoalsTable, Goal> {
     type: DriftSqlType.double,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _zoneMeta = const VerificationMeta('zone');
+  @override
+  late final GeneratedColumn<String> zone = GeneratedColumn<String>(
+    'zone',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -1641,6 +1650,7 @@ class $GoalsTable extends Goals with TableInfo<$GoalsTable, Goal> {
     toZoneY,
     fromZoneX,
     fromZoneY,
+    zone,
     createdAt,
   ];
   @override
@@ -1701,6 +1711,12 @@ class $GoalsTable extends Goals with TableInfo<$GoalsTable, Goal> {
         fromZoneY.isAcceptableOrUnknown(data['from_zone_y']!, _fromZoneYMeta),
       );
     }
+    if (data.containsKey('zone')) {
+      context.handle(
+        _zoneMeta,
+        zone.isAcceptableOrUnknown(data['zone']!, _zoneMeta),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -1744,6 +1760,10 @@ class $GoalsTable extends Goals with TableInfo<$GoalsTable, Goal> {
         DriftSqlType.double,
         data['${effectivePrefix}from_zone_y'],
       ),
+      zone: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}zone'],
+      ),
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -1765,6 +1785,7 @@ class Goal extends DataClass implements Insertable<Goal> {
   final double? toZoneY;
   final double? fromZoneX;
   final double? fromZoneY;
+  final String? zone;
   final DateTime createdAt;
   const Goal({
     required this.id,
@@ -1774,6 +1795,7 @@ class Goal extends DataClass implements Insertable<Goal> {
     this.toZoneY,
     this.fromZoneX,
     this.fromZoneY,
+    this.zone,
     required this.createdAt,
   });
   @override
@@ -1793,6 +1815,9 @@ class Goal extends DataClass implements Insertable<Goal> {
     }
     if (!nullToAbsent || fromZoneY != null) {
       map['from_zone_y'] = Variable<double>(fromZoneY);
+    }
+    if (!nullToAbsent || zone != null) {
+      map['zone'] = Variable<String>(zone);
     }
     map['created_at'] = Variable<DateTime>(createdAt);
     return map;
@@ -1815,6 +1840,7 @@ class Goal extends DataClass implements Insertable<Goal> {
       fromZoneY: fromZoneY == null && nullToAbsent
           ? const Value.absent()
           : Value(fromZoneY),
+      zone: zone == null && nullToAbsent ? const Value.absent() : Value(zone),
       createdAt: Value(createdAt),
     );
   }
@@ -1832,6 +1858,7 @@ class Goal extends DataClass implements Insertable<Goal> {
       toZoneY: serializer.fromJson<double?>(json['toZoneY']),
       fromZoneX: serializer.fromJson<double?>(json['fromZoneX']),
       fromZoneY: serializer.fromJson<double?>(json['fromZoneY']),
+      zone: serializer.fromJson<String?>(json['zone']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
     );
   }
@@ -1846,6 +1873,7 @@ class Goal extends DataClass implements Insertable<Goal> {
       'toZoneY': serializer.toJson<double?>(toZoneY),
       'fromZoneX': serializer.toJson<double?>(fromZoneX),
       'fromZoneY': serializer.toJson<double?>(fromZoneY),
+      'zone': serializer.toJson<String?>(zone),
       'createdAt': serializer.toJson<DateTime>(createdAt),
     };
   }
@@ -1858,6 +1886,7 @@ class Goal extends DataClass implements Insertable<Goal> {
     Value<double?> toZoneY = const Value.absent(),
     Value<double?> fromZoneX = const Value.absent(),
     Value<double?> fromZoneY = const Value.absent(),
+    Value<String?> zone = const Value.absent(),
     DateTime? createdAt,
   }) => Goal(
     id: id ?? this.id,
@@ -1867,6 +1896,7 @@ class Goal extends DataClass implements Insertable<Goal> {
     toZoneY: toZoneY.present ? toZoneY.value : this.toZoneY,
     fromZoneX: fromZoneX.present ? fromZoneX.value : this.fromZoneX,
     fromZoneY: fromZoneY.present ? fromZoneY.value : this.fromZoneY,
+    zone: zone.present ? zone.value : this.zone,
     createdAt: createdAt ?? this.createdAt,
   );
   Goal copyWithCompanion(GoalsCompanion data) {
@@ -1880,6 +1910,7 @@ class Goal extends DataClass implements Insertable<Goal> {
       toZoneY: data.toZoneY.present ? data.toZoneY.value : this.toZoneY,
       fromZoneX: data.fromZoneX.present ? data.fromZoneX.value : this.fromZoneX,
       fromZoneY: data.fromZoneY.present ? data.fromZoneY.value : this.fromZoneY,
+      zone: data.zone.present ? data.zone.value : this.zone,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
   }
@@ -1894,6 +1925,7 @@ class Goal extends DataClass implements Insertable<Goal> {
           ..write('toZoneY: $toZoneY, ')
           ..write('fromZoneX: $fromZoneX, ')
           ..write('fromZoneY: $fromZoneY, ')
+          ..write('zone: $zone, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
@@ -1908,6 +1940,7 @@ class Goal extends DataClass implements Insertable<Goal> {
     toZoneY,
     fromZoneX,
     fromZoneY,
+    zone,
     createdAt,
   );
   @override
@@ -1921,6 +1954,7 @@ class Goal extends DataClass implements Insertable<Goal> {
           other.toZoneY == this.toZoneY &&
           other.fromZoneX == this.fromZoneX &&
           other.fromZoneY == this.fromZoneY &&
+          other.zone == this.zone &&
           other.createdAt == this.createdAt);
 }
 
@@ -1932,6 +1966,7 @@ class GoalsCompanion extends UpdateCompanion<Goal> {
   final Value<double?> toZoneY;
   final Value<double?> fromZoneX;
   final Value<double?> fromZoneY;
+  final Value<String?> zone;
   final Value<DateTime> createdAt;
   const GoalsCompanion({
     this.id = const Value.absent(),
@@ -1941,6 +1976,7 @@ class GoalsCompanion extends UpdateCompanion<Goal> {
     this.toZoneY = const Value.absent(),
     this.fromZoneX = const Value.absent(),
     this.fromZoneY = const Value.absent(),
+    this.zone = const Value.absent(),
     this.createdAt = const Value.absent(),
   });
   GoalsCompanion.insert({
@@ -1951,6 +1987,7 @@ class GoalsCompanion extends UpdateCompanion<Goal> {
     this.toZoneY = const Value.absent(),
     this.fromZoneX = const Value.absent(),
     this.fromZoneY = const Value.absent(),
+    this.zone = const Value.absent(),
     this.createdAt = const Value.absent(),
   }) : matchId = Value(matchId),
        goalTypeId = Value(goalTypeId);
@@ -1962,6 +1999,7 @@ class GoalsCompanion extends UpdateCompanion<Goal> {
     Expression<double>? toZoneY,
     Expression<double>? fromZoneX,
     Expression<double>? fromZoneY,
+    Expression<String>? zone,
     Expression<DateTime>? createdAt,
   }) {
     return RawValuesInsertable({
@@ -1972,6 +2010,7 @@ class GoalsCompanion extends UpdateCompanion<Goal> {
       if (toZoneY != null) 'to_zone_y': toZoneY,
       if (fromZoneX != null) 'from_zone_x': fromZoneX,
       if (fromZoneY != null) 'from_zone_y': fromZoneY,
+      if (zone != null) 'zone': zone,
       if (createdAt != null) 'created_at': createdAt,
     });
   }
@@ -1984,6 +2023,7 @@ class GoalsCompanion extends UpdateCompanion<Goal> {
     Value<double?>? toZoneY,
     Value<double?>? fromZoneX,
     Value<double?>? fromZoneY,
+    Value<String?>? zone,
     Value<DateTime>? createdAt,
   }) {
     return GoalsCompanion(
@@ -1994,6 +2034,7 @@ class GoalsCompanion extends UpdateCompanion<Goal> {
       toZoneY: toZoneY ?? this.toZoneY,
       fromZoneX: fromZoneX ?? this.fromZoneX,
       fromZoneY: fromZoneY ?? this.fromZoneY,
+      zone: zone ?? this.zone,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -2022,6 +2063,9 @@ class GoalsCompanion extends UpdateCompanion<Goal> {
     if (fromZoneY.present) {
       map['from_zone_y'] = Variable<double>(fromZoneY.value);
     }
+    if (zone.present) {
+      map['zone'] = Variable<String>(zone.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -2038,6 +2082,7 @@ class GoalsCompanion extends UpdateCompanion<Goal> {
           ..write('toZoneY: $toZoneY, ')
           ..write('fromZoneX: $fromZoneX, ')
           ..write('fromZoneY: $fromZoneY, ')
+          ..write('zone: $zone, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
@@ -3083,6 +3128,7 @@ typedef $$GoalsTableCreateCompanionBuilder =
       Value<double?> toZoneY,
       Value<double?> fromZoneX,
       Value<double?> fromZoneY,
+      Value<String?> zone,
       Value<DateTime> createdAt,
     });
 typedef $$GoalsTableUpdateCompanionBuilder =
@@ -3094,6 +3140,7 @@ typedef $$GoalsTableUpdateCompanionBuilder =
       Value<double?> toZoneY,
       Value<double?> fromZoneX,
       Value<double?> fromZoneY,
+      Value<String?> zone,
       Value<DateTime> createdAt,
     });
 
@@ -3154,6 +3201,11 @@ class $$GoalsTableFilterComposer extends Composer<_$AppDatabase, $GoalsTable> {
 
   ColumnFilters<double> get fromZoneY => $composableBuilder(
     column: $table.fromZoneY,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get zone => $composableBuilder(
+    column: $table.zone,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -3225,6 +3277,11 @@ class $$GoalsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get zone => $composableBuilder(
+    column: $table.zone,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -3282,6 +3339,9 @@ class $$GoalsTableAnnotationComposer
 
   GeneratedColumn<double> get fromZoneY =>
       $composableBuilder(column: $table.fromZoneY, builder: (column) => column);
+
+  GeneratedColumn<String> get zone =>
+      $composableBuilder(column: $table.zone, builder: (column) => column);
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -3345,6 +3405,7 @@ class $$GoalsTableTableManager
                 Value<double?> toZoneY = const Value.absent(),
                 Value<double?> fromZoneX = const Value.absent(),
                 Value<double?> fromZoneY = const Value.absent(),
+                Value<String?> zone = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
               }) => GoalsCompanion(
                 id: id,
@@ -3354,6 +3415,7 @@ class $$GoalsTableTableManager
                 toZoneY: toZoneY,
                 fromZoneX: fromZoneX,
                 fromZoneY: fromZoneY,
+                zone: zone,
                 createdAt: createdAt,
               ),
           createCompanionCallback:
@@ -3365,6 +3427,7 @@ class $$GoalsTableTableManager
                 Value<double?> toZoneY = const Value.absent(),
                 Value<double?> fromZoneX = const Value.absent(),
                 Value<double?> fromZoneY = const Value.absent(),
+                Value<String?> zone = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
               }) => GoalsCompanion.insert(
                 id: id,
@@ -3374,6 +3437,7 @@ class $$GoalsTableTableManager
                 toZoneY: toZoneY,
                 fromZoneX: fromZoneX,
                 fromZoneY: fromZoneY,
+                zone: zone,
                 createdAt: createdAt,
               ),
           withReferenceMapper: (p0) => p0

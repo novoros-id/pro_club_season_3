@@ -60,6 +60,8 @@ class Goals extends Table {
   RealColumn get fromZoneX => real().nullable()();
   RealColumn get fromZoneY => real().nullable()();
 
+  TextColumn get zone => text().nullable()();
+
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
 }
 
@@ -69,7 +71,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   // ========== Методы для вратарей ==========
   Future<List<Goalkeeper>> getAllGoalkeepers() => select(goalkeepers).get();

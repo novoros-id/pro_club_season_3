@@ -6,9 +6,13 @@ import 'goal_input_wizard.dart';
 
 class GoalListScreen extends ConsumerStatefulWidget {
   final Matche match;
-  final String hand; // ✅ Добавляем поле для хвата
+  final String hand; // Хват вратаря ('left' или 'right')
 
-  const GoalListScreen({super.key, required this.match, this.hand = 'right',});
+  const GoalListScreen({
+    super.key,
+    required this.match,
+    this.hand = 'right',
+  });
 
   @override
   ConsumerState<GoalListScreen> createState() => _GoalListScreenState();
@@ -45,7 +49,7 @@ class _GoalListScreenState extends ConsumerState<GoalListScreen> {
     final result = await Navigator.push<bool>(
       context,
       MaterialPageRoute(
-        builder: (context) => GoalInputWizard(match: widget.match,  hand: widget.hand, ),
+        builder: (context) => GoalInputWizard(match: widget.match, hand: widget.hand),
       ),
     );
     if (result == true) {
@@ -199,15 +203,25 @@ class _GoalListScreenState extends ConsumerState<GoalListScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 4),
+                  if (goal.zone != null) // ✅ ДОБАВИТЬ ЭТОТ БЛОК
+                    Text(
+                      '🎯 Зона: ${goal.zone}',
+                      style: const TextStyle(
+                        fontFamily: 'Unbounded',
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: accentColor,
+                      ),
+                    ),
                   if (goal.toZoneX != null && goal.toZoneY != null)
                     Text(
-                      '🎯 Куда: (${goal.toZoneX!.toStringAsFixed(2)}, ${goal.toZoneY!.toStringAsFixed(2)})',
-                      style: const TextStyle(fontFamily: 'Lato', fontSize: 12, color: auxText),
+                      'Куда: (${goal.toZoneX!.toStringAsFixed(2)}, ${goal.toZoneY!.toStringAsFixed(2)})',
+                      style: const TextStyle(fontFamily: 'Lato', fontSize: 11, color: auxText),
                     ),
                   if (goal.fromZoneX != null && goal.fromZoneY != null)
                     Text(
-                      '📍 Откуда: (${goal.fromZoneX!.toStringAsFixed(2)}, ${goal.fromZoneY!.toStringAsFixed(2)})',
-                      style: const TextStyle(fontFamily: 'Lato', fontSize: 12, color: auxText),
+                      'Откуда: (${goal.fromZoneX!.toStringAsFixed(2)}, ${goal.fromZoneY!.toStringAsFixed(2)})',
+                      style: const TextStyle(fontFamily: 'Lato', fontSize: 11, color: auxText),
                     ),
                 ],
               ),

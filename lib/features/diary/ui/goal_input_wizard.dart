@@ -23,12 +23,15 @@ class GoalInputWizard extends ConsumerStatefulWidget {
 
 class _GoalInputWizardState extends ConsumerState<GoalInputWizard> {
   final GlobalKey _rinkContainerKey = GlobalKey(); // Ключ для контейнера с полем
+  final GlobalKey _imageContainerKey = GlobalKey(); // Ключ для контейнера с вратарем
+
   int _currentStep = 0;
   int _selectedGoalTypeId = 1;
   double? _toZoneX;
   double? _toZoneY;
   double? _fromZoneX;
   double? _fromZoneY;
+  String? _currentZone;
 
   // Флаг для отображения отладочной сетки
   bool _showDebugGrid = true;
@@ -62,6 +65,7 @@ class _GoalInputWizardState extends ConsumerState<GoalInputWizard> {
       _toZoneY = widget.existingGoal!.toZoneY;
       _fromZoneX = widget.existingGoal!.fromZoneX;
       _fromZoneY = widget.existingGoal!.fromZoneY;
+      _currentZone = widget.existingGoal!.zone;
     }
   }
 
@@ -83,6 +87,7 @@ class _GoalInputWizardState extends ConsumerState<GoalInputWizard> {
 
   Future<void> _saveGoal() async {
     final db = ref.read(databaseProvider);
+
     if (widget.existingGoal != null) {
       final updated = Goal(
         id: widget.existingGoal!.id,
@@ -92,6 +97,7 @@ class _GoalInputWizardState extends ConsumerState<GoalInputWizard> {
         toZoneY: _toZoneY,
         fromZoneX: _fromZoneX,
         fromZoneY: _fromZoneY,
+        zone: _currentZone, // ✅ ДОБАВИТЬ
         createdAt: widget.existingGoal!.createdAt,
       );
       await db.updateGoal(updated);
@@ -103,15 +109,16 @@ class _GoalInputWizardState extends ConsumerState<GoalInputWizard> {
         toZoneY: Value(_toZoneY),
         fromZoneX: Value(_fromZoneX),
         fromZoneY: Value(_fromZoneY),
+        zone: Value(_currentZone), // ✅ ДОБАВИТЬ
       ));
     }
+
     if (mounted) {
       Navigator.pop(context, true);
     }
   }
 
-  // ✅ МЕТОД РАСЧЕТА ЗОНЫ (теперь принимает размеры контейнера)
-  // ✅ ОБНОВЛЕННЫЙ МЕТОД: Принимает радиусы явно
+  // ✅ МЕТОД РАСЧЕТА ЗОНЫ
   String? _calculateZone(
       double normalizedX,
       double normalizedY,
@@ -119,17 +126,15 @@ class _GoalInputWizardState extends ConsumerState<GoalInputWizard> {
       double height,
       double centerX,
       double centerY,
-      double maxRadius,   // ✅ Добавили параметр
-      double innerRadius, // ✅ Добавили параметр
+      double maxRadius,
+      double innerRadius,
       ) {
     double px = normalizedX * width;
     double py = normalizedY * height;
-
     double dx = px - centerX;
     double dy = py - centerY;
     double dist = math.sqrt(dx * dx + dy * dy);
 
-    // ✅ Используем переданные радиусы, а не хардкод
     if (dist > maxRadius) return null;
 
     String ring = (dist < innerRadius) ? '2' : '1';
@@ -143,7 +148,6 @@ class _GoalInputWizardState extends ConsumerState<GoalInputWizard> {
       'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
       'N', 'O', 'P', 'A', 'B', 'C', 'D', 'E'
     ];
-
     int sectorIndex = (angleDeg / 22.5).floor();
     if (sectorIndex >= sectors.length) sectorIndex = 0;
 
@@ -277,23 +281,18 @@ class _GoalInputWizardState extends ConsumerState<GoalInputWizard> {
   }
 
   // ШАГ 2: Куда забит гол
-  // ШАГ 2: Куда забит гол
   Widget _buildToZoneStep() {
     final String goalieImage = widget.hand == 'left'
         ? 'assets/images/goalie_l.png'
         : 'assets/images/goalie_r.png';
 
-    // Динамический размер контейнера (растягиваем на ширину экрана)
+    // Динамический размер контейнера
     final double containerWidth = MediaQuery.of(context).size.width - 32;
     final double containerHeight = containerWidth * aspectRatio;
 
     // 🎯 НАСТРОЙКА ЦЕНТРА ЗОН
     final double centerX = containerWidth / 2;
-    // Сдвиг центра вниз (подбирай это число, если сетка не совпадает с картинкой)
-    // 0.085 означает сдвиг на 8.5% высоты вниз от середины
     final double centerY = (containerHeight / 2) + (containerHeight * 0.085);
-
-    // Радиусы пропорциональны ширине (должны совпадать с теми, что в Painter!)
     final double outerRadius = containerWidth * 0.51;
     final double innerRadius = containerWidth * 0.35;
 
@@ -321,17 +320,11 @@ class _GoalInputWizardState extends ConsumerState<GoalInputWizard> {
         Expanded(
           child: GestureDetector(
             onTapDown: (details) {
-              // Получаем реальные размеры и позицию контейнера через GlobalKey
               final RenderBox? box = _imageContainerKey.currentContext?.findRenderObject() as RenderBox?;
               if (box == null) return;
-
               final Offset containerOffset = box.localToGlobal(Offset.zero);
-
-              // Координаты нажатия относительно левого верхнего угла контейнера
               final double relativeX = details.globalPosition.dx - containerOffset.dx;
               final double relativeY = details.globalPosition.dy - containerOffset.dy;
-
-              // Нормализуем координаты (от 0.0 до 1.0)
               final double normalizedX = relativeX / box.size.width;
               final double normalizedY = relativeY / box.size.height;
 
@@ -339,8 +332,6 @@ class _GoalInputWizardState extends ConsumerState<GoalInputWizard> {
                 setState(() {
                   _toZoneX = normalizedX;
                   _toZoneY = normalizedY;
-
-                  // ✅ ВАЖНО: Передаем вычисленные радиусы в метод расчета!
                   _currentZone = _calculateZone(
                     normalizedX,
                     normalizedY,
@@ -348,8 +339,8 @@ class _GoalInputWizardState extends ConsumerState<GoalInputWizard> {
                     box.size.height,
                     centerX,
                     centerY,
-                    outerRadius,   // Передаем внешний радиус
-                    innerRadius,   // Передаем внутренний радиус
+                    outerRadius,
+                    innerRadius,
                   );
                 });
               }
@@ -357,7 +348,7 @@ class _GoalInputWizardState extends ConsumerState<GoalInputWizard> {
             child: Align(
               alignment: Alignment.topCenter,
               child: Container(
-                key: _imageContainerKey, // Ключ для точных координат
+                key: _imageContainerKey,
                 width: containerWidth,
                 height: containerHeight,
                 margin: const EdgeInsets.only(top: 10),
@@ -368,8 +359,6 @@ class _GoalInputWizardState extends ConsumerState<GoalInputWizard> {
                     Positioned.fill(
                       child: Image.asset(goalieImage, fit: BoxFit.contain, alignment: Alignment.bottomCenter),
                     ),
-
-                    // ✅ ОТЛАДОЧНАЯ СЕТКА (использует те же centerX, centerY и радиусы)
                     if (_showDebugGrid)
                       Positioned.fill(
                         child: CustomPaint(
@@ -383,8 +372,6 @@ class _GoalInputWizardState extends ConsumerState<GoalInputWizard> {
                           ),
                         ),
                       ),
-
-                    // Маркер попадания (шайба)
                     if (_toZoneX != null && _toZoneY != null)
                       Positioned(
                         left: _toZoneX! * containerWidth - 12,
@@ -395,8 +382,6 @@ class _GoalInputWizardState extends ConsumerState<GoalInputWizard> {
                           child: const Icon(Icons.sports_hockey, color: primaryText, size: 16),
                         ),
                       ),
-
-                    // Текст зоны
                     if (_currentZone != null && _toZoneX != null && _toZoneY != null)
                       Positioned(
                         left: _toZoneX! * containerWidth - 20,
@@ -417,14 +402,9 @@ class _GoalInputWizardState extends ConsumerState<GoalInputWizard> {
     );
   }
 
-  // Глобальный ключ для точного определения координат контейнера
-  final GlobalKey _imageContainerKey = GlobalKey();
-  String? _currentZone;
-
+  // ШАГ 3: Откуда бросок
   Widget _buildFromZoneStep() {
-    // Динамический размер контейнера под поле
     final double containerWidth = MediaQuery.of(context).size.width - 32;
-    // Пропорции картинки pole.png (2617x2094)
     final double containerHeight = containerWidth * (2094 / 2617);
 
     return Column(
@@ -445,14 +425,11 @@ class _GoalInputWizardState extends ConsumerState<GoalInputWizard> {
         Expanded(
           child: GestureDetector(
             onTapDown: (details) {
-              // Получаем координаты относительно контейнера с полем
               final RenderBox? box = _rinkContainerKey.currentContext?.findRenderObject() as RenderBox?;
               if (box == null) return;
-
               final Offset containerOffset = box.localToGlobal(Offset.zero);
               final double relativeX = details.globalPosition.dx - containerOffset.dx;
               final double relativeY = details.globalPosition.dy - containerOffset.dy;
-
               final double normalizedX = relativeX / box.size.width;
               final double normalizedY = relativeY / box.size.height;
 
@@ -466,7 +443,7 @@ class _GoalInputWizardState extends ConsumerState<GoalInputWizard> {
             child: Align(
               alignment: Alignment.topCenter,
               child: Container(
-                key: _rinkContainerKey, // Привязываем ключ
+                key: _rinkContainerKey,
                 width: containerWidth,
                 height: containerHeight,
                 margin: const EdgeInsets.only(top: 10),
@@ -478,7 +455,6 @@ class _GoalInputWizardState extends ConsumerState<GoalInputWizard> {
                 child: Stack(
                   clipBehavior: Clip.none,
                   children: [
-                    // Картинка поля
                     Positioned.fill(
                       child: Image.asset(
                         'assets/images/pole.png',
@@ -486,8 +462,6 @@ class _GoalInputWizardState extends ConsumerState<GoalInputWizard> {
                         alignment: Alignment.center,
                       ),
                     ),
-
-                    // Маркер броска (синяя точка)
                     if (_fromZoneX != null && _fromZoneY != null)
                       Positioned(
                         left: _fromZoneX! * containerWidth - 12,
@@ -496,7 +470,7 @@ class _GoalInputWizardState extends ConsumerState<GoalInputWizard> {
                           width: 24,
                           height: 24,
                           decoration: const BoxDecoration(
-                            color: Color(0xFF1E88E5), // Синий цвет
+                            color: Color(0xFF1E88E5),
                             shape: BoxShape.circle,
                             boxShadow: [
                               BoxShadow(
@@ -524,7 +498,7 @@ class _GoalInputWizardState extends ConsumerState<GoalInputWizard> {
   }
 }
 
-// 🎨 ОТЛАДОЧНАЯ СЕТКА ЗОН (с динамическими размерами)
+// 🎨 ОТЛАДОЧНАЯ СЕТКА ЗОН
 class ZoneGridPainter extends CustomPainter {
   final double width;
   final double height;
@@ -548,12 +522,10 @@ class ZoneGridPainter extends CustomPainter {
       ..color = Colors.red.withOpacity(0.7)
       ..strokeWidth = 1.5
       ..style = PaintingStyle.stroke;
-
     final innerCirclePaint = Paint()
       ..color = Colors.blue.withOpacity(0.7)
       ..strokeWidth = 1.5
       ..style = PaintingStyle.stroke;
-
     final outerCirclePaint = Paint()
       ..color = Colors.green.withOpacity(0.7)
       ..strokeWidth = 1.5
@@ -562,10 +534,8 @@ class ZoneGridPainter extends CustomPainter {
     canvas.drawCircle(Offset(centerX, centerY), outerRadius, outerCirclePaint);
     canvas.drawCircle(Offset(centerX, centerY), innerRadius, innerCirclePaint);
 
-    // Строго вертикальная линия (12 часов)
     final double startAngleRad = -math.pi / 2;
     final double stepRad = 22.5 * math.pi / 180;
-
     for (int i = 0; i < 16; i++) {
       final angle = startAngleRad + i * stepRad;
       final dx = math.cos(angle) * outerRadius;
@@ -577,7 +547,6 @@ class ZoneGridPainter extends CustomPainter {
       );
     }
 
-    // Точка центра и маркер 12 часов
     canvas.drawCircle(Offset(centerX, centerY), 3, Paint()..color = Colors.black);
     canvas.drawCircle(Offset(centerX, centerY - outerRadius), 4, Paint()..color = Colors.red);
   }
