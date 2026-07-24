@@ -1,122 +1,243 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../../../l10n/app_localizations.dart';
 
-class OnboardingScreen extends StatelessWidget {
+class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+  State<OnboardingScreen> createState() => _OnboardingScreenState();
+}
 
-    // Цвета из гайда
-    const Color darkBg = Color(0xFF121212);
+class _OnboardingScreenState extends State<OnboardingScreen> {
+  bool _isButtonPressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    const Color darkBg = Color(0xFF121A1F);
     const Color accentGreen = Color(0xFFBBF246);
-    const Color textGrey = Color(0xFF9B9EA1);
+    const Color greyText = Color(0xFF8F9499);
 
     return Scaffold(
       backgroundColor: Colors.white,
-      body: SafeArea(
-        child: Column(
-          children: [
-            Expanded(
-              flex: 3,
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  // Картинка вратаря (замени путь на свой актуальный)
-                  Image.asset(
-                    'assets/images/goalkeeper_banner.png',
-                    fit: BoxFit.cover,
-                  ),
-                  // Затемнение снизу
-                  Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [Colors.transparent, Colors.black.withOpacity(0.8)],
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    bottom: 40,
-                    left: 20,
-                    right: 20,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          l10n.appName.toUpperCase(), // "ТРЕНИРОВКА ВРАТАРЕЙ"
-                          style: const TextStyle(
-                            fontFamily: 'Unbounded',
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                            height: 1.2,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Понимай, почему тебе забивают\nи становись сильнее с каждой игрой',
-                          style: TextStyle(
-                            fontFamily: 'Lato',
-                            fontSize: 16,
-                            color: Colors.white.withOpacity(0.9),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final height = constraints.maxHeight;
 
-            Expanded(
-              flex: 2,
-              child: Container(
-                padding: const EdgeInsets.all(24),
-                color: Colors.white,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
+          return Stack(
+            children: [
+              // Верхняя картинка
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                height: height * 0.68,
+                child: Stack(
+                  fit: StackFit.expand,
                   children: [
-                    // Акцентная полоска
-                    Container(
-                      width: 40,
-                      height: 4,
-                      color: accentGreen,
-                      margin: const EdgeInsets.only(bottom: 32),
+                    Image.asset(
+                      'assets/images/goalkeeper_banner.png',
+                      fit: BoxFit.cover,
+                      alignment: Alignment.topCenter,
                     ),
 
-                    // Кнопка "Давай начнем"
-                    SizedBox(
-                      width: double.infinity,
-                      height: 56,
-                      child: ElevatedButton(
-                        onPressed: () => context.push('/add-goalkeeper'), // Переход к форме
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: darkBg,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30), // Полностью круглая
-                          ),
-                          elevation: 0,
-                        ),
-                        child: Text(
-                          'ДАВАЙ НАЧНЁМ',
-                          style: const TextStyle(
-                            fontFamily: 'Unbounded',
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
+                    // Белый fade снизу
+                    Container(
+                      decoration: const BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          stops: [0.58, 0.82, 1.0],
+                          colors: [
+                            Colors.transparent,
+                            Colors.white70,
+                            Colors.white,
+                          ],
                         ),
                       ),
                     ),
                   ],
                 ),
               ),
+
+              // Контент
+              Positioned.fill(
+                child: SafeArea(
+                  top: false,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 32),
+                    child: Column(
+                      children: [
+                        SizedBox(height: height * 0.64),
+
+                        const _LogoTitle(),
+
+                        const SizedBox(height: 35),
+
+                        const Text(
+                          'Понимай, почему тебе забивают\nи становись сильнее с каждой игрой',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontFamily: 'Lato',
+                            fontSize: 18,
+                            height: 1.35,
+                            color: greyText,
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+
+                        const SizedBox(height: 58),
+
+                        // Украшалка-загрузка
+                        const _LoadingDecoration(),
+
+                        const Spacer(),
+
+                        SizedBox(
+                          width: double.infinity,
+                          height: 64,
+                          child: GestureDetector(
+                            onTapDown: (_) {
+                              setState(() {
+                                _isButtonPressed = true;
+                              });
+                            },
+                            onTapCancel: () {
+                              setState(() {
+                                _isButtonPressed = false;
+                              });
+                            },
+
+                            onTap: () {
+                              context.push('/add-goalkeeper').then((_) {
+                                if (!mounted) return;
+
+                                setState(() {
+                                  _isButtonPressed = false;
+                                });
+                              });
+                            },
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 120),
+                              curve: Curves.easeOut,
+                              decoration: BoxDecoration(
+                                color: _isButtonPressed ? accentGreen : darkBg,
+                                borderRadius: BorderRadius.circular(40),
+                              ),
+                              child: Center(
+                                child: _ButtonText(
+                                  text: 'Присоединиться',
+                                  textColor: _isButtonPressed
+                                      ? Colors.black
+                                      : Colors.white,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 28),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _LogoTitle extends StatelessWidget {
+  const _LogoTitle();
+
+  @override
+  Widget build(BuildContext context) {
+    const Color darkText = Color(0xFF121A1F);
+    const Color accentGreen = Color(0xFFBBF246);
+
+    return Center(
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          // Зеленая подложка под словом "ПУТЬ"
+          Positioned(
+            left: -13,
+            bottom: 4,
+            child: Container(
+              width: 85,
+              height: 10,
+              color: accentGreen,
             ),
-          ],
+          ),
+
+          const Text(
+            'ПУТЬ ВРАТАРЯ',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontFamily: 'Unbounded',
+              fontSize: 34,
+              fontWeight: FontWeight.w900,
+              letterSpacing: -1,
+              color: darkText,
+              height: 1,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ButtonText extends StatelessWidget {
+  final String text;
+  final Color textColor;
+
+  const _ButtonText({
+    required this.text,
+    this.textColor = Colors.white,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      text,
+      style: TextStyle(
+        fontFamily: 'Unbounded',
+        fontSize: 18,
+        fontWeight: FontWeight.w600,
+        color: textColor,
+      ),
+    );
+  }
+}
+
+class _LoadingDecoration extends StatelessWidget {
+  const _LoadingDecoration();
+
+  @override
+  Widget build(BuildContext context) {
+    const Color darkBg = Color(0xFF121A1F);
+    const Color accentGreen = Color(0xFFBBF246);
+
+    return Center(
+      child: Container(
+        width: 70,
+        height: 9,
+        padding: const EdgeInsets.all(2),
+        decoration: BoxDecoration(
+          color: darkBg,
+          borderRadius: BorderRadius.circular(15),
+        ),
+        alignment: Alignment.centerLeft,
+        child: Container(
+          width: 35,
+          height: 4,
+          decoration: BoxDecoration(
+            color: accentGreen,
+            borderRadius: BorderRadius.circular(15),
+          ),
         ),
       ),
     );
