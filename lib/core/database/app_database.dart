@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
+import 'package:uuid/uuid.dart';
 import 'dart:io';
 
 part 'app_database.g.dart';
@@ -67,6 +68,8 @@ class Goals extends Table {
 
 class DailyTasks extends Table {
   IntColumn get id => integer().autoIncrement()();
+  TextColumn get uuid =>
+      text().clientDefault(() => const Uuid().v4()).unique()();
   IntColumn get goalkeeperId => integer().references(Goalkeepers, #id)();
   TextColumn get title => text()();
   TextColumn get description => text().nullable()();
@@ -96,16 +99,92 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
+
+  @override
   MigrationStrategy get migration => MigrationStrategy(
     onCreate: (m) => m.createAll(),
     onUpgrade: (m, from, to) async {
       if (from < 5) {
         await m.createTable(dailyTasks);
         await m.createTable(dailyTaskCompletions);
+      } else if (from == 5) {
+        await _migrateDailyTasksFromV5(m);
       }
     },
   );
+
+  Future<void> _migrateDailyTasksFromV5(Migrator m) async {
+    final foreignKeysEnabled =
+        (await customSelect(
+          'PRAGMA foreign_keys',
+        ).getSingle()).read<int>('foreign_keys') ==
+        1;
+
+    if (foreignKeysEnabled) {
+      await customStatement('PRAGMA foreign_keys = OFF');
+    }
+
+    try {
+      await transaction(() async {
+        await customStatement('''
+          CREATE TEMP TABLE daily_task_uuid_v6_map (
+            task_id INTEGER NOT NULL PRIMARY KEY,
+            uuid TEXT NOT NULL UNIQUE
+          )
+        ''');
+
+        final taskIds = await customSelect(
+          'SELECT id FROM daily_tasks ORDER BY id',
+        ).map((row) => row.read<int>('id')).get();
+        for (final taskId in taskIds) {
+          await customStatement(
+            'INSERT INTO daily_task_uuid_v6_map (task_id, uuid) VALUES (?, ?)',
+            [taskId, const Uuid().v4()],
+          );
+        }
+
+        await m.createTable(dailyTasks.createAlias('daily_tasks_v6'));
+        await customStatement('''
+          INSERT INTO daily_tasks_v6 (
+            id,
+            uuid,
+            goalkeeper_id,
+            title,
+            description,
+            recurrence_type,
+            is_enabled,
+            created_at,
+            updated_at,
+            deleted_at
+          )
+          SELECT
+            tasks.id,
+            uuid_map.uuid,
+            tasks.goalkeeper_id,
+            tasks.title,
+            tasks.description,
+            tasks.recurrence_type,
+            tasks.is_enabled,
+            tasks.created_at,
+            tasks.updated_at,
+            tasks.deleted_at
+          FROM daily_tasks AS tasks
+          INNER JOIN daily_task_uuid_v6_map AS uuid_map
+            ON uuid_map.task_id = tasks.id
+        ''');
+        await customStatement('DROP TABLE daily_tasks');
+        await customStatement(
+          'ALTER TABLE daily_tasks_v6 RENAME TO daily_tasks',
+        );
+        await customStatement('DROP TABLE daily_task_uuid_v6_map');
+      });
+    } finally {
+      if (foreignKeysEnabled) {
+        await customStatement('PRAGMA foreign_keys = ON');
+      }
+    }
+  }
 
   // ========== Методы для вратарей ==========
   Future<List<Goalkeeper>> getAllGoalkeepers() => select(goalkeepers).get();

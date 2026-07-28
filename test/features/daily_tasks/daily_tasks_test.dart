@@ -1,5 +1,5 @@
 import 'package:drift/native.dart';
-import 'package:drift/drift.dart' show Value;
+import 'package:drift/drift.dart' show OrderingTerm, Value;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -17,6 +17,9 @@ import 'package:goalkeeper_trainer/l10n/app_localizations.dart';
 void main() {
   late AppDatabase db;
   late DailyTasksData data;
+  final uuidV4Pattern = RegExp(
+    r'^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$',
+  );
 
   setUp(() {
     db = AppDatabase(NativeDatabase.memory());
@@ -36,6 +39,10 @@ void main() {
           isCurrent: Value(current),
         ),
       );
+
+  Future<DailyTask> taskById(int id) => (db.select(
+    db.dailyTasks,
+  )..where((task) => task.id.equals(id))).getSingle();
 
   Future<void> pumpTaskForm(WidgetTester tester, {DailyTask? task}) async {
     final router = GoRouter(
@@ -95,6 +102,101 @@ void main() {
       (await data.tasksForDate(first, DateTime.now())).map((e) => e.task.title),
       ['Первый'],
     );
+  });
+
+  test(
+    'new tasks get canonical unique UUIDs and accept an explicit UUID',
+    () async {
+      final keeper = await addKeeper();
+      await data.createTask(
+        DailyTasksCompanion.insert(goalkeeperId: keeper, title: 'Первая'),
+      );
+      await data.createTask(
+        DailyTasksCompanion.insert(goalkeeperId: keeper, title: 'Вторая'),
+      );
+      const explicitUuid = '11111111-1111-4111-8111-111111111111';
+      await data.createTask(
+        DailyTasksCompanion.insert(
+          uuid: const Value(explicitUuid),
+          goalkeeperId: keeper,
+          title: 'Импортированная',
+        ),
+      );
+
+      final tasks = await db.select(db.dailyTasks).get();
+      expect(tasks, hasLength(3));
+      expect(tasks[0].uuid, matches(uuidV4Pattern));
+      expect(tasks[1].uuid, matches(uuidV4Pattern));
+      expect(tasks[0].uuid, isNot(tasks[1].uuid));
+      expect(tasks[2].uuid, explicitUuid);
+
+      await expectLater(
+        data.createTask(
+          DailyTasksCompanion.insert(
+            uuid: const Value(explicitUuid),
+            goalkeeperId: keeper,
+            title: 'Дубликат',
+          ),
+        ),
+        throwsA(
+          predicate<Object>(
+            (error) => error.toString().contains(
+              'UNIQUE constraint failed: daily_tasks.uuid',
+            ),
+          ),
+        ),
+      );
+      expect(await db.select(db.dailyTasks).get(), hasLength(3));
+
+      final columns = await db
+          .customSelect("PRAGMA table_info('daily_tasks')")
+          .get();
+      final uuidColumn = columns.singleWhere(
+        (row) => row.read<String>('name') == 'uuid',
+      );
+      expect(uuidColumn.read<int>('notnull'), 1);
+
+      final indexes = await db
+          .customSelect("PRAGMA index_list('daily_tasks')")
+          .get();
+      var hasUniqueUuidIndex = false;
+      for (final index in indexes.where(
+        (row) => row.read<int>('unique') == 1,
+      )) {
+        final indexName = index.read<String>('name').replaceAll('"', '""');
+        final columns = await db
+            .customSelect('PRAGMA index_info("$indexName")')
+            .get();
+        if (columns.any((row) => row.read<String>('name') == 'uuid')) {
+          hasUniqueUuidIndex = true;
+          break;
+        }
+      }
+      expect(hasUniqueUuidIndex, isTrue);
+    },
+  );
+
+  test('task UUID stays stable across updates and soft delete', () async {
+    final keeper = await addKeeper();
+    final taskId = await data.createTask(
+      DailyTasksCompanion.insert(goalkeeperId: keeper, title: 'Исходная'),
+    );
+    final uuid = (await taskById(taskId)).uuid;
+
+    await data.updateTask(
+      taskId,
+      title: 'Переименованная',
+      description: 'Новое описание',
+    );
+    expect((await taskById(taskId)).uuid, uuid);
+
+    await data.setEnabled(taskId, false);
+    expect((await taskById(taskId)).uuid, uuid);
+    await data.setEnabled(taskId, true);
+    expect((await taskById(taskId)).uuid, uuid);
+
+    await data.softDelete(taskId);
+    expect((await taskById(taskId)).uuid, uuid);
   });
 
   test('completion is unique, removable, and date-specific', () async {
@@ -574,7 +676,149 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  test('migrates version 4 without losing goalkeeper data', () async {
+  test(
+    'migrates version 5 tasks to UUIDs without breaking completions',
+    () async {
+      await db.close();
+      final oldExecutor = NativeDatabase.memory(
+        setup: (database) {
+          database.execute('''
+          CREATE TABLE goalkeepers (
+            id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+            uuid TEXT NOT NULL UNIQUE,
+            first_name TEXT NOT NULL,
+            last_name TEXT NOT NULL,
+            hand TEXT NOT NULL,
+            email TEXT,
+            birth_date INTEGER,
+            is_current INTEGER NOT NULL DEFAULT 0
+              CHECK (is_current IN (0, 1)),
+            photo_path TEXT
+          )
+        ''');
+          database.execute('''
+          CREATE TABLE daily_tasks (
+            id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+            goalkeeper_id INTEGER NOT NULL REFERENCES goalkeepers (id),
+            title TEXT NOT NULL,
+            description TEXT,
+            recurrence_type TEXT NOT NULL DEFAULT 'daily',
+            is_enabled INTEGER NOT NULL DEFAULT 1
+              CHECK (is_enabled IN (0, 1)),
+            created_at INTEGER NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            updated_at INTEGER NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            deleted_at INTEGER
+          )
+        ''');
+          database.execute('''
+          CREATE TABLE daily_task_completions (
+            task_id INTEGER NOT NULL REFERENCES daily_tasks (id),
+            occurrence_date INTEGER NOT NULL,
+            completed_at INTEGER NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (task_id, occurrence_date)
+          )
+        ''');
+          database.execute(
+            "INSERT INTO goalkeepers "
+            "(id, uuid, first_name, last_name, hand) "
+            "VALUES (1, 'legacy', 'Старый', 'Вратарь', 'right')",
+          );
+          database.execute('''
+          INSERT INTO daily_tasks (
+            id,
+            goalkeeper_id,
+            title,
+            description,
+            recurrence_type,
+            is_enabled,
+            created_at,
+            updated_at,
+            deleted_at
+          ) VALUES
+            (
+              10,
+              1,
+              'Первая',
+              'Описание',
+              'daily',
+              1,
+              1700000000,
+              1700000100,
+              NULL
+            ),
+            (
+              20,
+              1,
+              'Вторая',
+              NULL,
+              'weekly',
+              0,
+              1700000200,
+              1700000300,
+              1700000400
+            )
+        ''');
+          database.execute('''
+          INSERT INTO daily_task_completions (
+            task_id,
+            occurrence_date,
+            completed_at
+          ) VALUES
+            (10, 1704067200, 1704067300),
+            (10, 1704153600, 1704153700),
+            (20, 1704067200, 1704067400)
+        ''');
+          database.execute('PRAGMA foreign_keys = ON');
+          database.execute('PRAGMA user_version = 5');
+        },
+      );
+      db = AppDatabase(oldExecutor);
+      final migrated = db;
+
+      final tasks = await (migrated.select(
+        migrated.dailyTasks,
+      )..orderBy([(task) => OrderingTerm.asc(task.id)])).get();
+      expect(tasks.map((task) => task.id), [10, 20]);
+      expect(tasks.map((task) => task.title), ['Первая', 'Вторая']);
+      expect(tasks[0].description, 'Описание');
+      expect(tasks[1].description, isNull);
+      expect(tasks.map((task) => task.recurrenceType), ['daily', 'weekly']);
+      expect(tasks.map((task) => task.isEnabled), [isTrue, isFalse]);
+      expect(tasks[0].createdAt.millisecondsSinceEpoch, 1700000000000);
+      expect(tasks[0].updatedAt.millisecondsSinceEpoch, 1700000100000);
+      expect(tasks[0].deletedAt, isNull);
+      expect(tasks[1].deletedAt?.millisecondsSinceEpoch, 1700000400000);
+      expect(tasks.every((task) => uuidV4Pattern.hasMatch(task.uuid)), isTrue);
+      expect(tasks.map((task) => task.uuid).toSet(), hasLength(2));
+
+      final completions =
+          await (migrated.select(migrated.dailyTaskCompletions)..orderBy([
+                (completion) => OrderingTerm.asc(completion.taskId),
+                (completion) => OrderingTerm.asc(completion.occurrenceDate),
+              ]))
+              .get();
+      expect(completions, hasLength(3));
+      expect(completions.map((completion) => completion.taskId), [10, 10, 20]);
+      expect(
+        await migrated.customSelect('PRAGMA foreign_key_check').get(),
+        isEmpty,
+      );
+
+      final nextId = await migrated
+          .into(migrated.dailyTasks)
+          .insert(DailyTasksCompanion.insert(goalkeeperId: 1, title: 'Новая'));
+      expect(nextId, greaterThan(20));
+      expect(
+        (await (migrated.select(
+          migrated.dailyTasks,
+        )..where((task) => task.id.equals(nextId))).getSingle()).uuid,
+        matches(uuidV4Pattern),
+      );
+    },
+  );
+
+  test('migrates version 4 directly to the version 6 task schema', () async {
+    await db.close();
     final oldExecutor = NativeDatabase.memory(
       setup: (database) {
         database.execute('''
@@ -602,14 +846,25 @@ void main() {
         database.execute('PRAGMA user_version = 4');
       },
     );
-    final migrated = AppDatabase(oldExecutor);
+    db = AppDatabase(oldExecutor);
+    final migrated = db;
     expect((await migrated.getAllGoalkeepers()).single.firstName, 'Старый');
     await migrated
         .into(migrated.dailyTasks)
         .insert(
           DailyTasksCompanion.insert(goalkeeperId: 1, title: 'После миграции'),
         );
-    expect(await migrated.select(migrated.dailyTasks).get(), hasLength(1));
-    await migrated.close();
+    final tasks = await migrated.select(migrated.dailyTasks).get();
+    expect(tasks, hasLength(1));
+    expect(tasks.single.uuid, matches(uuidV4Pattern));
+    final columns = await migrated
+        .customSelect("PRAGMA table_info('daily_tasks')")
+        .get();
+    expect(
+      columns
+          .singleWhere((row) => row.read<String>('name') == 'uuid')
+          .read<int>('notnull'),
+      1,
+    );
   });
 }

@@ -2108,6 +2108,17 @@ class $DailyTasksTable extends DailyTasks
       'PRIMARY KEY AUTOINCREMENT',
     ),
   );
+  static const VerificationMeta _uuidMeta = const VerificationMeta('uuid');
+  @override
+  late final GeneratedColumn<String> uuid = GeneratedColumn<String>(
+    'uuid',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'),
+    clientDefault: () => const Uuid().v4(),
+  );
   static const VerificationMeta _goalkeeperIdMeta = const VerificationMeta(
     'goalkeeperId',
   );
@@ -2207,6 +2218,7 @@ class $DailyTasksTable extends DailyTasks
   @override
   List<GeneratedColumn> get $columns => [
     id,
+    uuid,
     goalkeeperId,
     title,
     description,
@@ -2230,6 +2242,12 @@ class $DailyTasksTable extends DailyTasks
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('uuid')) {
+      context.handle(
+        _uuidMeta,
+        uuid.isAcceptableOrUnknown(data['uuid']!, _uuidMeta),
+      );
     }
     if (data.containsKey('goalkeeper_id')) {
       context.handle(
@@ -2305,6 +2323,10 @@ class $DailyTasksTable extends DailyTasks
         DriftSqlType.int,
         data['${effectivePrefix}id'],
       )!,
+      uuid: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}uuid'],
+      )!,
       goalkeeperId: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}goalkeeper_id'],
@@ -2348,6 +2370,7 @@ class $DailyTasksTable extends DailyTasks
 
 class DailyTask extends DataClass implements Insertable<DailyTask> {
   final int id;
+  final String uuid;
   final int goalkeeperId;
   final String title;
   final String? description;
@@ -2358,6 +2381,7 @@ class DailyTask extends DataClass implements Insertable<DailyTask> {
   final DateTime? deletedAt;
   const DailyTask({
     required this.id,
+    required this.uuid,
     required this.goalkeeperId,
     required this.title,
     this.description,
@@ -2371,6 +2395,7 @@ class DailyTask extends DataClass implements Insertable<DailyTask> {
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<int>(id);
+    map['uuid'] = Variable<String>(uuid);
     map['goalkeeper_id'] = Variable<int>(goalkeeperId);
     map['title'] = Variable<String>(title);
     if (!nullToAbsent || description != null) {
@@ -2389,6 +2414,7 @@ class DailyTask extends DataClass implements Insertable<DailyTask> {
   DailyTasksCompanion toCompanion(bool nullToAbsent) {
     return DailyTasksCompanion(
       id: Value(id),
+      uuid: Value(uuid),
       goalkeeperId: Value(goalkeeperId),
       title: Value(title),
       description: description == null && nullToAbsent
@@ -2411,6 +2437,7 @@ class DailyTask extends DataClass implements Insertable<DailyTask> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return DailyTask(
       id: serializer.fromJson<int>(json['id']),
+      uuid: serializer.fromJson<String>(json['uuid']),
       goalkeeperId: serializer.fromJson<int>(json['goalkeeperId']),
       title: serializer.fromJson<String>(json['title']),
       description: serializer.fromJson<String?>(json['description']),
@@ -2426,6 +2453,7 @@ class DailyTask extends DataClass implements Insertable<DailyTask> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
+      'uuid': serializer.toJson<String>(uuid),
       'goalkeeperId': serializer.toJson<int>(goalkeeperId),
       'title': serializer.toJson<String>(title),
       'description': serializer.toJson<String?>(description),
@@ -2439,6 +2467,7 @@ class DailyTask extends DataClass implements Insertable<DailyTask> {
 
   DailyTask copyWith({
     int? id,
+    String? uuid,
     int? goalkeeperId,
     String? title,
     Value<String?> description = const Value.absent(),
@@ -2449,6 +2478,7 @@ class DailyTask extends DataClass implements Insertable<DailyTask> {
     Value<DateTime?> deletedAt = const Value.absent(),
   }) => DailyTask(
     id: id ?? this.id,
+    uuid: uuid ?? this.uuid,
     goalkeeperId: goalkeeperId ?? this.goalkeeperId,
     title: title ?? this.title,
     description: description.present ? description.value : this.description,
@@ -2461,6 +2491,7 @@ class DailyTask extends DataClass implements Insertable<DailyTask> {
   DailyTask copyWithCompanion(DailyTasksCompanion data) {
     return DailyTask(
       id: data.id.present ? data.id.value : this.id,
+      uuid: data.uuid.present ? data.uuid.value : this.uuid,
       goalkeeperId: data.goalkeeperId.present
           ? data.goalkeeperId.value
           : this.goalkeeperId,
@@ -2482,6 +2513,7 @@ class DailyTask extends DataClass implements Insertable<DailyTask> {
   String toString() {
     return (StringBuffer('DailyTask(')
           ..write('id: $id, ')
+          ..write('uuid: $uuid, ')
           ..write('goalkeeperId: $goalkeeperId, ')
           ..write('title: $title, ')
           ..write('description: $description, ')
@@ -2497,6 +2529,7 @@ class DailyTask extends DataClass implements Insertable<DailyTask> {
   @override
   int get hashCode => Object.hash(
     id,
+    uuid,
     goalkeeperId,
     title,
     description,
@@ -2511,6 +2544,7 @@ class DailyTask extends DataClass implements Insertable<DailyTask> {
       identical(this, other) ||
       (other is DailyTask &&
           other.id == this.id &&
+          other.uuid == this.uuid &&
           other.goalkeeperId == this.goalkeeperId &&
           other.title == this.title &&
           other.description == this.description &&
@@ -2523,6 +2557,7 @@ class DailyTask extends DataClass implements Insertable<DailyTask> {
 
 class DailyTasksCompanion extends UpdateCompanion<DailyTask> {
   final Value<int> id;
+  final Value<String> uuid;
   final Value<int> goalkeeperId;
   final Value<String> title;
   final Value<String?> description;
@@ -2533,6 +2568,7 @@ class DailyTasksCompanion extends UpdateCompanion<DailyTask> {
   final Value<DateTime?> deletedAt;
   const DailyTasksCompanion({
     this.id = const Value.absent(),
+    this.uuid = const Value.absent(),
     this.goalkeeperId = const Value.absent(),
     this.title = const Value.absent(),
     this.description = const Value.absent(),
@@ -2544,6 +2580,7 @@ class DailyTasksCompanion extends UpdateCompanion<DailyTask> {
   });
   DailyTasksCompanion.insert({
     this.id = const Value.absent(),
+    this.uuid = const Value.absent(),
     required int goalkeeperId,
     required String title,
     this.description = const Value.absent(),
@@ -2556,6 +2593,7 @@ class DailyTasksCompanion extends UpdateCompanion<DailyTask> {
        title = Value(title);
   static Insertable<DailyTask> custom({
     Expression<int>? id,
+    Expression<String>? uuid,
     Expression<int>? goalkeeperId,
     Expression<String>? title,
     Expression<String>? description,
@@ -2567,6 +2605,7 @@ class DailyTasksCompanion extends UpdateCompanion<DailyTask> {
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
+      if (uuid != null) 'uuid': uuid,
       if (goalkeeperId != null) 'goalkeeper_id': goalkeeperId,
       if (title != null) 'title': title,
       if (description != null) 'description': description,
@@ -2580,6 +2619,7 @@ class DailyTasksCompanion extends UpdateCompanion<DailyTask> {
 
   DailyTasksCompanion copyWith({
     Value<int>? id,
+    Value<String>? uuid,
     Value<int>? goalkeeperId,
     Value<String>? title,
     Value<String?>? description,
@@ -2591,6 +2631,7 @@ class DailyTasksCompanion extends UpdateCompanion<DailyTask> {
   }) {
     return DailyTasksCompanion(
       id: id ?? this.id,
+      uuid: uuid ?? this.uuid,
       goalkeeperId: goalkeeperId ?? this.goalkeeperId,
       title: title ?? this.title,
       description: description ?? this.description,
@@ -2607,6 +2648,9 @@ class DailyTasksCompanion extends UpdateCompanion<DailyTask> {
     final map = <String, Expression>{};
     if (id.present) {
       map['id'] = Variable<int>(id.value);
+    }
+    if (uuid.present) {
+      map['uuid'] = Variable<String>(uuid.value);
     }
     if (goalkeeperId.present) {
       map['goalkeeper_id'] = Variable<int>(goalkeeperId.value);
@@ -2639,6 +2683,7 @@ class DailyTasksCompanion extends UpdateCompanion<DailyTask> {
   String toString() {
     return (StringBuffer('DailyTasksCompanion(')
           ..write('id: $id, ')
+          ..write('uuid: $uuid, ')
           ..write('goalkeeperId: $goalkeeperId, ')
           ..write('title: $title, ')
           ..write('description: $description, ')
@@ -4448,6 +4493,7 @@ typedef $$GoalsTableProcessedTableManager =
 typedef $$DailyTasksTableCreateCompanionBuilder =
     DailyTasksCompanion Function({
       Value<int> id,
+      Value<String> uuid,
       required int goalkeeperId,
       required String title,
       Value<String?> description,
@@ -4460,6 +4506,7 @@ typedef $$DailyTasksTableCreateCompanionBuilder =
 typedef $$DailyTasksTableUpdateCompanionBuilder =
     DailyTasksCompanion Function({
       Value<int> id,
+      Value<String> uuid,
       Value<int> goalkeeperId,
       Value<String> title,
       Value<String?> description,
@@ -4528,6 +4575,11 @@ class $$DailyTasksTableFilterComposer
   });
   ColumnFilters<int> get id => $composableBuilder(
     column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get uuid => $composableBuilder(
+    column: $table.uuid,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -4629,6 +4681,11 @@ class $$DailyTasksTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get uuid => $composableBuilder(
+    column: $table.uuid,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get title => $composableBuilder(
     column: $table.title,
     builder: (column) => ColumnOrderings(column),
@@ -4699,6 +4756,9 @@ class $$DailyTasksTableAnnotationComposer
   });
   GeneratedColumn<int> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get uuid =>
+      $composableBuilder(column: $table.uuid, builder: (column) => column);
 
   GeneratedColumn<String> get title =>
       $composableBuilder(column: $table.title, builder: (column) => column);
@@ -4807,6 +4867,7 @@ class $$DailyTasksTableTableManager
           updateCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
+                Value<String> uuid = const Value.absent(),
                 Value<int> goalkeeperId = const Value.absent(),
                 Value<String> title = const Value.absent(),
                 Value<String?> description = const Value.absent(),
@@ -4817,6 +4878,7 @@ class $$DailyTasksTableTableManager
                 Value<DateTime?> deletedAt = const Value.absent(),
               }) => DailyTasksCompanion(
                 id: id,
+                uuid: uuid,
                 goalkeeperId: goalkeeperId,
                 title: title,
                 description: description,
@@ -4829,6 +4891,7 @@ class $$DailyTasksTableTableManager
           createCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
+                Value<String> uuid = const Value.absent(),
                 required int goalkeeperId,
                 required String title,
                 Value<String?> description = const Value.absent(),
@@ -4839,6 +4902,7 @@ class $$DailyTasksTableTableManager
                 Value<DateTime?> deletedAt = const Value.absent(),
               }) => DailyTasksCompanion.insert(
                 id: id,
+                uuid: uuid,
                 goalkeeperId: goalkeeperId,
                 title: title,
                 description: description,
