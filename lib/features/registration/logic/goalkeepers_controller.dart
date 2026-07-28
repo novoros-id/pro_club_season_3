@@ -4,7 +4,17 @@ import 'package:drift/drift.dart';
 import '../../../core/database/app_database.dart';
 import '../../../core/database/database_provider.dart';
 
-final goalkeepersControllerProvider = NotifierProvider<GoalkeepersController, List<Goalkeeper>>(GoalkeepersController.new);
+final goalkeepersControllerProvider =
+    NotifierProvider<GoalkeepersController, List<Goalkeeper>>(
+      GoalkeepersController.new,
+    );
+
+final currentGoalkeeperProvider = Provider<Goalkeeper?>((ref) {
+  for (final goalkeeper in ref.watch(goalkeepersControllerProvider)) {
+    if (goalkeeper.isCurrent) return goalkeeper;
+  }
+  return null;
+});
 
 class GoalkeepersController extends Notifier<List<Goalkeeper>> {
   late AppDatabase _db;
