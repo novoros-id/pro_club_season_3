@@ -35,6 +35,25 @@
   "dailyTasksDeleteConfirmation": "Удалить эту задачу?",
   "dailyTasksEmpty": "Задач пока нет. Добавьте первую задачу.",
   "dailyTasksNoGoalkeeper": "Выберите вратаря, чтобы увидеть ежедневные задачи.",
+  "dailyTasksChooseGoalkeeper": "Выбрать или создать вратаря",
+  "dailyTasksForGoalkeeper": "Задачи для: {name}",
+  "@dailyTasksForGoalkeeper": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "dailyTasksOwner": "Вратарь: {name}",
+  "@dailyTasksOwner": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "dailyTasksGoalkeeperChanged": "Активный вратарь изменился. Вернитесь к обновлённому списку задач.",
+  "dailyTasksReturnToList": "Вернуться к задачам",
   "dailyTasksLoadError": "Не удалось загрузить ежедневные задачи.",
   "dailyTasksSaveError": "Не удалось сохранить задачу.",
   "dailyTasksTitleRequired": "Введите название задачи.",

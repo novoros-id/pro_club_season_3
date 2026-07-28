@@ -308,6 +308,36 @@ abstract class AppLocalizations {
   /// **'Select a goalkeeper to view daily tasks.'**
   String get dailyTasksNoGoalkeeper;
 
+  /// No description provided for @dailyTasksChooseGoalkeeper.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose or create goalkeeper'**
+  String get dailyTasksChooseGoalkeeper;
+
+  /// No description provided for @dailyTasksForGoalkeeper.
+  ///
+  /// In en, this message translates to:
+  /// **'Tasks for {name}'**
+  String dailyTasksForGoalkeeper(String name);
+
+  /// No description provided for @dailyTasksOwner.
+  ///
+  /// In en, this message translates to:
+  /// **'Goalkeeper: {name}'**
+  String dailyTasksOwner(String name);
+
+  /// No description provided for @dailyTasksGoalkeeperChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'The active goalkeeper changed. Return to the updated task list.'**
+  String get dailyTasksGoalkeeperChanged;
+
+  /// No description provided for @dailyTasksReturnToList.
+  ///
+  /// In en, this message translates to:
+  /// **'Return to tasks'**
+  String get dailyTasksReturnToList;
+
   /// No description provided for @dailyTasksLoadError.
   ///
   /// In en, this message translates to:

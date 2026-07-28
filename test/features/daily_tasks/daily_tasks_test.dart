@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:drift/native.dart';
 import 'package:drift/drift.dart' show OrderingTerm, Value;
 import 'package:flutter/material.dart';
@@ -10,9 +12,39 @@ import 'package:goalkeeper_trainer/core/database/database_provider.dart';
 import 'package:goalkeeper_trainer/features/daily_tasks/data/daily_tasks_data.dart';
 import 'package:goalkeeper_trainer/features/daily_tasks/logic/daily_task_date.dart';
 import 'package:goalkeeper_trainer/features/daily_tasks/logic/daily_tasks_logic.dart';
+import 'package:goalkeeper_trainer/features/daily_tasks/models/daily_task.dart';
+import 'package:goalkeeper_trainer/features/daily_tasks/models/daily_task_stats.dart';
 import 'package:goalkeeper_trainer/features/daily_tasks/ui/daily_task_edit_screen.dart';
 import 'package:goalkeeper_trainer/features/daily_tasks/ui/daily_tasks_screen.dart';
+import 'package:goalkeeper_trainer/features/registration/logic/goalkeepers_controller.dart';
 import 'package:goalkeeper_trainer/l10n/app_localizations.dart';
+
+class TrackingDailyTasksData extends DailyTasksData {
+  TrackingDailyTasksData(super.db, {this.delayedGoalkeeperId, this.loadGate});
+
+  final int? delayedGoalkeeperId;
+  final Completer<void>? loadGate;
+  int taskReads = 0;
+  int statsReads = 0;
+
+  @override
+  Future<List<DailyTaskItem>> tasksForDate(
+    int goalkeeperId,
+    DateTime date,
+  ) async {
+    taskReads++;
+    if (goalkeeperId == delayedGoalkeeperId && loadGate != null) {
+      await loadGate!.future;
+    }
+    return super.tasksForDate(goalkeeperId, date);
+  }
+
+  @override
+  Future<DailyTaskStats> stats(int goalkeeperId, DateTime date) {
+    statsReads++;
+    return super.stats(goalkeeperId, date);
+  }
+}
 
 void main() {
   late AppDatabase db;
@@ -43,6 +75,21 @@ void main() {
   Future<DailyTask> taskById(int id) => (db.select(
     db.dailyTasks,
   )..where((task) => task.id.equals(id))).getSingle();
+
+  Future<void> expectAccessDenied(Future<void> Function() operation) =>
+      expectLater(operation(), throwsA(isA<DailyTaskAccessException>()));
+
+  Future<DailyTasksState> waitForDailyTasks(
+    ProviderContainer container,
+    int goalkeeperId,
+  ) async {
+    for (var attempt = 0; attempt < 100; attempt++) {
+      final state = container.read(dailyTasksControllerProvider);
+      if (state.goalkeeperId == goalkeeperId && !state.isLoading) return state;
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+    }
+    return container.read(dailyTasksControllerProvider);
+  }
 
   Future<void> pumpTaskForm(WidgetTester tester, {DailyTask? task}) async {
     final router = GoRouter(
@@ -85,18 +132,20 @@ void main() {
 
   test('returns no current goalkeeper when none is selected', () async {
     await addKeeper(current: false);
-    expect(await data.currentGoalkeeper(), isNull);
+    final container = ProviderContainer(
+      overrides: [databaseProvider.overrideWithValue(db)],
+    );
+    addTearDown(container.dispose);
+    container.read(currentGoalkeeperProvider);
+    await Future<void>.delayed(const Duration(milliseconds: 20));
+    expect(container.read(currentGoalkeeperProvider), isNull);
   });
 
   test('tasks are isolated by goalkeeper and active state', () async {
     final first = await addKeeper();
     final second = await addKeeper(current: false);
-    await data.createTask(
-      DailyTasksCompanion.insert(goalkeeperId: first, title: 'Первый'),
-    );
-    await data.createTask(
-      DailyTasksCompanion.insert(goalkeeperId: second, title: 'Второй'),
-    );
+    await data.createTask(goalkeeperId: first, title: 'Первый');
+    await data.createTask(goalkeeperId: second, title: 'Второй');
 
     expect(
       (await data.tasksForDate(first, DateTime.now())).map((e) => e.task.title),
@@ -104,23 +153,98 @@ void main() {
     );
   });
 
+  test('equal task titles stay isolated by goalkeeper', () async {
+    final first = await addKeeper();
+    final second = await addKeeper(current: false);
+    await data.createTask(goalkeeperId: first, title: 'Разминка');
+    await data.createTask(goalkeeperId: second, title: 'Разминка');
+
+    expect(await data.tasksForDate(first, DateTime.now()), hasLength(1));
+    expect(await data.tasksForDate(second, DateTime.now()), hasLength(1));
+  });
+
+  test('cross-owner update is rejected and preserves owner and UUID', () async {
+    final first = await addKeeper();
+    final second = await addKeeper(current: false);
+    final taskId = await data.createTask(
+      goalkeeperId: second,
+      title: 'Чужая задача',
+    );
+    final original = await taskById(taskId);
+
+    await expectAccessDenied(
+      () => data.updateTask(first, taskId, title: 'Подмена'),
+    );
+
+    final stored = await taskById(taskId);
+    expect(stored.title, original.title);
+    expect(stored.goalkeeperId, second);
+    expect(stored.uuid, original.uuid);
+  });
+
+  test('cross-owner enable and disable are rejected', () async {
+    final first = await addKeeper();
+    final second = await addKeeper(current: false);
+    final taskId = await data.createTask(
+      goalkeeperId: second,
+      title: 'Чужая задача',
+    );
+
+    await expectAccessDenied(() => data.setEnabled(first, taskId, false));
+    expect((await taskById(taskId)).isEnabled, isTrue);
+  });
+
+  test('cross-owner soft delete is rejected', () async {
+    final first = await addKeeper();
+    final second = await addKeeper(current: false);
+    final taskId = await data.createTask(
+      goalkeeperId: second,
+      title: 'Чужая задача',
+    );
+
+    await expectAccessDenied(() => data.softDelete(first, taskId));
+    expect((await taskById(taskId)).deletedAt, isNull);
+  });
+
+  test('cross-owner complete is rejected', () async {
+    final first = await addKeeper();
+    final second = await addKeeper(current: false);
+    final taskId = await data.createTask(
+      goalkeeperId: second,
+      title: 'Чужая задача',
+    );
+
+    await expectAccessDenied(
+      () => data.complete(first, taskId, DateTime.now()),
+    );
+    expect(await db.select(db.dailyTaskCompletions).get(), isEmpty);
+  });
+
+  test('cross-owner uncomplete is rejected', () async {
+    final first = await addKeeper();
+    final second = await addKeeper(current: false);
+    final taskId = await data.createTask(
+      goalkeeperId: second,
+      title: 'Чужая задача',
+    );
+    final date = DateTime.now();
+    await data.complete(second, taskId, date);
+
+    await expectAccessDenied(() => data.uncomplete(first, taskId, date));
+    expect(await db.select(db.dailyTaskCompletions).get(), hasLength(1));
+  });
+
   test(
     'new tasks get canonical unique UUIDs and accept an explicit UUID',
     () async {
       final keeper = await addKeeper();
-      await data.createTask(
-        DailyTasksCompanion.insert(goalkeeperId: keeper, title: 'Первая'),
-      );
-      await data.createTask(
-        DailyTasksCompanion.insert(goalkeeperId: keeper, title: 'Вторая'),
-      );
+      await data.createTask(goalkeeperId: keeper, title: 'Первая');
+      await data.createTask(goalkeeperId: keeper, title: 'Вторая');
       const explicitUuid = '11111111-1111-4111-8111-111111111111';
       await data.createTask(
-        DailyTasksCompanion.insert(
-          uuid: const Value(explicitUuid),
-          goalkeeperId: keeper,
-          title: 'Импортированная',
-        ),
+        uuid: explicitUuid,
+        goalkeeperId: keeper,
+        title: 'Импортированная',
       );
 
       final tasks = await db.select(db.dailyTasks).get();
@@ -132,11 +256,9 @@ void main() {
 
       await expectLater(
         data.createTask(
-          DailyTasksCompanion.insert(
-            uuid: const Value(explicitUuid),
-            goalkeeperId: keeper,
-            title: 'Дубликат',
-          ),
+          uuid: explicitUuid,
+          goalkeeperId: keeper,
+          title: 'Дубликат',
         ),
         throwsA(
           predicate<Object>(
@@ -179,37 +301,40 @@ void main() {
   test('task UUID stays stable across updates and soft delete', () async {
     final keeper = await addKeeper();
     final taskId = await data.createTask(
-      DailyTasksCompanion.insert(goalkeeperId: keeper, title: 'Исходная'),
+      goalkeeperId: keeper,
+      title: 'Исходная',
     );
     final uuid = (await taskById(taskId)).uuid;
 
     await data.updateTask(
+      keeper,
       taskId,
       title: 'Переименованная',
       description: 'Новое описание',
     );
     expect((await taskById(taskId)).uuid, uuid);
 
-    await data.setEnabled(taskId, false);
+    await data.setEnabled(keeper, taskId, false);
     expect((await taskById(taskId)).uuid, uuid);
-    await data.setEnabled(taskId, true);
+    await data.setEnabled(keeper, taskId, true);
     expect((await taskById(taskId)).uuid, uuid);
 
-    await data.softDelete(taskId);
+    await data.softDelete(keeper, taskId);
     expect((await taskById(taskId)).uuid, uuid);
   });
 
   test('completion is unique, removable, and date-specific', () async {
     final keeper = await addKeeper();
     final taskId = await data.createTask(
-      DailyTasksCompanion.insert(goalkeeperId: keeper, title: 'Разминка'),
+      goalkeeperId: keeper,
+      title: 'Разминка',
     );
     final date = DateTime(2026, 7, 20, 12);
 
-    await data.complete(taskId, date);
+    await data.complete(keeper, taskId, date);
     final firstCompletion =
         (await db.select(db.dailyTaskCompletions).get()).single;
-    await data.complete(taskId, date);
+    await data.complete(keeper, taskId, date);
     final completions = await db.select(db.dailyTaskCompletions).get();
     expect(completions, hasLength(1));
     expect(completions.single.completedAt, firstCompletion.completedAt);
@@ -222,7 +347,7 @@ void main() {
       isFalse,
     );
 
-    await data.uncomplete(taskId, date);
+    await data.uncomplete(keeper, taskId, date);
     expect(await db.select(db.dailyTaskCompletions).get(), isEmpty);
   });
 
@@ -231,34 +356,32 @@ void main() {
     () async {
       final keeper = await addKeeper();
       final taskId = await data.createTask(
-        DailyTasksCompanion.insert(goalkeeperId: keeper, title: 'Сохранить'),
+        goalkeeperId: keeper,
+        title: 'Сохранить',
       );
       final date = DateTime(2026, 7, 20);
-      await data.complete(taskId, date);
-      await data.softDelete(taskId);
+      await data.complete(keeper, taskId, date);
+      await data.softDelete(keeper, taskId);
       expect(await db.select(db.dailyTaskCompletions).get(), hasLength(1));
       expect(await data.tasksForDate(keeper, date), isEmpty);
 
       final enabledId = await data.createTask(
-        DailyTasksCompanion.insert(goalkeeperId: keeper, title: 'Включать'),
+        goalkeeperId: keeper,
+        title: 'Включать',
       );
-      await data.setEnabled(enabledId, false);
+      await data.setEnabled(keeper, enabledId, false);
       expect(await data.tasksForDate(keeper, date), isEmpty);
-      await data.setEnabled(enabledId, true);
+      await data.setEnabled(keeper, enabledId, true);
       expect(await data.tasksForDate(keeper, date), hasLength(1));
     },
   );
 
   test('statistics count current active tasks and completions', () async {
     final keeper = await addKeeper();
-    final first = await data.createTask(
-      DailyTasksCompanion.insert(goalkeeperId: keeper, title: 'Раз'),
-    );
-    await data.createTask(
-      DailyTasksCompanion.insert(goalkeeperId: keeper, title: 'Два'),
-    );
+    final first = await data.createTask(goalkeeperId: keeper, title: 'Раз');
+    await data.createTask(goalkeeperId: keeper, title: 'Два');
     final date = normalizeOccurrenceDate(DateTime.now());
-    await data.complete(first, date);
+    await data.complete(keeper, first, date);
 
     final stats = await data.stats(keeper, date);
     expect(stats.totalTasksToday, 2);
@@ -275,14 +398,12 @@ void main() {
     final taskIds = <int>[];
     for (var i = 0; i < 7; i++) {
       taskIds.add(
-        await data.createTask(
-          DailyTasksCompanion.insert(goalkeeperId: keeper, title: 'Задача $i'),
-        ),
+        await data.createTask(goalkeeperId: keeper, title: 'Задача $i'),
       );
     }
     final date = normalizeOccurrenceDate(DateTime.now());
-    await data.complete(taskIds[0], date);
-    await data.complete(taskIds[1], date);
+    await data.complete(keeper, taskIds[0], date);
+    await data.complete(keeper, taskIds[1], date);
 
     var stats = await data.stats(keeper, date);
     expect(stats.completedToday, 2);
@@ -290,12 +411,12 @@ void main() {
     expect(stats.remainingActiveTasksToday, 5);
     expect(stats.completionPercentToday.round(), 29);
 
-    await data.complete(taskIds[2], date);
+    await data.complete(keeper, taskIds[2], date);
     stats = await data.stats(keeper, date);
     expect(stats.remainingActiveTasksToday, 4);
     expect(stats.totalTasksToday, 7);
 
-    await data.uncomplete(taskIds[2], date);
+    await data.uncomplete(keeper, taskIds[2], date);
     stats = await data.stats(keeper, date);
     expect(stats.remainingActiveTasksToday, 5);
     expect(stats.totalTasksToday, 7);
@@ -303,9 +424,7 @@ void main() {
 
   test('returns no day statistics when there are no completions', () async {
     final keeper = await addKeeper();
-    await data.createTask(
-      DailyTasksCompanion.insert(goalkeeperId: keeper, title: 'Без отметки'),
-    );
+    await data.createTask(goalkeeperId: keeper, title: 'Без отметки');
 
     final stats = await data.stats(keeper, DateTime.now());
     expect(stats.recentDays, isEmpty);
@@ -315,14 +434,16 @@ void main() {
     final keeper = await addKeeper();
     final today = normalizeOccurrenceDate(DateTime.now());
     final taskId = await data.createTask(
-      DailyTasksCompanion.insert(
-        goalkeeperId: keeper,
-        title: 'История',
-        createdAt: Value(today.subtract(const Duration(days: 4))),
-      ),
+      goalkeeperId: keeper,
+      title: 'История',
+      createdAt: today.subtract(const Duration(days: 4)),
     );
     for (final offset in [4, 2, 0]) {
-      await data.complete(taskId, today.subtract(Duration(days: offset)));
+      await data.complete(
+        keeper,
+        taskId,
+        today.subtract(Duration(days: offset)),
+      );
     }
 
     var stats = await data.stats(keeper, today);
@@ -332,7 +453,11 @@ void main() {
       today,
     ]);
 
-    await data.complete(taskId, today.subtract(const Duration(days: 1)));
+    await data.complete(
+      keeper,
+      taskId,
+      today.subtract(const Duration(days: 1)),
+    );
     stats = await data.stats(keeper, today);
     expect(stats.recentDays, hasLength(3));
     expect(stats.recentDays.map((day) => day.date), [
@@ -347,18 +472,11 @@ void main() {
     final secondKeeper = await addKeeper(current: false);
     final today = normalizeOccurrenceDate(DateTime.now());
     final firstTask = await data.createTask(
-      DailyTasksCompanion.insert(
-        goalkeeperId: firstKeeper,
-        title: 'Первая задача',
-      ),
+      goalkeeperId: firstKeeper,
+      title: 'Первая задача',
     );
-    await data.createTask(
-      DailyTasksCompanion.insert(
-        goalkeeperId: secondKeeper,
-        title: 'Вторая задача',
-      ),
-    );
-    await data.complete(firstTask, today);
+    await data.createTask(goalkeeperId: secondKeeper, title: 'Вторая задача');
+    await data.complete(firstKeeper, firstTask, today);
 
     final firstStats = await data.stats(firstKeeper, today);
     expect(firstStats.totalTasksToday, 1);
@@ -371,6 +489,163 @@ void main() {
     expect(secondStats.completedToday, 0);
     expect(secondStats.remainingActiveTasksToday, 1);
     expect(secondStats.completionPercentToday, 0);
+  });
+
+  test(
+    'controller loads and automatically switches active goalkeeper',
+    () async {
+      final first = await addKeeper();
+      final second = await addKeeper(current: false);
+      await data.createTask(goalkeeperId: first, title: 'Задача А');
+      await data.createTask(goalkeeperId: second, title: 'Задача Б');
+      final container = ProviderContainer(
+        overrides: [databaseProvider.overrideWithValue(db)],
+      );
+      addTearDown(container.dispose);
+
+      await container
+          .read(goalkeepersControllerProvider.notifier)
+          .makeCurrent(first);
+      container.read(dailyTasksControllerProvider);
+      var state = await waitForDailyTasks(container, first);
+      expect(state.tasks.map((item) => item.task.title), ['Задача А']);
+
+      await container
+          .read(goalkeepersControllerProvider.notifier)
+          .makeCurrent(second);
+      state = container.read(dailyTasksControllerProvider);
+      expect(state.goalkeeperId, second);
+      expect(
+        state.tasks.where((item) => item.task.goalkeeperId == first),
+        isEmpty,
+      );
+
+      state = await waitForDailyTasks(container, second);
+      expect(state.tasks.map((item) => item.task.title), ['Задача Б']);
+
+      await container
+          .read(dailyTasksControllerProvider.notifier)
+          .createTask(title: 'Новая задача Б');
+      final created = (await db.select(db.dailyTasks).get()).singleWhere(
+        (task) => task.title == 'Новая задача Б',
+      );
+      expect(created.goalkeeperId, second);
+    },
+  );
+
+  test('late goalkeeper response cannot replace the current state', () async {
+    final first = await addKeeper();
+    final second = await addKeeper(current: false);
+    await data.createTask(goalkeeperId: first, title: 'Медленная А');
+    await data.createTask(goalkeeperId: second, title: 'Быстрая Б');
+    final gate = Completer<void>();
+    final trackingData = TrackingDailyTasksData(
+      db,
+      delayedGoalkeeperId: first,
+      loadGate: gate,
+    );
+    final container = ProviderContainer(
+      overrides: [
+        databaseProvider.overrideWithValue(db),
+        dailyTasksDataProvider.overrideWithValue(trackingData),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    await container
+        .read(goalkeepersControllerProvider.notifier)
+        .makeCurrent(first);
+    container.read(dailyTasksControllerProvider);
+    await Future<void>.delayed(Duration.zero);
+    expect(trackingData.taskReads, 1);
+
+    await container
+        .read(goalkeepersControllerProvider.notifier)
+        .makeCurrent(second);
+    var state = await waitForDailyTasks(container, second);
+    expect(state.tasks.map((item) => item.task.title), ['Быстрая Б']);
+
+    gate.complete();
+    await Future<void>.delayed(const Duration(milliseconds: 20));
+    state = container.read(dailyTasksControllerProvider);
+    expect(state.goalkeeperId, second);
+    expect(state.tasks.map((item) => item.task.title), ['Быстрая Б']);
+  });
+
+  test('rapid A to B to A switch keeps the last scope', () async {
+    final first = await addKeeper();
+    final second = await addKeeper(current: false);
+    await data.createTask(goalkeeperId: first, title: 'Задача А');
+    await data.createTask(goalkeeperId: second, title: 'Задача Б');
+    final container = ProviderContainer(
+      overrides: [databaseProvider.overrideWithValue(db)],
+    );
+    addTearDown(container.dispose);
+
+    final keepers = container.read(goalkeepersControllerProvider.notifier);
+    await keepers.makeCurrent(first);
+    container.read(dailyTasksControllerProvider);
+    await keepers.makeCurrent(second);
+    await keepers.makeCurrent(first);
+
+    final state = await waitForDailyTasks(container, first);
+    expect(state.goalkeeperId, first);
+    expect(state.tasks.map((item) => item.task.title), ['Задача А']);
+  });
+
+  test('controller skips task queries without an active goalkeeper', () async {
+    await addKeeper(current: false);
+    final trackingData = TrackingDailyTasksData(db);
+    final container = ProviderContainer(
+      overrides: [
+        databaseProvider.overrideWithValue(db),
+        dailyTasksDataProvider.overrideWithValue(trackingData),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    container.read(dailyTasksControllerProvider);
+    await Future<void>.delayed(const Duration(milliseconds: 20));
+
+    final state = container.read(dailyTasksControllerProvider);
+    expect(state.goalkeeperId, isNull);
+    expect(state.tasks, isEmpty);
+    expect(state.isLoading, isFalse);
+    expect(trackingData.taskReads, 0);
+    expect(trackingData.statsReads, 0);
+    await expectLater(
+      container
+          .read(dailyTasksControllerProvider.notifier)
+          .createTask(title: 'Нельзя создать'),
+      throwsA(isA<DailyTasksScopeException>()),
+    );
+  });
+
+  test('controller reports cross-owner mutation as an error', () async {
+    final first = await addKeeper();
+    final second = await addKeeper(current: false);
+    final foreignTask = await data.createTask(
+      goalkeeperId: second,
+      title: 'Чужая',
+    );
+    final container = ProviderContainer(
+      overrides: [databaseProvider.overrideWithValue(db)],
+    );
+    addTearDown(container.dispose);
+
+    await container
+        .read(goalkeepersControllerProvider.notifier)
+        .makeCurrent(first);
+    container.read(dailyTasksControllerProvider);
+    await waitForDailyTasks(container, first);
+
+    await expectLater(
+      container
+          .read(dailyTasksControllerProvider.notifier)
+          .updateTask(foreignTask, title: 'Подмена'),
+      throwsA(isA<DailyTaskAccessException>()),
+    );
+    expect((await taskById(foreignTask)).title, 'Чужая');
   });
 
   testWidgets('statistics uses localized metrics and compact day cards', (
@@ -386,14 +661,16 @@ void main() {
     final keeper = await addKeeper();
     final today = normalizeOccurrenceDate(DateTime.now());
     final taskId = await data.createTask(
-      DailyTasksCompanion.insert(
-        goalkeeperId: keeper,
-        title: 'Статистика',
-        createdAt: Value(today.subtract(const Duration(days: 3))),
-      ),
+      goalkeeperId: keeper,
+      title: 'Статистика',
+      createdAt: today.subtract(const Duration(days: 3)),
     );
     for (var offset = 0; offset < 4; offset++) {
-      await data.complete(taskId, today.subtract(Duration(days: offset)));
+      await data.complete(
+        keeper,
+        taskId,
+        today.subtract(Duration(days: offset)),
+      );
     }
 
     await tester.pumpWidget(
@@ -422,20 +699,20 @@ void main() {
     final keeper = await addKeeper();
     final today = normalizeOccurrenceDate(DateTime.now());
     final oldTask = await data.createTask(
-      DailyTasksCompanion.insert(
-        goalkeeperId: keeper,
-        title: 'Старая',
-        createdAt: Value(today.subtract(const Duration(days: 2))),
-      ),
+      goalkeeperId: keeper,
+      title: 'Старая',
+      createdAt: today.subtract(const Duration(days: 2)),
     );
     await data.createTask(
-      DailyTasksCompanion.insert(
-        goalkeeperId: keeper,
-        title: 'Новая',
-        createdAt: Value(today.add(const Duration(hours: 1))),
-      ),
+      goalkeeperId: keeper,
+      title: 'Новая',
+      createdAt: today.add(const Duration(hours: 1)),
     );
-    await data.complete(oldTask, today.subtract(const Duration(days: 1)));
+    await data.complete(
+      keeper,
+      oldTask,
+      today.subtract(const Duration(days: 1)),
+    );
 
     final stats = await data.stats(keeper, today);
     expect(stats.recentDays.single.totalCount, 1);
@@ -447,21 +724,21 @@ void main() {
       final keeper = await addKeeper();
       final today = normalizeOccurrenceDate(DateTime.now());
       final first = await data.createTask(
-        DailyTasksCompanion.insert(
-          goalkeeperId: keeper,
-          title: 'Первая',
-          createdAt: Value(today.subtract(const Duration(days: 2))),
-        ),
+        goalkeeperId: keeper,
+        title: 'Первая',
+        createdAt: today.subtract(const Duration(days: 2)),
       );
       final second = await data.createTask(
-        DailyTasksCompanion.insert(
-          goalkeeperId: keeper,
-          title: 'Вторая',
-          createdAt: Value(today),
-        ),
+        goalkeeperId: keeper,
+        title: 'Вторая',
+        createdAt: today,
       );
-      await data.complete(first, today.subtract(const Duration(days: 1)));
-      await data.complete(second, today);
+      await data.complete(
+        keeper,
+        first,
+        today.subtract(const Duration(days: 1)),
+      );
+      await data.complete(keeper, second, today);
 
       final stats = await data.stats(keeper, today);
       expect(stats.recentDays.map((day) => day.totalCount), [1, 2]);
@@ -473,11 +750,10 @@ void main() {
     tester,
   ) async {
     final keeper = await addKeeper();
-    final taskId = await data.createTask(
-      DailyTasksCompanion.insert(goalkeeperId: keeper, title: 'Задача'),
-    );
+    final taskId = await data.createTask(goalkeeperId: keeper, title: 'Задача');
     final task = (await db.select(db.dailyTasks).get()).single;
     await pumpTaskForm(tester, task: task);
+    expect(find.text('Goalkeeper: Иван Иванов'), findsOneWidget);
 
     const description = 'Длинное описание без сохранения при вводе';
     await tester.enterText(find.byType(TextFormField).at(1), description);
@@ -490,6 +766,37 @@ void main() {
     expect(updated.id, taskId);
     expect(updated.goalkeeperId, keeper);
     expect(updated.description, description);
+  });
+
+  testWidgets('form blocks saving after active goalkeeper changes', (
+    tester,
+  ) async {
+    final first = await addKeeper();
+    final second = await addKeeper(current: false);
+    final taskId = await data.createTask(
+      goalkeeperId: first,
+      title: 'Не переносить',
+    );
+    final task = await taskById(taskId);
+    await pumpTaskForm(tester, task: task);
+    await tester.enterText(find.byType(TextFormField).first, 'Черновик');
+
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(DailyTaskEditScreen)),
+    );
+    await container
+        .read(goalkeepersControllerProvider.notifier)
+        .makeCurrent(second);
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text(
+        'The active goalkeeper changed. Return to the updated task list.',
+      ),
+      findsOneWidget,
+    );
+    expect(find.text('Save'), findsNothing);
+    expect((await taskById(taskId)).title, 'Не переносить');
   });
 
   testWidgets(
@@ -546,11 +853,9 @@ void main() {
     (tester) async {
       final keeper = await addKeeper();
       final taskId = await data.createTask(
-        DailyTasksCompanion.insert(
-          goalkeeperId: keeper,
-          title: 'Исходный заголовок',
-          description: const Value('Исходное описание'),
-        ),
+        goalkeeperId: keeper,
+        title: 'Исходный заголовок',
+        description: 'Исходное описание',
       );
       final task = (await db.select(db.dailyTasks).get()).single;
       await pumpTaskForm(tester, task: task);
@@ -591,11 +896,9 @@ void main() {
   testWidgets('Cancel does not save edit form changes', (tester) async {
     final keeper = await addKeeper();
     await data.createTask(
-      DailyTasksCompanion.insert(
-        goalkeeperId: keeper,
-        title: 'Без изменений',
-        description: const Value('Старое описание'),
-      ),
+      goalkeeperId: keeper,
+      title: 'Без изменений',
+      description: 'Старое описание',
     );
     final task = (await db.select(db.dailyTasks).get()).single;
     await pumpTaskForm(tester, task: task);
@@ -616,18 +919,20 @@ void main() {
   ) async {
     final keeper = await addKeeper();
     final taskId = await data.createTask(
-      DailyTasksCompanion.insert(
-        goalkeeperId: keeper,
-        title: 'Очень длинное название задачи для маленького экрана',
-        description: Value('Очень длинное описание задачи ' * 8),
-      ),
+      goalkeeperId: keeper,
+      title: 'Очень длинное название задачи для маленького экрана',
+      description: 'Очень длинное описание задачи ' * 8,
     );
     final task = (await db.select(db.dailyTasks).get()).single;
+    final goalkeeper = await db.getCurrentGoalkeeper();
     expect(task.id, taskId);
 
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [databaseProvider.overrideWithValue(db)],
+        overrides: [
+          databaseProvider.overrideWithValue(db),
+          currentGoalkeeperProvider.overrideWithValue(goalkeeper),
+        ],
         child: MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
@@ -649,11 +954,9 @@ void main() {
   testWidgets('task list renders without overflow', (tester) async {
     final keeper = await addKeeper();
     await data.createTask(
-      DailyTasksCompanion.insert(
-        goalkeeperId: keeper,
-        title: 'Задача с длинным названием для проверки карточки',
-        description: Value('Описание задачи'),
-      ),
+      goalkeeperId: keeper,
+      title: 'Задача с длинным названием для проверки карточки',
+      description: 'Описание задачи',
     );
 
     await tester.pumpWidget(
@@ -668,6 +971,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    expect(find.text('Tasks for Иван Иванов'), findsOneWidget);
     expect(
       find.text('Задача с длинным названием для проверки карточки'),
       findsOneWidget,

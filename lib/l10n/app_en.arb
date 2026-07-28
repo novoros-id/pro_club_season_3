@@ -35,6 +35,25 @@
   "dailyTasksDeleteConfirmation": "Delete this task?",
   "dailyTasksEmpty": "No daily tasks yet. Add your first task.",
   "dailyTasksNoGoalkeeper": "Select a goalkeeper to view daily tasks.",
+  "dailyTasksChooseGoalkeeper": "Choose or create goalkeeper",
+  "dailyTasksForGoalkeeper": "Tasks for {name}",
+  "@dailyTasksForGoalkeeper": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "dailyTasksOwner": "Goalkeeper: {name}",
+  "@dailyTasksOwner": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "dailyTasksGoalkeeperChanged": "The active goalkeeper changed. Return to the updated task list.",
+  "dailyTasksReturnToList": "Return to tasks",
   "dailyTasksLoadError": "Could not load daily tasks.",
   "dailyTasksSaveError": "Could not save the task.",
   "dailyTasksTitleRequired": "Enter a task title.",
