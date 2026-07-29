@@ -88,6 +88,7 @@ flutter:
     - assets/images/pole.png
     - assets/images/catch_left.svg
     - assets/images/catch_right.svg
+    - assets/images/caver.png
   fonts:
     - family: Unbounded
       fonts:

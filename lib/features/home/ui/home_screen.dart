@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../../l10n/app_localizations.dart';
+
+const Color _darkBg = Color(0xFF121A1F);
+const Color _accentGreen = Color(0xFFBBF246);
+const Color _fieldBg = Color(0xFFF2F2F7);
+const Color _borderGrey = Color(0xFFD8DADF);
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -10,122 +16,146 @@ class HomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
 
-    // Цвета из гайда
-    const Color darkBg = Color(0xFF121212);
-    const Color accentGreen = Color(0xFFBBF246);
-    const Color fieldBg = Color(0xFFF2F2F7);
-    const Color textColor = Color(0xFF121212);
-
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
         child: Column(
           children: [
-            // --- 1. Баннер с картинкой (БЕЗ надписи) ---
-            Container(
-              width: double.infinity,
-              height: 260,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.1),
-                    blurRadius: 10,
-                    offset: const Offset(0, 5),
-                  ),
-                ],
-              ),
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  Image.asset(
-                    'assets/images/goalkeeper_banner.png',
-                    fit: BoxFit.cover,
-                    alignment: Alignment.topCenter,
-                  ),
-                  // Градиент оставил, чтобы картинка красиво переходила в белый фон
-                  Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.transparent,
-                          Colors.black.withValues(
-                            alpha: 0.4,
-                          ), // Чуть светлее, так как текста нет
-                        ],
-                      ),
-                    ),
-                  ),
-                  // ✅ УДАЛИЛ БЛОК С ТЕКСТОМ "Тренировка Вратарей"
-                ],
-              ),
-            ),
+            const _GoalkeeperHeader(),
 
-            // --- 2. Основной контент (Скроллящийся) ---
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 24,
+                padding: const EdgeInsets.fromLTRB(
+                  20,
+                  4,
+                  20,
+                  24,
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Заголовок с украшалкой ПОД ним
-                    Column(
+                    _MenuTitle(
+                      title: l10n.mainMenuTitle,
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    // Первая строка — главные разделы
+                    Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          l10n.mainMenuTitle,
-                          style: const TextStyle(
-                            fontFamily: 'Unbounded',
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            color: textColor,
-                            height: 1.2,
+                        Expanded(
+                          child: _MenuCard(
+                            title: l10n.diaryTitle,
+                            icon: Icons.menu_book_rounded,
+                            backgroundColor: _darkBg,
+                            contentColor: Colors.white,
+                            iconColor: _accentGreen,
+                            iconBackgroundColor:
+                            const Color(0xFF263129),
+                            borderColor: _darkBg,
+                            isLarge: true,
+                            onPressed: () async {
+                              await context.push('/diary');
+                            },
                           ),
                         ),
-                        const SizedBox(height: 4),
-                        Container(width: 60, height: 6, color: accentGreen),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: _MenuCard(
+                            title: l10n.analyticsTitle,
+                            icon: Icons.insights_rounded,
+                            backgroundColor: _accentGreen,
+                            contentColor: _darkBg,
+                            iconColor: _darkBg,
+                            iconBackgroundColor:
+                            const Color(0x99FFFFFF),
+                            borderColor: _accentGreen,
+                            isLarge: true,
+                            onPressed: () async {
+                              await context.push('/analytics');
+                            },
+                          ),
+                        ),
                       ],
                     ),
 
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 14),
 
-                    // Сетка основных кнопок
-                    GridView.count(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      crossAxisCount: 2,
-                      mainAxisSpacing: 12,
-                      crossAxisSpacing: 12,
-                      childAspectRatio: 2.2,
+                    // Вторая строка
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _StandardButton(
-                          title: l10n.diaryTitle,
-                          onPressed: () => context.push('/diary'),
+                        Expanded(
+                          child: _MenuCard(
+                            title: l10n.goalkeepersTitle,
+                            icon: Icons.shield_outlined,
+                            backgroundColor: _fieldBg,
+                            contentColor: _darkBg,
+                            iconColor: _darkBg,
+                            iconBackgroundColor: Colors.white,
+                            borderColor: _borderGrey,
+                            isLarge: false,
+                            onPressed: () async {
+                              await context.push('/registration');
+                            },
+                          ),
                         ),
-                        _StandardButton(
-                          title: l10n.analyticsTitle,
-                          onPressed: () => context.push('/analytics'),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: _MenuCard(
+                            title: l10n.dailyTasksTitle,
+                            icon: Icons.fact_check_outlined,
+                            backgroundColor: _fieldBg,
+                            contentColor: _darkBg,
+                            iconColor: _darkBg,
+                            iconBackgroundColor: Colors.white,
+                            borderColor: _borderGrey,
+                            isLarge: false,
+                            onPressed: () async {
+                              await context.push('/daily-tasks');
+                            },
+                          ),
                         ),
-                        _StandardButton(
-                          title: l10n.goalkeepersTitle,
-                          onPressed: () => context.push('/registration'),
+                      ],
+                    ),
+
+                    const SizedBox(height: 14),
+
+                    // Третья строка
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: _MenuCard(
+                            title: l10n.aeroHockeyTitle,
+                            icon: Icons.sports_hockey,
+                            backgroundColor: _fieldBg,
+                            contentColor: _darkBg,
+                            iconColor: _darkBg,
+                            iconBackgroundColor: Colors.white,
+                            borderColor: _borderGrey,
+                            isLarge: false,
+                            onPressed: () async {
+                              await context.push('/game2');
+                            },
+                          ),
                         ),
-                        _StandardButton(
-                          title: l10n.aeroHockeyTitle,
-                          onPressed: () => context.push('/game2'),
-                        ),
-                        _StandardButton(
-                          title: l10n.schulteTableTitle,
-                          onPressed: () => context.push('/game_schulte'),
-                        ),
-                        _StandardButton(
-                          title: l10n.dailyTasksTitle,
-                          onPressed: () => context.push('/daily-tasks'),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: _MenuCard(
+                            title: l10n.schulteTableTitle,
+                            icon: Icons.grid_view_rounded,
+                            backgroundColor: _fieldBg,
+                            contentColor: _darkBg,
+                            iconColor: _darkBg,
+                            iconBackgroundColor: Colors.white,
+                            borderColor: _borderGrey,
+                            isLarge: false,
+                            onPressed: () async {
+                              await context.push('/game_schulte');
+                            },
+                          ),
                         ),
                       ],
                     ),
@@ -134,12 +164,15 @@ class HomeScreen extends ConsumerWidget {
               ),
             ),
 
-            // --- 3. Нижняя панель (Компактная) ---
             _BottomBar(
               settingsTitle: l10n.settingsTitle,
               authorsTitle: l10n.authorsTitle,
-              onSettings: () => context.push('/settings'),
-              onAuthors: () => context.push('/authors'),
+              onSettings: () async {
+                await context.push('/settings');
+              },
+              onAuthors: () async {
+                await context.push('/authors');
+              },
             ),
           ],
         ),
@@ -148,43 +181,232 @@ class HomeScreen extends ConsumerWidget {
   }
 }
 
-// Виджет стандартной кнопки (Серая с лаймовой обводкой)
-class _StandardButton extends StatelessWidget {
-  final String title;
-  final VoidCallback onPressed;
-
-  const _StandardButton({required this.title, required this.onPressed});
+// Верхняя фотография
+class _GoalkeeperHeader extends StatelessWidget {
+  const _GoalkeeperHeader();
 
   @override
   Widget build(BuildContext context) {
-    const Color accentGreen = Color(0xFFBBF246);
-    const Color fieldBg = Color(0xFFF2F2F7);
-    const Color textColor = Color(0xFF121212);
-
-    return Material(
-      color: Colors.transparent,
-      borderRadius: BorderRadius.circular(15),
-      child: InkWell(
-        onTap: onPressed,
-        borderRadius: BorderRadius.circular(15),
-        child: Container(
-          decoration: BoxDecoration(
-            color: fieldBg,
-            borderRadius: BorderRadius.circular(15),
-            border: Border.all(color: accentGreen, width: 1.5),
+    return SizedBox(
+      width: double.infinity,
+      height: 280,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          Image.asset(
+            'assets/images/caver.png',
+            fit: BoxFit.cover,
+            alignment: Alignment.center,
           ),
-          alignment: Alignment.center,
-          padding: const EdgeInsets.symmetric(horizontal: 8),
-          child: Text(
-            title,
-            textAlign: TextAlign.center,
-            // ✅ ИЗМЕНЕНИЕ: Убрал FontWeight.bold
-            style: TextStyle(
-              fontFamily: 'Unbounded',
-              fontSize: 16,
-              fontWeight: FontWeight.normal, // <-- Обычный вес шрифта
-              color: textColor,
+
+          // Плавный переход фотографии в белый фон
+          const DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                stops: [
+                  0.50,
+                  0.90,
+                  1.0,
+                ],
+                colors: [
+                  Colors.transparent,
+                  Color(0x33FFFFFF),
+                  Colors.white,
+                ],
+              ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// Заголовок главного меню
+class _MenuTitle extends StatelessWidget {
+  final String title;
+
+  const _MenuTitle({
+    required this.title,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        // Лаймовая плашка под первой частью заголовка
+        Positioned(
+          left: -5,
+          bottom: 2,
+          child: Container(
+            width: 65,
+            height: 8,
+            color: _accentGreen,
+          ),
+        ),
+
+        Text(
+          title,
+          style: const TextStyle(
+            fontFamily: 'Unbounded',
+            fontSize: 22,
+            fontWeight: FontWeight.w900,
+            letterSpacing: -0.6,
+            height: 1.15,
+            color: _darkBg,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// Карточка главного меню
+class _MenuCard extends StatefulWidget {
+  final String title;
+  final IconData icon;
+  final Color backgroundColor;
+  final Color contentColor;
+  final Color iconColor;
+  final Color iconBackgroundColor;
+  final Color borderColor;
+  final bool isLarge;
+  final Future<void> Function() onPressed;
+
+  const _MenuCard({
+    required this.title,
+    required this.icon,
+    required this.backgroundColor,
+    required this.contentColor,
+    required this.iconColor,
+    required this.iconBackgroundColor,
+    required this.borderColor,
+    required this.isLarge,
+    required this.onPressed,
+  });
+
+  @override
+  State<_MenuCard> createState() => _MenuCardState();
+}
+
+class _MenuCardState extends State<_MenuCard> {
+  bool _isPressed = false;
+
+  Future<void> _handleTap() async {
+    try {
+      await widget.onPressed();
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isPressed = false;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final Color currentBackground =
+    _isPressed ? _accentGreen : widget.backgroundColor;
+
+    final Color currentContent =
+    _isPressed ? _darkBg : widget.contentColor;
+
+    final Color currentIcon =
+    _isPressed ? _darkBg : widget.iconColor;
+
+    final Color currentBorder =
+    _isPressed ? _accentGreen : widget.borderColor;
+
+    final double cardHeight =
+    widget.isLarge ? 138 : 118;
+
+    final double iconBoxSize =
+    widget.isLarge ? 46 : 42;
+
+    final double iconSize =
+    widget.isLarge ? 28 : 25;
+
+    return AnimatedScale(
+      scale: _isPressed ? 0.98 : 1,
+      duration: const Duration(milliseconds: 120),
+      curve: Curves.easeOut,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTapDown: (_) {
+          setState(() {
+            _isPressed = true;
+          });
+        },
+        onTapCancel: () {
+          setState(() {
+            _isPressed = false;
+          });
+        },
+        onTap: _handleTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 120),
+          curve: Curves.easeOut,
+          height: cardHeight,
+          padding: EdgeInsets.all(
+            widget.isLarge ? 16 : 13,
+          ),
+          decoration: BoxDecoration(
+            color: currentBackground,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: currentBorder,
+              width: 1.3,
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 120),
+                width: iconBoxSize,
+                height: iconBoxSize,
+                decoration: BoxDecoration(
+                  color: _isPressed
+                      ? const Color(0x99FFFFFF)
+                      : widget.iconBackgroundColor,
+                  borderRadius: BorderRadius.circular(13),
+                  border: Border.all(
+                    color: _isPressed
+                        ? _darkBg
+                        : widget.isLarge
+                        ? widget.iconColor
+                        : _accentGreen,
+                    width: 1.2,
+                  ),
+                ),
+                alignment: Alignment.center,
+                child: Icon(
+                  widget.icon,
+                  size: iconSize,
+                  color: currentIcon,
+                ),
+              ),
+
+              const Spacer(),
+
+              Text(
+                widget.title,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontFamily: 'Unbounded',
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  height: 1.2,
+                  letterSpacing: -0.2,
+                  color: currentContent,
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -196,8 +418,8 @@ class _StandardButton extends StatelessWidget {
 class _BottomBar extends StatelessWidget {
   final String settingsTitle;
   final String authorsTitle;
-  final VoidCallback onSettings;
-  final VoidCallback onAuthors;
+  final Future<void> Function() onSettings;
+  final Future<void> Function() onAuthors;
 
   const _BottomBar({
     required this.settingsTitle,
@@ -208,49 +430,45 @@ class _BottomBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const Color darkBg = Color(0xFF121212);
-    const Color accentGreen = Color(0xFFBBF246);
-
     return Container(
       width: double.infinity,
-      // Внешние отступы вокруг всей панели
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       color: Colors.white,
+      padding: const EdgeInsets.fromLTRB(
+        20,
+        10,
+        20,
+        14,
+      ),
       child: Container(
-        // Внутренний отступ черной капсулы (создает рамку вокруг кнопок)
-        padding: const EdgeInsets.all(6),
+        height: 62,
+        padding: const EdgeInsets.all(5),
         decoration: BoxDecoration(
-          color: darkBg,
-          borderRadius: BorderRadius.circular(30),
+          color: _darkBg,
+          borderRadius: BorderRadius.circular(32),
         ),
         child: Row(
           children: [
-            // ✅ ДОБАВЛЕН ОТСТУП СЛЕВА
-            const SizedBox(width: 8),
-
             Expanded(
-              child: _InnerButton(
+              child: _BottomAction(
                 title: settingsTitle,
+                icon: Icons.settings_rounded,
                 onPressed: onSettings,
-                bgColor: accentGreen,
-                textColor: darkBg,
               ),
             ),
 
-            // ✅ РАССТОЯНИЕ МЕЖДУ КНОПКАМИ
-            const SizedBox(width: 12),
+            Container(
+              width: 1,
+              height: 30,
+              color: const Color(0x33FFFFFF),
+            ),
 
             Expanded(
-              child: _InnerButton(
+              child: _BottomAction(
                 title: authorsTitle,
+                icon: Icons.info_outline_rounded,
                 onPressed: onAuthors,
-                bgColor: accentGreen,
-                textColor: darkBg,
               ),
             ),
-
-            // ✅ ДОБАВЛЕН ОТСТУП СПРАВА
-            const SizedBox(width: 8),
           ],
         ),
       ),
@@ -258,46 +476,94 @@ class _BottomBar extends StatelessWidget {
   }
 }
 
-// Внутренняя зеленая кнопка
-class _InnerButton extends StatelessWidget {
+// Кнопка нижней панели
+class _BottomAction extends StatefulWidget {
   final String title;
-  final VoidCallback onPressed;
-  final Color bgColor;
-  final Color textColor;
+  final IconData icon;
+  final Future<void> Function() onPressed;
 
-  const _InnerButton({
+  const _BottomAction({
     required this.title,
+    required this.icon,
     required this.onPressed,
-    required this.bgColor,
-    required this.textColor,
   });
 
   @override
+  State<_BottomAction> createState() =>
+      _BottomActionState();
+}
+
+class _BottomActionState extends State<_BottomAction> {
+  bool _isPressed = false;
+
+  Future<void> _handleTap() async {
+    try {
+      await widget.onPressed();
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isPressed = false;
+        });
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      borderRadius: BorderRadius.circular(25),
-      child: InkWell(
-        onTap: onPressed,
-        borderRadius: BorderRadius.circular(25),
-        child: Container(
-          // ✅ УМЕНЬШЕНА ВЫСОТА (было 8, стало 6)
-          padding: const EdgeInsets.symmetric(vertical: 6),
-          decoration: BoxDecoration(
-            color: bgColor,
-            borderRadius: BorderRadius.circular(25),
-          ),
-          alignment: Alignment.center,
-          child: Text(
-            title,
-            // ✅ УМЕНЬШЕН ШРИФТ (было 11, стало 10)
-            style: TextStyle(
-              fontFamily: 'Unbounded',
-              fontSize: 10,
-              fontWeight: FontWeight.bold,
-              color: textColor,
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTapDown: (_) {
+        setState(() {
+          _isPressed = true;
+        });
+      },
+      onTapCancel: () {
+        setState(() {
+          _isPressed = false;
+        });
+      },
+      onTap: _handleTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 120),
+        curve: Curves.easeOut,
+        height: double.infinity,
+        decoration: BoxDecoration(
+          color: _isPressed
+              ? _accentGreen
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(27),
+        ),
+        padding: const EdgeInsets.symmetric(
+          horizontal: 8,
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              widget.icon,
+              size: 21,
+              color: _isPressed
+                  ? _darkBg
+                  : _accentGreen,
             ),
-          ),
+
+            const SizedBox(width: 8),
+
+            Flexible(
+              child: Text(
+                widget.title,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontFamily: 'Unbounded',
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: _isPressed
+                      ? _darkBg
+                      : Colors.white,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
