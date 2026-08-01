@@ -6,6 +6,7 @@ import '../../../core/database/database_provider.dart';
 import '../../../core/database/app_database.dart';
 import 'goal_list_screen.dart';
 import 'package:flutter/services.dart';
+import 'package:uuid/uuid.dart';
 
 class DiaryMainScreen extends ConsumerStatefulWidget {
   const DiaryMainScreen({super.key});
@@ -394,7 +395,12 @@ class _DiaryMainScreenState extends ConsumerState<DiaryMainScreen> {
     if (totalShots > 0) {
       savePercentage = (saves / totalShots) * 100;
     }
+
+    // ✅ ГЕНЕРАЦИЯ UUID
+    final uuid = const Uuid().v4();
+
     final match = MatchesCompanion.insert(
+      uuid: uuid,
       goalkeeperId: goalkeeperId,
       date: date,
       opponent: opponent,
@@ -567,6 +573,7 @@ class _DiaryMainScreenState extends ConsumerState<DiaryMainScreen> {
                     final scoreString = '$teamScore:$oppScore';
                     final updatedMatch = Matche(
                       id: match.id,
+                      uuid: match.uuid, // ✅ ВАЖНО: сохраняем существующий UUID
                       goalkeeperId: match.goalkeeperId,
                       date: match.date,
                       opponent: opponentController.text.trim(),

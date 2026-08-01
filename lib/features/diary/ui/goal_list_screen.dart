@@ -203,9 +203,10 @@ class _GoalListScreenState extends ConsumerState<GoalListScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 4),
-                  if (goal.zone != null) // ✅ ДОБАВИТЬ ЭТОТ БЛОК
+                  // ✅ ЗОНА "КУДА" — зелёным шрифтом
+                  if (goal.zone != null)
                     Text(
-                      '🎯 Зона: ${goal.zone}',
+                      '🎯 Куда: ${goal.zone}',
                       style: const TextStyle(
                         fontFamily: 'Unbounded',
                         fontSize: 12,
@@ -213,6 +214,18 @@ class _GoalListScreenState extends ConsumerState<GoalListScreen> {
                         color: accentColor,
                       ),
                     ),
+                  // ✅ ЗОНА "ОТКУДА" — зелёным шрифтом (НОВОЕ)
+                  if (goal.fromZone != null)
+                    Text(
+                      '📍 Откуда: ${goal.fromZone}',
+                      style: const TextStyle(
+                        fontFamily: 'Unbounded',
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: accentColor,
+                      ),
+                    ),
+                  // Координаты мелким серым шрифтом
                   if (goal.toZoneX != null && goal.toZoneY != null)
                     Text(
                       'Куда: (${goal.toZoneX!.toStringAsFixed(2)}, ${goal.toZoneY!.toStringAsFixed(2)})',

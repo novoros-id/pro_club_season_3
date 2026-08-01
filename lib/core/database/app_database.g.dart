@@ -570,6 +570,16 @@ class $MatchesTable extends Matches with TableInfo<$MatchesTable, Matche> {
       'PRIMARY KEY AUTOINCREMENT',
     ),
   );
+  static const VerificationMeta _uuidMeta = const VerificationMeta('uuid');
+  @override
+  late final GeneratedColumn<String> uuid = GeneratedColumn<String>(
+    'uuid',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'),
+  );
   static const VerificationMeta _goalkeeperIdMeta = const VerificationMeta(
     'goalkeeperId',
   );
@@ -750,6 +760,7 @@ class $MatchesTable extends Matches with TableInfo<$MatchesTable, Matche> {
   @override
   List<GeneratedColumn> get $columns => [
     id,
+    uuid,
     goalkeeperId,
     date,
     opponent,
@@ -781,6 +792,14 @@ class $MatchesTable extends Matches with TableInfo<$MatchesTable, Matche> {
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('uuid')) {
+      context.handle(
+        _uuidMeta,
+        uuid.isAcceptableOrUnknown(data['uuid']!, _uuidMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_uuidMeta);
     }
     if (data.containsKey('goalkeeper_id')) {
       context.handle(
@@ -921,6 +940,10 @@ class $MatchesTable extends Matches with TableInfo<$MatchesTable, Matche> {
         DriftSqlType.int,
         data['${effectivePrefix}id'],
       )!,
+      uuid: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}uuid'],
+      )!,
       goalkeeperId: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}goalkeeper_id'],
@@ -996,6 +1019,7 @@ class $MatchesTable extends Matches with TableInfo<$MatchesTable, Matche> {
 
 class Matche extends DataClass implements Insertable<Matche> {
   final int id;
+  final String uuid;
   final int goalkeeperId;
   final DateTime date;
   final String opponent;
@@ -1014,6 +1038,7 @@ class Matche extends DataClass implements Insertable<Matche> {
   final DateTime createdAt;
   const Matche({
     required this.id,
+    required this.uuid,
     required this.goalkeeperId,
     required this.date,
     required this.opponent,
@@ -1035,6 +1060,7 @@ class Matche extends DataClass implements Insertable<Matche> {
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<int>(id);
+    map['uuid'] = Variable<String>(uuid);
     map['goalkeeper_id'] = Variable<int>(goalkeeperId);
     map['date'] = Variable<DateTime>(date);
     map['opponent'] = Variable<String>(opponent);
@@ -1075,6 +1101,7 @@ class Matche extends DataClass implements Insertable<Matche> {
   MatchesCompanion toCompanion(bool nullToAbsent) {
     return MatchesCompanion(
       id: Value(id),
+      uuid: Value(uuid),
       goalkeeperId: Value(goalkeeperId),
       date: Value(date),
       opponent: Value(opponent),
@@ -1119,6 +1146,7 @@ class Matche extends DataClass implements Insertable<Matche> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return Matche(
       id: serializer.fromJson<int>(json['id']),
+      uuid: serializer.fromJson<String>(json['uuid']),
       goalkeeperId: serializer.fromJson<int>(json['goalkeeperId']),
       date: serializer.fromJson<DateTime>(json['date']),
       opponent: serializer.fromJson<String>(json['opponent']),
@@ -1142,6 +1170,7 @@ class Matche extends DataClass implements Insertable<Matche> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
+      'uuid': serializer.toJson<String>(uuid),
       'goalkeeperId': serializer.toJson<int>(goalkeeperId),
       'date': serializer.toJson<DateTime>(date),
       'opponent': serializer.toJson<String>(opponent),
@@ -1163,6 +1192,7 @@ class Matche extends DataClass implements Insertable<Matche> {
 
   Matche copyWith({
     int? id,
+    String? uuid,
     int? goalkeeperId,
     DateTime? date,
     String? opponent,
@@ -1181,6 +1211,7 @@ class Matche extends DataClass implements Insertable<Matche> {
     DateTime? createdAt,
   }) => Matche(
     id: id ?? this.id,
+    uuid: uuid ?? this.uuid,
     goalkeeperId: goalkeeperId ?? this.goalkeeperId,
     date: date ?? this.date,
     opponent: opponent ?? this.opponent,
@@ -1209,6 +1240,7 @@ class Matche extends DataClass implements Insertable<Matche> {
   Matche copyWithCompanion(MatchesCompanion data) {
     return Matche(
       id: data.id.present ? data.id.value : this.id,
+      uuid: data.uuid.present ? data.uuid.value : this.uuid,
       goalkeeperId: data.goalkeeperId.present
           ? data.goalkeeperId.value
           : this.goalkeeperId,
@@ -1250,6 +1282,7 @@ class Matche extends DataClass implements Insertable<Matche> {
   String toString() {
     return (StringBuffer('Matche(')
           ..write('id: $id, ')
+          ..write('uuid: $uuid, ')
           ..write('goalkeeperId: $goalkeeperId, ')
           ..write('date: $date, ')
           ..write('opponent: $opponent, ')
@@ -1273,6 +1306,7 @@ class Matche extends DataClass implements Insertable<Matche> {
   @override
   int get hashCode => Object.hash(
     id,
+    uuid,
     goalkeeperId,
     date,
     opponent,
@@ -1295,6 +1329,7 @@ class Matche extends DataClass implements Insertable<Matche> {
       identical(this, other) ||
       (other is Matche &&
           other.id == this.id &&
+          other.uuid == this.uuid &&
           other.goalkeeperId == this.goalkeeperId &&
           other.date == this.date &&
           other.opponent == this.opponent &&
@@ -1315,6 +1350,7 @@ class Matche extends DataClass implements Insertable<Matche> {
 
 class MatchesCompanion extends UpdateCompanion<Matche> {
   final Value<int> id;
+  final Value<String> uuid;
   final Value<int> goalkeeperId;
   final Value<DateTime> date;
   final Value<String> opponent;
@@ -1333,6 +1369,7 @@ class MatchesCompanion extends UpdateCompanion<Matche> {
   final Value<DateTime> createdAt;
   const MatchesCompanion({
     this.id = const Value.absent(),
+    this.uuid = const Value.absent(),
     this.goalkeeperId = const Value.absent(),
     this.date = const Value.absent(),
     this.opponent = const Value.absent(),
@@ -1352,6 +1389,7 @@ class MatchesCompanion extends UpdateCompanion<Matche> {
   });
   MatchesCompanion.insert({
     this.id = const Value.absent(),
+    required String uuid,
     required int goalkeeperId,
     required DateTime date,
     required String opponent,
@@ -1368,11 +1406,13 @@ class MatchesCompanion extends UpdateCompanion<Matche> {
     this.greatSavesRating = const Value.absent(),
     this.comments = const Value.absent(),
     this.createdAt = const Value.absent(),
-  }) : goalkeeperId = Value(goalkeeperId),
+  }) : uuid = Value(uuid),
+       goalkeeperId = Value(goalkeeperId),
        date = Value(date),
        opponent = Value(opponent);
   static Insertable<Matche> custom({
     Expression<int>? id,
+    Expression<String>? uuid,
     Expression<int>? goalkeeperId,
     Expression<DateTime>? date,
     Expression<String>? opponent,
@@ -1392,6 +1432,7 @@ class MatchesCompanion extends UpdateCompanion<Matche> {
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
+      if (uuid != null) 'uuid': uuid,
       if (goalkeeperId != null) 'goalkeeper_id': goalkeeperId,
       if (date != null) 'date': date,
       if (opponent != null) 'opponent': opponent,
@@ -1413,6 +1454,7 @@ class MatchesCompanion extends UpdateCompanion<Matche> {
 
   MatchesCompanion copyWith({
     Value<int>? id,
+    Value<String>? uuid,
     Value<int>? goalkeeperId,
     Value<DateTime>? date,
     Value<String>? opponent,
@@ -1432,6 +1474,7 @@ class MatchesCompanion extends UpdateCompanion<Matche> {
   }) {
     return MatchesCompanion(
       id: id ?? this.id,
+      uuid: uuid ?? this.uuid,
       goalkeeperId: goalkeeperId ?? this.goalkeeperId,
       date: date ?? this.date,
       opponent: opponent ?? this.opponent,
@@ -1456,6 +1499,9 @@ class MatchesCompanion extends UpdateCompanion<Matche> {
     final map = <String, Expression>{};
     if (id.present) {
       map['id'] = Variable<int>(id.value);
+    }
+    if (uuid.present) {
+      map['uuid'] = Variable<String>(uuid.value);
     }
     if (goalkeeperId.present) {
       map['goalkeeper_id'] = Variable<int>(goalkeeperId.value);
@@ -1512,6 +1558,7 @@ class MatchesCompanion extends UpdateCompanion<Matche> {
   String toString() {
     return (StringBuffer('MatchesCompanion(')
           ..write('id: $id, ')
+          ..write('uuid: $uuid, ')
           ..write('goalkeeperId: $goalkeeperId, ')
           ..write('date: $date, ')
           ..write('opponent: $opponent, ')
@@ -1629,6 +1676,17 @@ class $GoalsTable extends Goals with TableInfo<$GoalsTable, Goal> {
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _fromZoneMeta = const VerificationMeta(
+    'fromZone',
+  );
+  @override
+  late final GeneratedColumn<String> fromZone = GeneratedColumn<String>(
+    'from_zone',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -1651,6 +1709,7 @@ class $GoalsTable extends Goals with TableInfo<$GoalsTable, Goal> {
     fromZoneX,
     fromZoneY,
     zone,
+    fromZone,
     createdAt,
   ];
   @override
@@ -1717,6 +1776,12 @@ class $GoalsTable extends Goals with TableInfo<$GoalsTable, Goal> {
         zone.isAcceptableOrUnknown(data['zone']!, _zoneMeta),
       );
     }
+    if (data.containsKey('from_zone')) {
+      context.handle(
+        _fromZoneMeta,
+        fromZone.isAcceptableOrUnknown(data['from_zone']!, _fromZoneMeta),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -1764,6 +1829,10 @@ class $GoalsTable extends Goals with TableInfo<$GoalsTable, Goal> {
         DriftSqlType.string,
         data['${effectivePrefix}zone'],
       ),
+      fromZone: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}from_zone'],
+      ),
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -1786,6 +1855,7 @@ class Goal extends DataClass implements Insertable<Goal> {
   final double? fromZoneX;
   final double? fromZoneY;
   final String? zone;
+  final String? fromZone;
   final DateTime createdAt;
   const Goal({
     required this.id,
@@ -1796,6 +1866,7 @@ class Goal extends DataClass implements Insertable<Goal> {
     this.fromZoneX,
     this.fromZoneY,
     this.zone,
+    this.fromZone,
     required this.createdAt,
   });
   @override
@@ -1819,6 +1890,9 @@ class Goal extends DataClass implements Insertable<Goal> {
     if (!nullToAbsent || zone != null) {
       map['zone'] = Variable<String>(zone);
     }
+    if (!nullToAbsent || fromZone != null) {
+      map['from_zone'] = Variable<String>(fromZone);
+    }
     map['created_at'] = Variable<DateTime>(createdAt);
     return map;
   }
@@ -1841,6 +1915,9 @@ class Goal extends DataClass implements Insertable<Goal> {
           ? const Value.absent()
           : Value(fromZoneY),
       zone: zone == null && nullToAbsent ? const Value.absent() : Value(zone),
+      fromZone: fromZone == null && nullToAbsent
+          ? const Value.absent()
+          : Value(fromZone),
       createdAt: Value(createdAt),
     );
   }
@@ -1859,6 +1936,7 @@ class Goal extends DataClass implements Insertable<Goal> {
       fromZoneX: serializer.fromJson<double?>(json['fromZoneX']),
       fromZoneY: serializer.fromJson<double?>(json['fromZoneY']),
       zone: serializer.fromJson<String?>(json['zone']),
+      fromZone: serializer.fromJson<String?>(json['fromZone']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
     );
   }
@@ -1874,6 +1952,7 @@ class Goal extends DataClass implements Insertable<Goal> {
       'fromZoneX': serializer.toJson<double?>(fromZoneX),
       'fromZoneY': serializer.toJson<double?>(fromZoneY),
       'zone': serializer.toJson<String?>(zone),
+      'fromZone': serializer.toJson<String?>(fromZone),
       'createdAt': serializer.toJson<DateTime>(createdAt),
     };
   }
@@ -1887,6 +1966,7 @@ class Goal extends DataClass implements Insertable<Goal> {
     Value<double?> fromZoneX = const Value.absent(),
     Value<double?> fromZoneY = const Value.absent(),
     Value<String?> zone = const Value.absent(),
+    Value<String?> fromZone = const Value.absent(),
     DateTime? createdAt,
   }) => Goal(
     id: id ?? this.id,
@@ -1897,6 +1977,7 @@ class Goal extends DataClass implements Insertable<Goal> {
     fromZoneX: fromZoneX.present ? fromZoneX.value : this.fromZoneX,
     fromZoneY: fromZoneY.present ? fromZoneY.value : this.fromZoneY,
     zone: zone.present ? zone.value : this.zone,
+    fromZone: fromZone.present ? fromZone.value : this.fromZone,
     createdAt: createdAt ?? this.createdAt,
   );
   Goal copyWithCompanion(GoalsCompanion data) {
@@ -1911,6 +1992,7 @@ class Goal extends DataClass implements Insertable<Goal> {
       fromZoneX: data.fromZoneX.present ? data.fromZoneX.value : this.fromZoneX,
       fromZoneY: data.fromZoneY.present ? data.fromZoneY.value : this.fromZoneY,
       zone: data.zone.present ? data.zone.value : this.zone,
+      fromZone: data.fromZone.present ? data.fromZone.value : this.fromZone,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
   }
@@ -1926,6 +2008,7 @@ class Goal extends DataClass implements Insertable<Goal> {
           ..write('fromZoneX: $fromZoneX, ')
           ..write('fromZoneY: $fromZoneY, ')
           ..write('zone: $zone, ')
+          ..write('fromZone: $fromZone, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
@@ -1941,6 +2024,7 @@ class Goal extends DataClass implements Insertable<Goal> {
     fromZoneX,
     fromZoneY,
     zone,
+    fromZone,
     createdAt,
   );
   @override
@@ -1955,6 +2039,7 @@ class Goal extends DataClass implements Insertable<Goal> {
           other.fromZoneX == this.fromZoneX &&
           other.fromZoneY == this.fromZoneY &&
           other.zone == this.zone &&
+          other.fromZone == this.fromZone &&
           other.createdAt == this.createdAt);
 }
 
@@ -1967,6 +2052,7 @@ class GoalsCompanion extends UpdateCompanion<Goal> {
   final Value<double?> fromZoneX;
   final Value<double?> fromZoneY;
   final Value<String?> zone;
+  final Value<String?> fromZone;
   final Value<DateTime> createdAt;
   const GoalsCompanion({
     this.id = const Value.absent(),
@@ -1977,6 +2063,7 @@ class GoalsCompanion extends UpdateCompanion<Goal> {
     this.fromZoneX = const Value.absent(),
     this.fromZoneY = const Value.absent(),
     this.zone = const Value.absent(),
+    this.fromZone = const Value.absent(),
     this.createdAt = const Value.absent(),
   });
   GoalsCompanion.insert({
@@ -1988,6 +2075,7 @@ class GoalsCompanion extends UpdateCompanion<Goal> {
     this.fromZoneX = const Value.absent(),
     this.fromZoneY = const Value.absent(),
     this.zone = const Value.absent(),
+    this.fromZone = const Value.absent(),
     this.createdAt = const Value.absent(),
   }) : matchId = Value(matchId),
        goalTypeId = Value(goalTypeId);
@@ -2000,6 +2088,7 @@ class GoalsCompanion extends UpdateCompanion<Goal> {
     Expression<double>? fromZoneX,
     Expression<double>? fromZoneY,
     Expression<String>? zone,
+    Expression<String>? fromZone,
     Expression<DateTime>? createdAt,
   }) {
     return RawValuesInsertable({
@@ -2011,6 +2100,7 @@ class GoalsCompanion extends UpdateCompanion<Goal> {
       if (fromZoneX != null) 'from_zone_x': fromZoneX,
       if (fromZoneY != null) 'from_zone_y': fromZoneY,
       if (zone != null) 'zone': zone,
+      if (fromZone != null) 'from_zone': fromZone,
       if (createdAt != null) 'created_at': createdAt,
     });
   }
@@ -2024,6 +2114,7 @@ class GoalsCompanion extends UpdateCompanion<Goal> {
     Value<double?>? fromZoneX,
     Value<double?>? fromZoneY,
     Value<String?>? zone,
+    Value<String?>? fromZone,
     Value<DateTime>? createdAt,
   }) {
     return GoalsCompanion(
@@ -2035,6 +2126,7 @@ class GoalsCompanion extends UpdateCompanion<Goal> {
       fromZoneX: fromZoneX ?? this.fromZoneX,
       fromZoneY: fromZoneY ?? this.fromZoneY,
       zone: zone ?? this.zone,
+      fromZone: fromZone ?? this.fromZone,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -2066,6 +2158,9 @@ class GoalsCompanion extends UpdateCompanion<Goal> {
     if (zone.present) {
       map['zone'] = Variable<String>(zone.value);
     }
+    if (fromZone.present) {
+      map['from_zone'] = Variable<String>(fromZone.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -2083,6 +2178,7 @@ class GoalsCompanion extends UpdateCompanion<Goal> {
           ..write('fromZoneX: $fromZoneX, ')
           ..write('fromZoneY: $fromZoneY, ')
           ..write('zone: $zone, ')
+          ..write('fromZone: $fromZone, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
@@ -2988,7 +3084,7 @@ final class $$GoalkeepersTableReferences
     _$AppDatabase db,
   ) => MultiTypedResultKey.fromTable(
     db.matches,
-    aliasName: 'goalkeepers__id__matches__goalkeeper_id',
+    aliasName: $_aliasNameGenerator(db.goalkeepers.id, db.matches.goalkeeperId),
   );
 
   $$MatchesTableProcessedTableManager get matchesRefs {
@@ -3006,7 +3102,10 @@ final class $$GoalkeepersTableReferences
   static MultiTypedResultKey<$DailyTasksTable, List<DailyTask>>
   _dailyTasksRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
     db.dailyTasks,
-    aliasName: 'goalkeepers__id__daily_tasks__goalkeeper_id',
+    aliasName: $_aliasNameGenerator(
+      db.goalkeepers.id,
+      db.dailyTasks.goalkeeperId,
+    ),
   );
 
   $$DailyTasksTableProcessedTableManager get dailyTasksRefs {
@@ -3425,6 +3524,7 @@ typedef $$GoalkeepersTableProcessedTableManager =
 typedef $$MatchesTableCreateCompanionBuilder =
     MatchesCompanion Function({
       Value<int> id,
+      required String uuid,
       required int goalkeeperId,
       required DateTime date,
       required String opponent,
@@ -3445,6 +3545,7 @@ typedef $$MatchesTableCreateCompanionBuilder =
 typedef $$MatchesTableUpdateCompanionBuilder =
     MatchesCompanion Function({
       Value<int> id,
+      Value<String> uuid,
       Value<int> goalkeeperId,
       Value<DateTime> date,
       Value<String> opponent,
@@ -3468,7 +3569,9 @@ final class $$MatchesTableReferences
   $$MatchesTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
   static $GoalkeepersTable _goalkeeperIdTable(_$AppDatabase db) =>
-      db.goalkeepers.createAlias('matches__goalkeeper_id__goalkeepers__id');
+      db.goalkeepers.createAlias(
+        $_aliasNameGenerator(db.matches.goalkeeperId, db.goalkeepers.id),
+      );
 
   $$GoalkeepersTableProcessedTableManager get goalkeeperId {
     final $_column = $_itemColumn<int>('goalkeeper_id')!;
@@ -3488,7 +3591,7 @@ final class $$MatchesTableReferences
     _$AppDatabase db,
   ) => MultiTypedResultKey.fromTable(
     db.goals,
-    aliasName: 'matches__id__goals__match_id',
+    aliasName: $_aliasNameGenerator(db.matches.id, db.goals.matchId),
   );
 
   $$GoalsTableProcessedTableManager get goalsRefs {
@@ -3515,6 +3618,11 @@ class $$MatchesTableFilterComposer
   });
   ColumnFilters<int> get id => $composableBuilder(
     column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get uuid => $composableBuilder(
+    column: $table.uuid,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -3656,6 +3764,11 @@ class $$MatchesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get uuid => $composableBuilder(
+    column: $table.uuid,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get date => $composableBuilder(
     column: $table.date,
     builder: (column) => ColumnOrderings(column),
@@ -3766,6 +3879,9 @@ class $$MatchesTableAnnotationComposer
   });
   GeneratedColumn<int> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get uuid =>
+      $composableBuilder(column: $table.uuid, builder: (column) => column);
 
   GeneratedColumn<DateTime> get date =>
       $composableBuilder(column: $table.date, builder: (column) => column);
@@ -3906,6 +4022,7 @@ class $$MatchesTableTableManager
           updateCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
+                Value<String> uuid = const Value.absent(),
                 Value<int> goalkeeperId = const Value.absent(),
                 Value<DateTime> date = const Value.absent(),
                 Value<String> opponent = const Value.absent(),
@@ -3924,6 +4041,7 @@ class $$MatchesTableTableManager
                 Value<DateTime> createdAt = const Value.absent(),
               }) => MatchesCompanion(
                 id: id,
+                uuid: uuid,
                 goalkeeperId: goalkeeperId,
                 date: date,
                 opponent: opponent,
@@ -3944,6 +4062,7 @@ class $$MatchesTableTableManager
           createCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
+                required String uuid,
                 required int goalkeeperId,
                 required DateTime date,
                 required String opponent,
@@ -3962,6 +4081,7 @@ class $$MatchesTableTableManager
                 Value<DateTime> createdAt = const Value.absent(),
               }) => MatchesCompanion.insert(
                 id: id,
+                uuid: uuid,
                 goalkeeperId: goalkeeperId,
                 date: date,
                 opponent: opponent,
@@ -4069,6 +4189,7 @@ typedef $$GoalsTableCreateCompanionBuilder =
       Value<double?> fromZoneX,
       Value<double?> fromZoneY,
       Value<String?> zone,
+      Value<String?> fromZone,
       Value<DateTime> createdAt,
     });
 typedef $$GoalsTableUpdateCompanionBuilder =
@@ -4081,6 +4202,7 @@ typedef $$GoalsTableUpdateCompanionBuilder =
       Value<double?> fromZoneX,
       Value<double?> fromZoneY,
       Value<String?> zone,
+      Value<String?> fromZone,
       Value<DateTime> createdAt,
     });
 
@@ -4088,8 +4210,8 @@ final class $$GoalsTableReferences
     extends BaseReferences<_$AppDatabase, $GoalsTable, Goal> {
   $$GoalsTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
-  static $MatchesTable _matchIdTable(_$AppDatabase db) =>
-      db.matches.createAlias('goals__match_id__matches__id');
+  static $MatchesTable _matchIdTable(_$AppDatabase db) => db.matches
+      .createAlias($_aliasNameGenerator(db.goals.matchId, db.matches.id));
 
   $$MatchesTableProcessedTableManager get matchId {
     final $_column = $_itemColumn<int>('match_id')!;
@@ -4146,6 +4268,11 @@ class $$GoalsTableFilterComposer extends Composer<_$AppDatabase, $GoalsTable> {
 
   ColumnFilters<String> get zone => $composableBuilder(
     column: $table.zone,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get fromZone => $composableBuilder(
+    column: $table.fromZone,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -4222,6 +4349,11 @@ class $$GoalsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get fromZone => $composableBuilder(
+    column: $table.fromZone,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -4282,6 +4414,9 @@ class $$GoalsTableAnnotationComposer
 
   GeneratedColumn<String> get zone =>
       $composableBuilder(column: $table.zone, builder: (column) => column);
+
+  GeneratedColumn<String> get fromZone =>
+      $composableBuilder(column: $table.fromZone, builder: (column) => column);
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -4346,6 +4481,7 @@ class $$GoalsTableTableManager
                 Value<double?> fromZoneX = const Value.absent(),
                 Value<double?> fromZoneY = const Value.absent(),
                 Value<String?> zone = const Value.absent(),
+                Value<String?> fromZone = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
               }) => GoalsCompanion(
                 id: id,
@@ -4356,6 +4492,7 @@ class $$GoalsTableTableManager
                 fromZoneX: fromZoneX,
                 fromZoneY: fromZoneY,
                 zone: zone,
+                fromZone: fromZone,
                 createdAt: createdAt,
               ),
           createCompanionCallback:
@@ -4368,6 +4505,7 @@ class $$GoalsTableTableManager
                 Value<double?> fromZoneX = const Value.absent(),
                 Value<double?> fromZoneY = const Value.absent(),
                 Value<String?> zone = const Value.absent(),
+                Value<String?> fromZone = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
               }) => GoalsCompanion.insert(
                 id: id,
@@ -4378,6 +4516,7 @@ class $$GoalsTableTableManager
                 fromZoneX: fromZoneX,
                 fromZoneY: fromZoneY,
                 zone: zone,
+                fromZone: fromZone,
                 createdAt: createdAt,
               ),
           withReferenceMapper: (p0) => p0
@@ -4475,7 +4614,9 @@ final class $$DailyTasksTableReferences
   $$DailyTasksTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
   static $GoalkeepersTable _goalkeeperIdTable(_$AppDatabase db) =>
-      db.goalkeepers.createAlias('daily_tasks__goalkeeper_id__goalkeepers__id');
+      db.goalkeepers.createAlias(
+        $_aliasNameGenerator(db.dailyTasks.goalkeeperId, db.goalkeepers.id),
+      );
 
   $$GoalkeepersTableProcessedTableManager get goalkeeperId {
     final $_column = $_itemColumn<int>('goalkeeper_id')!;
@@ -4498,7 +4639,10 @@ final class $$DailyTasksTableReferences
   _dailyTaskCompletionsRefsTable(_$AppDatabase db) =>
       MultiTypedResultKey.fromTable(
         db.dailyTaskCompletions,
-        aliasName: 'daily_tasks__id__daily_task_completions__task_id',
+        aliasName: $_aliasNameGenerator(
+          db.dailyTasks.id,
+          db.dailyTaskCompletions.taskId,
+        ),
       );
 
   $$DailyTaskCompletionsTableProcessedTableManager
@@ -4969,8 +5113,10 @@ final class $$DailyTaskCompletionsTableReferences
     super.$_typedResult,
   );
 
-  static $DailyTasksTable _taskIdTable(_$AppDatabase db) => db.dailyTasks
-      .createAlias('daily_task_completions__task_id__daily_tasks__id');
+  static $DailyTasksTable _taskIdTable(_$AppDatabase db) =>
+      db.dailyTasks.createAlias(
+        $_aliasNameGenerator(db.dailyTaskCompletions.taskId, db.dailyTasks.id),
+      );
 
   $$DailyTasksTableProcessedTableManager get taskId {
     final $_column = $_itemColumn<int>('task_id')!;

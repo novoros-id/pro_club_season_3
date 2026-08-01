@@ -32,6 +32,7 @@ dependencies:
   flutter:
     sdk: flutter
   fl_chart: ^0.66.0
+  image: ^4.1.0
   flutter_localizations:
     sdk: flutter
   intl: any
@@ -85,6 +86,7 @@ flutter:
     - assets/images/goalie_l.png
     - assets/images/goalie_r.png
     - assets/images/pole.png
+    - assets/images/zones.png
   fonts:
     - family: Unbounded
       fonts:
