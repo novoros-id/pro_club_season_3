@@ -39,7 +39,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       fit: BoxFit.cover,
                       alignment: Alignment.topCenter,
                     ),
-
                     // Белый fade снизу
                     Container(
                       decoration: const BoxDecoration(
@@ -59,13 +58,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 ),
               ),
 
-              // Контент
+              // Контент (теперь прокручиваемый)
               Positioned.fill(
                 child: SafeArea(
                   top: false,
-                  child: Padding(
+                  child: SingleChildScrollView( // ✅ Добавлена прокрутка
                     padding: const EdgeInsets.symmetric(horizontal: 32),
                     child: Column(
+                      mainAxisSize: MainAxisSize.min, // ✅ Важно для ScrollView
                       children: [
                         SizedBox(height: height * 0.64),
 
@@ -90,7 +90,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         // Украшалка-загрузка
                         const _LoadingDecoration(),
 
-                        const Spacer(),
+                        const SizedBox(height: 50), // Отступ вместо Spacer
 
                         SizedBox(
                           width: double.infinity,
@@ -106,11 +106,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                 _isButtonPressed = false;
                               });
                             },
-
                             onTap: () {
                               context.push('/add-goalkeeper').then((_) {
                                 if (!mounted) return;
-
                                 setState(() {
                                   _isButtonPressed = false;
                                 });
@@ -161,7 +159,6 @@ class _LogoTitle extends StatelessWidget {
       child: Stack(
         clipBehavior: Clip.none,
         children: [
-          // Зеленая подложка под словом "ПУТЬ"
           Positioned(
             left: -13,
             bottom: 4,
@@ -171,7 +168,6 @@ class _LogoTitle extends StatelessWidget {
               color: accentGreen,
             ),
           ),
-
           const Text(
             'ПУТЬ ВРАТАРЯ',
             textAlign: TextAlign.center,
