@@ -88,6 +88,15 @@ flutter:
     - assets/images/pole.png
     - assets/images/catch_left.svg
     - assets/images/catch_right.svg
+    - assets/images/caver.png
+    - assets/images/settings.svg
+    - assets/images/diary.svg
+    - assets/images/goalkeepers.svg
+    - assets/images/air_hockey.svg
+    - assets/images/schulte.svg
+    - assets/images/analytics.svg
+    - assets/images/author.svg
+    - assets/images/daily_tasks.svg
   fonts:
     - family: Unbounded
       fonts:

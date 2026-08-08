@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <mask id="daily-tasks-cutouts">
+      <rect width="512" height="512" fill="white"/>
+
+      <!-- Отверстие в верхнем зажиме планшета -->
+      <rect x="218" y="50" width="76" height="20" rx="10" fill="black"/>
+
+      <!-- Первая задача -->
+      <rect x="112" y="154" width="70" height="70" rx="18" fill="black"/>
+      <path d="M128 189L143 204L168 174" fill="none" stroke="white" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+      <rect x="214" y="164" width="184" height="20" rx="10" fill="black"/>
+      <rect x="214" y="196" width="132" height="14" rx="7" fill="black"/>
+
+      <!-- Вторая задача -->
+      <rect x="112" y="272" width="70" height="70" rx="18" fill="black"/>
+      <path d="M128 307L143 322L168 292" fill="none" stroke="white" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+      <rect x="214" y="282" width="184" height="20" rx="10" fill="black"/>
+      <rect x="214" y="314" width="150" height="14" rx="7" fill="black"/>
+
+      <!-- Третья задача -->
+      <rect x="112" y="390" width="70" height="70" rx="18" fill="black"/>
+      <path d="M128 425L143 440L168 410" fill="none" stroke="white" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+      <rect x="214" y="400" width="184" height="20" rx="10" fill="black"/>
+      <rect x="214" y="432" width="116" height="14" rx="7" fill="black"/>
+    </mask>
+  </defs>
+
+  <!-- Заполненный планшет со скруглёнными углами -->
+  <rect x="68" y="70" width="376" height="420" rx="54" fill="#000000" mask="url(#daily-tasks-cutouts)"/>
+
+  <!-- Верхний зажим -->
+  <rect x="166" y="22" width="180" height="100" rx="42" fill="#000000" mask="url(#daily-tasks-cutouts)"/>
+</svg>
