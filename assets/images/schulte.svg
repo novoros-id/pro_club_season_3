@@ -1,0 +1,36 @@
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  width="512"
+  height="512"
+  viewBox="0 0 512 512"
+  fill="none"
+>
+  <title>Таблица Шульте</title>
+
+  <defs>
+    <mask id="center-cell-cutout">
+      <rect width="512" height="512" fill="white" />
+      <rect x="218" y="218" width="76" height="76" rx="18" fill="black" />
+    </mask>
+  </defs>
+
+  <rect x="48" y="48" width="120" height="120" rx="24" fill="#000000" />
+  <rect x="196" y="48" width="120" height="120" rx="24" fill="#000000" />
+  <rect x="344" y="48" width="120" height="120" rx="24" fill="#000000" />
+
+  <rect x="48" y="196" width="120" height="120" rx="24" fill="#000000" />
+  <rect
+    x="185"
+    y="185"
+    width="142"
+    height="142"
+    rx="32"
+    fill="#000000"
+    mask="url(#center-cell-cutout)"
+  />
+  <rect x="344" y="196" width="120" height="120" rx="24" fill="#000000" />
+
+  <rect x="48" y="344" width="120" height="120" rx="24" fill="#000000" />
+  <rect x="196" y="344" width="120" height="120" rx="24" fill="#000000" />
+  <rect x="344" y="344" width="120" height="120" rx="24" fill="#000000" />
+</svg>

@@ -1,0 +1,63 @@
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  width="512"
+  height="512"
+  viewBox="0 0 512 512"
+  fill="none"
+>
+  <title>Аналитика голов</title>
+
+  <defs>
+    <mask id="puck-detail">
+      <rect width="512" height="512" fill="white" />
+      <path
+        d="M72 155C81.5 166 94 171 108 171C122 171 134.5 166 144 155"
+        stroke="black"
+        stroke-width="7"
+        stroke-linecap="round"
+      />
+    </mask>
+  </defs>
+
+  <path
+    d="M63 154C63 134.67 83.1472 119 108 119C132.853 119 153 134.67 153 154V185C153 204.33 132.853 220 108 220C83.1472 220 63 204.33 63 185V154Z"
+    fill="#000000"
+    mask="url(#puck-detail)"
+  />
+
+  <rect
+    x="52"
+    y="270"
+    width="96"
+    height="190"
+    rx="24"
+    fill="#000000"
+  />
+
+  <rect
+    x="208"
+    y="178"
+    width="96"
+    height="282"
+    rx="24"
+    fill="#000000"
+  />
+
+  <rect
+    x="364"
+    y="82"
+    width="96"
+    height="378"
+    rx="24"
+    fill="#000000"
+  />
+
+  <rect
+    x="32"
+    y="448"
+    width="448"
+    height="28"
+    rx="14"
+    fill="#000000"
+  />
+</svg>
