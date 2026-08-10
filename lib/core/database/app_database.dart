@@ -23,6 +23,7 @@ class Goalkeepers extends Table {
 // 2. Таблица игр
 class Matches extends Table {
   IntColumn get id => integer().autoIncrement()();
+  TextColumn get uuid => text().unique()(); // ✅ НОВОЕ ПОЛЕ
   IntColumn get goalkeeperId => integer().references(Goalkeepers, #id)();
   DateTimeColumn get date => dateTime()();
   TextColumn get opponent => text()();
@@ -62,6 +63,7 @@ class Goals extends Table {
   RealColumn get fromZoneY => real().nullable()();
 
   TextColumn get zone => text().nullable()();
+  TextColumn get fromZone => text().nullable()();
 
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
 }
@@ -110,6 +112,14 @@ class AppDatabase extends _$AppDatabase {
         await m.createTable(dailyTaskCompletions);
       } else if (from == 5) {
         await _migrateDailyTasksFromV5(m);
+      }
+      if (from < 6) {
+        // Добавляем поле fromZone в существующую таблицу
+        await m.addColumn(goals, goals.fromZone);
+      }
+      if (from < 7) {
+        // Добавляем uuid в таблицу matches
+        await m.addColumn(matches, matches.uuid);
       }
     },
   );

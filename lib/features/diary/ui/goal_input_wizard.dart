@@ -4,6 +4,7 @@ import 'dart:math' as math; // Для расчетов углов и радиу�
 import '../../../core/database/database_provider.dart';
 import '../../../core/database/app_database.dart';
 import 'package:drift/drift.dart' hide Column;
+import 'zone_detector.dart'; // ✅ ИМПОРТ ДЕТЕКТОРА ЗОН
 
 class GoalInputWizard extends ConsumerStatefulWidget {
   final Matche match;
@@ -32,11 +33,13 @@ class _GoalInputWizardState extends ConsumerState<GoalInputWizard> {
   double? _fromZoneX;
   double? _fromZoneY;
   String? _currentZone;
+  String? _fromZone; // ✅ ЗОНА "ОТКУДА"
+  String? _debugColorCode;
 
   // Флаг для отображения отладочной сетки
   bool _showDebugGrid = true;
 
-  // 🎨 Дизайн-система
+  //  Дизайн-система
   static const Color primaryText = Color(0xFF121212);
   static const Color accentColor = Color(0xFFBBF246);
   static const Color inputBg = Color(0xFFF2F2F7);
@@ -59,6 +62,8 @@ class _GoalInputWizardState extends ConsumerState<GoalInputWizard> {
   @override
   void initState() {
     super.initState();
+    ZoneDetector.loadZoneMap(); // ✅ ЗАГРУЖАЕМ КАРТУ ЗОН
+
     if (widget.existingGoal != null) {
       _selectedGoalTypeId = widget.existingGoal!.goalTypeId;
       _toZoneX = widget.existingGoal!.toZoneX;
@@ -66,20 +71,37 @@ class _GoalInputWizardState extends ConsumerState<GoalInputWizard> {
       _fromZoneX = widget.existingGoal!.fromZoneX;
       _fromZoneY = widget.existingGoal!.fromZoneY;
       _currentZone = widget.existingGoal!.zone;
+      _fromZone = widget.existingGoal!.fromZone; // ✅ ЗАГРУЖАЕМ ЗОНУ "ОТКУДА"
     }
   }
 
   void _nextStep() {
-    if (_currentStep < 2) {
-      setState(() => _currentStep++);
+    if (_currentStep == 0) {
+      // Шаг с выбором зоны в воротах нужен только для прямого броска.
+      setState(() {
+        _currentStep = _selectedGoalTypeId == 1 ? 1 : 2;
+
+        // Для остальных типов гола точка попадания в ворота не используется.
+        if (_selectedGoalTypeId != 1) {
+          _toZoneX = null;
+          _toZoneY = null;
+          _currentZone = null;
+        }
+      });
+    } else if (_currentStep == 1) {
+      setState(() => _currentStep = 2);
     } else {
       _saveGoal();
     }
   }
 
   void _previousStep() {
-    if (_currentStep > 0) {
-      setState(() => _currentStep--);
+    if (_currentStep == 2) {
+      // Если это прямой бросок — возвращаемся к выбору зоны ворот.
+      // Для остальных типов сразу возвращаемся к выбору типа гола.
+      setState(() => _currentStep = _selectedGoalTypeId == 1 ? 1 : 0);
+    } else if (_currentStep == 1) {
+      setState(() => _currentStep = 0);
     } else {
       Navigator.pop(context);
     }
@@ -97,7 +119,8 @@ class _GoalInputWizardState extends ConsumerState<GoalInputWizard> {
         toZoneY: _toZoneY,
         fromZoneX: _fromZoneX,
         fromZoneY: _fromZoneY,
-        zone: _currentZone, // ✅ ДОБАВИТЬ
+        zone: _currentZone,
+        fromZone: _fromZone, // ✅ СОХРАНЯЕМ ЗОНУ "ОТКУДА"
         createdAt: widget.existingGoal!.createdAt,
       );
       await db.updateGoal(updated);
@@ -109,7 +132,8 @@ class _GoalInputWizardState extends ConsumerState<GoalInputWizard> {
         toZoneY: Value(_toZoneY),
         fromZoneX: Value(_fromZoneX),
         fromZoneY: Value(_fromZoneY),
-        zone: Value(_currentZone), // ✅ ДОБАВИТЬ
+        zone: Value(_currentZone),
+        fromZone: Value(_fromZone), // ✅ СОХРАНЯЕМ ЗОНУ "ОТКУДА"
       ));
     }
 
@@ -182,10 +206,29 @@ class _GoalInputWizardState extends ConsumerState<GoalInputWizard> {
             child: Row(
               children: [
                 _buildStepIndicator(1, 'Тип'),
-                Expanded(child: Container(height: 2, color: _currentStep >= 1 ? accentColor : Colors.grey.shade300)),
-                _buildStepIndicator(2, 'В ворота'),
-                Expanded(child: Container(height: 2, color: _currentStep >= 2 ? accentColor : Colors.grey.shade300)),
-                _buildStepIndicator(3, 'Откуда'),
+                if (_selectedGoalTypeId == 1) ...[
+                  Expanded(
+                    child: Container(
+                      height: 2,
+                      color: _currentStep >= 1
+                          ? accentColor
+                          : Colors.grey.shade300,
+                    ),
+                  ),
+                  _buildStepIndicator(2, 'В ворота'),
+                ],
+                Expanded(
+                  child: Container(
+                    height: 2,
+                    color: _currentStep >= 2
+                        ? accentColor
+                        : Colors.grey.shade300,
+                  ),
+                ),
+                _buildStepIndicator(
+                  _selectedGoalTypeId == 1 ? 3 : 2,
+                  'Откуда',
+                ),
               ],
             ),
           ),
@@ -398,6 +441,23 @@ class _GoalInputWizardState extends ConsumerState<GoalInputWizard> {
             ),
           ),
         ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
+          child: Text(
+            'Сюда отмечай только чистые прямые броски: ты успел занять позицию, '
+                'видел шайбу и весь её полёт, тебе никто не мешал. Получаем информацию '
+                'по реакции, если есть время на реагирование и расположение по глубине, '
+                'если бросок совсем близко и времени на реакцию нет — ставь точку в тот '
+                'сектор ворот, куда зашла шайба.',
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontFamily: 'Lato',
+              fontSize: 14,
+              height: 1.4,
+              color: auxText,
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -405,22 +465,28 @@ class _GoalInputWizardState extends ConsumerState<GoalInputWizard> {
   // ШАГ 3: Откуда бросок
   Widget _buildFromZoneStep() {
     final double containerWidth = MediaQuery.of(context).size.width - 32;
-    final double containerHeight = containerWidth * (2094 / 2617);
+    final double containerHeight = containerWidth * (1097 / 1055); // ✅ ОБНОВЛЁННЫЕ ПРОПОРЦИИ
 
     return Column(
       children: [
-        const Padding(
-          padding: EdgeInsets.all(16),
-          child: Text(
-            'Отметь откуда был бросок\n(нажми на площадку)',
-            style: TextStyle(
-              fontFamily: 'Unbounded',
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: primaryText,
-            ),
-            textAlign: TextAlign.center,
+        Padding(
+          padding: const EdgeInsets.only(top: 16, bottom: 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text('Отметь откуда был бросок', style: TextStyle(fontFamily: 'Unbounded', fontSize: 14, fontWeight: FontWeight.w600, color: primaryText)),
+              const SizedBox(width: 8),
+              IconButton(
+                icon: Icon(_showDebugGrid ? Icons.grid_on : Icons.grid_off, color: _showDebugGrid ? accentColor : auxText),
+                onPressed: () => setState(() => _showDebugGrid = !_showDebugGrid),
+                tooltip: 'Показать/скрыть сетку зон',
+              ),
+            ],
           ),
+        ),
+        const Padding(
+          padding: EdgeInsets.only(bottom: 8),
+          child: Text('(нажми на площадку)', style: TextStyle(fontFamily: 'Unbounded', fontSize: 12, color: auxText), textAlign: TextAlign.center),
         ),
         Expanded(
           child: GestureDetector(
@@ -437,6 +503,10 @@ class _GoalInputWizardState extends ConsumerState<GoalInputWizard> {
                 setState(() {
                   _fromZoneX = normalizedX;
                   _fromZoneY = normalizedY;
+                  _fromZone = ZoneDetector.getZone(normalizedX, normalizedY); // ✅ ОПРЕДЕЛЯЕМ ЗОНУ
+
+                  // ✅ ОТЛАДКА: Получаем код цвета пикселя
+                  _debugColorCode = ZoneDetector.getDebugColorCode(normalizedX, normalizedY);
                 });
               }
             },
@@ -462,6 +532,7 @@ class _GoalInputWizardState extends ConsumerState<GoalInputWizard> {
                         alignment: Alignment.center,
                       ),
                     ),
+                    // Маркер броска
                     if (_fromZoneX != null && _fromZoneY != null)
                       Positioned(
                         left: _fromZoneX! * containerWidth - 12,
@@ -487,12 +558,63 @@ class _GoalInputWizardState extends ConsumerState<GoalInputWizard> {
                           ),
                         ),
                       ),
+                    // Текст зоны
+                    if (_fromZone != null && _fromZoneX != null && _fromZoneY != null)
+                      Positioned(
+                        left: _fromZoneX! * containerWidth - 20,
+                        top: _fromZoneY! * containerHeight + 18,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.7),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            _fromZone!,
+                            style: const TextStyle(
+                              fontFamily: 'Unbounded',
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
                   ],
                 ),
               ),
             ),
           ),
         ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
+          child: Text(
+            'Здесь отмечаешь место, откуда пробили или забили гол '
+                '(на нашей половине площадки).',
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontFamily: 'Lato',
+              fontSize: 14,
+              height: 1.4,
+              color: auxText,
+            ),
+          ),
+        ),
+        // ✅ ОТЛАДОЧНЫЙ ВЫВОД КОДА ЦВЕТА
+        //if (_debugColorCode != null)
+        // Padding(
+        //   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        //   child: Text(
+        //     'Отладка цвета: $_debugColorCode',
+        //     style: const TextStyle(
+        //       fontFamily: 'Lato',
+        //       fontSize: 12,
+        //       color: Colors.grey,
+        //       fontWeight: FontWeight.w500,
+        //     ),
+        //     textAlign: TextAlign.center,
+        //   ),
+        //),
       ],
     );
   }
