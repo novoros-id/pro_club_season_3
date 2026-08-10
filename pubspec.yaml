@@ -50,6 +50,7 @@ dependencies:
   path_provider: ^2.1.1
   path: ^1.8.3
   uuid: ^4.2.1
+  flutter_svg: ^2.3.0
 
 
 dev_dependencies:
@@ -87,6 +88,8 @@ flutter:
     - assets/images/goalie_r.png
     - assets/images/pole.png
     - assets/images/zones.png
+    - assets/images/catch_left.svg
+    - assets/images/catch_right.svg
   fonts:
     - family: Unbounded
       fonts:

@@ -115,6 +115,26 @@ class AppLocalizationsEn extends AppLocalizations {
       'Select a goalkeeper to view daily tasks.';
 
   @override
+  String get dailyTasksChooseGoalkeeper => 'Choose or create goalkeeper';
+
+  @override
+  String dailyTasksForGoalkeeper(String name) {
+    return 'Tasks for $name';
+  }
+
+  @override
+  String dailyTasksOwner(String name) {
+    return 'Goalkeeper: $name';
+  }
+
+  @override
+  String get dailyTasksGoalkeeperChanged =>
+      'The active goalkeeper changed. Return to the updated task list.';
+
+  @override
+  String get dailyTasksReturnToList => 'Return to tasks';
+
+  @override
   String get dailyTasksLoadError => 'Could not load daily tasks.';
 
   @override

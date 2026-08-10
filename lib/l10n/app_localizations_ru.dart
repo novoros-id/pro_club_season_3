@@ -116,6 +116,26 @@ class AppLocalizationsRu extends AppLocalizations {
       'Выберите вратаря, чтобы увидеть ежедневные задачи.';
 
   @override
+  String get dailyTasksChooseGoalkeeper => 'Выбрать или создать вратаря';
+
+  @override
+  String dailyTasksForGoalkeeper(String name) {
+    return 'Задачи для: $name';
+  }
+
+  @override
+  String dailyTasksOwner(String name) {
+    return 'Вратарь: $name';
+  }
+
+  @override
+  String get dailyTasksGoalkeeperChanged =>
+      'Активный вратарь изменился. Вернитесь к обновлённому списку задач.';
+
+  @override
+  String get dailyTasksReturnToList => 'Вернуться к задачам';
+
+  @override
   String get dailyTasksLoadError => 'Не удалось загрузить ежедневные задачи.';
 
   @override

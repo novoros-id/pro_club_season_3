@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'dart:math' as math; // Для отрисовки сетки
 import '../../../../core/database/database_provider.dart';
 import '../../../../core/database/app_database.dart';
 import '../../providers/analytics_filter_provider.dart';
@@ -23,16 +24,6 @@ class _GoalsConcededMapScreenState extends ConsumerState<GoalsConcededMapScreen>
 
   // Пропорции картинки вратаря (как в wizard)
   static const double aspectRatio = 720 / 947;
-
-  static const Map<int, Color> goalTypeColors = {
-    1: Colors.red,
-    2: Colors.orange,
-    3: Colors.purple,
-    4: Colors.blueGrey,
-    5: Colors.brown,
-    6: Colors.black,
-    7: Colors.teal,
-  };
 
   static const Map<int, String> goalTypeNames = {
     1: 'Прямой бросок',
@@ -69,7 +60,6 @@ class _GoalsConcededMapScreenState extends ConsumerState<GoalsConcededMapScreen>
     setState(() { _isLoading = true; });
 
     final db = ref.read(databaseProvider);
-
     final allMatches = await db.getMatchesByGoalkeeper(filters.selectedGoalkeeper!.id);
 
     final filteredMatches = allMatches.where((m) {
@@ -82,6 +72,8 @@ class _GoalsConcededMapScreenState extends ConsumerState<GoalsConcededMapScreen>
     List<Goal> loadedGoals = [];
     for (var match in filteredMatches) {
       final goals = await db.getGoalsByMatch(match.id);
+      // Если хочешь показывать ТОЛЬКО прямые броски, раскомментируй строку ниже:
+      // loadedGoals.addAll(goals.where((g) => g.goalTypeId == 1).toList());
       loadedGoals.addAll(goals);
     }
 
@@ -99,8 +91,17 @@ class _GoalsConcededMapScreenState extends ConsumerState<GoalsConcededMapScreen>
         ? 'assets/images/goalie_l.png'
         : 'assets/images/goalie_r.png';
 
+    // ✅ ИСПОЛЬЗУЕМ ТЕ ЖЕ РАЗМЕРЫ И ФОРМУЛЫ, ЧТО В WIZARD
     final double containerWidth = MediaQuery.of(context).size.width - 32;
     final double containerHeight = containerWidth * aspectRatio;
+
+    // 🎯 НАСТРОЙКА ЦЕНТРА ЗОН (как в GoalInputWizard)
+    final double centerX = containerWidth / 2;
+    final double centerY = (containerHeight / 2) + (containerHeight * 0.085); // Смещение вниз
+
+    // Радиусы (как в GoalInputWizard)
+    final double outerRadius = containerWidth * 0.51;
+    final double innerRadius = containerWidth * 0.35;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -139,35 +140,23 @@ class _GoalsConcededMapScreenState extends ConsumerState<GoalsConcededMapScreen>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // ✅ ЗАГОЛОВОК ВМЕСТО ЛЕГЕНДЫ
             Container(
-              padding: const EdgeInsets.all(12),
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
               decoration: BoxDecoration(
                 color: const Color(0xFFF2F2F7),
                 borderRadius: BorderRadius.circular(15),
               ),
-              child: Wrap(
-                spacing: 12,
-                runSpacing: 8,
-                children: goalTypeNames.entries.map((entry) {
-                  return Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        width: 12,
-                        height: 12,
-                        decoration: BoxDecoration(
-                          color: goalTypeColors[entry.key] ?? Colors.grey,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        entry.value,
-                        style: const TextStyle(fontSize: 12, fontFamily: 'Lato'),
-                      ),
-                    ],
-                  );
-                }).toList(),
+              child: const Text(
+                'ИНФОРМАЦИЯ ПО ПРЯМЫМ БРОСКАМ',
+                style: TextStyle(
+                  fontFamily: 'Unbounded',
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF121212),
+                ),
+                textAlign: TextAlign.center,
               ),
             ),
 
@@ -176,13 +165,27 @@ class _GoalsConcededMapScreenState extends ConsumerState<GoalsConcededMapScreen>
             Center(
               child: Stack(
                 children: [
+                  // 1. СЕТКА (Рисуем первой, чтобы была ПОД картинкой)
+                  // Используем тот же ZoneGridPainter, что и в Wizard, но с другими цветами/прозрачностью
+                  Positioned.fill(
+                    child: CustomPaint(
+                      painter: ZoneGridPainter(
+                        width: containerWidth,
+                        height: containerHeight,
+                        centerX: centerX,
+                        centerY: centerY,
+                        innerRadius: innerRadius,
+                        outerRadius: outerRadius,
+                      ),
+                    ),
+                  ),
+
+                  // 2. КАРТИНКА ВРАТАРЯ (Рисуем второй, чтобы перекрыть сетку)
                   Container(
                     width: containerWidth,
                     height: containerHeight,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF2F2F7),
                       borderRadius: BorderRadius.circular(15),
-                      border: Border.all(color: Colors.grey.shade300),
                     ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(15),
@@ -194,8 +197,12 @@ class _GoalsConcededMapScreenState extends ConsumerState<GoalsConcededMapScreen>
                     ),
                   ),
 
+                  // 3. ТОЧКИ ГОЛОВ (Рисуем поверх всего)
                   ..._allGoals.map((goal) {
                     if (goal.toZoneX == null || goal.toZoneY == null) return const SizedBox.shrink();
+
+                    // Если хочешь показывать ТОЛЬКО прямые броски, раскомментируй условие ниже:
+                    // if (goal.goalTypeId != 1) return const SizedBox.shrink();
 
                     return Positioned(
                       left: goal.toZoneX! * containerWidth - 8,
@@ -206,7 +213,8 @@ class _GoalsConcededMapScreenState extends ConsumerState<GoalsConcededMapScreen>
                           width: 16,
                           height: 16,
                           decoration: BoxDecoration(
-                            color: goalTypeColors[goal.goalTypeId] ?? Colors.grey,
+                            // Красный цвет для прямых бросков, серый для остальных (опционально)
+                            color: goal.goalTypeId == 1 ? Colors.red : Colors.grey.withOpacity(0.5),
                             shape: BoxShape.circle,
                             border: Border.all(color: Colors.white, width: 2),
                             boxShadow: const [
@@ -285,4 +293,71 @@ class _GoalsConcededMapScreenState extends ConsumerState<GoalsConcededMapScreen>
       ),
     );
   }
+}
+
+// 🎨 ОТЛАДОЧНАЯ СЕТКА ЗОН (ЦВЕТНАЯ, КАК В WIZARD, НО ПОЛУПРОЗРАЧНАЯ)
+class ZoneGridPainter extends CustomPainter {
+  final double width;
+  final double height;
+  final double centerX;
+  final double centerY;
+  final double innerRadius;
+  final double outerRadius;
+
+  ZoneGridPainter({
+    required this.width,
+    required this.height,
+    required this.centerX,
+    required this.centerY,
+    required this.innerRadius,
+    required this.outerRadius,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    // Линии секторов (Красные, как в wizard, но полупрозрачные)
+    final linePaint = Paint()
+      ..color = Colors.red.withOpacity(0.4) // Полупрозрачный красный
+      ..strokeWidth = 1.5
+      ..style = PaintingStyle.stroke;
+
+    // Внутренний круг (Синий, как в wizard)
+    final innerCirclePaint = Paint()
+      ..color = Colors.blue.withOpacity(0.4)
+      ..strokeWidth = 1.5
+      ..style = PaintingStyle.stroke;
+
+    // Внешний круг (Зеленый, как в wizard)
+    final outerCirclePaint = Paint()
+      ..color = Colors.green.withOpacity(0.4)
+      ..strokeWidth = 1.5
+      ..style = PaintingStyle.stroke;
+
+    canvas.drawCircle(Offset(centerX, centerY), outerRadius, outerCirclePaint);
+    canvas.drawCircle(Offset(centerX, centerY), innerRadius, innerCirclePaint);
+
+    // Строго вертикальная линия (12 часов)
+    final double startAngleRad = -math.pi / 2;
+    final double stepRad = 22.5 * math.pi / 180;
+
+    for (int i = 0; i < 16; i++) {
+      final angle = startAngleRad + i * stepRad;
+      final dx = math.cos(angle) * outerRadius;
+      final dy = math.sin(angle) * outerRadius;
+      canvas.drawLine(
+        Offset(centerX, centerY),
+        Offset(centerX + dx, centerY + dy),
+        linePaint,
+      );
+    }
+
+    // Точка центра (черная)
+    canvas.drawCircle(Offset(centerX, centerY), 3, Paint()..color = Colors.black.withOpacity(0.5));
+
+    // Маркер 12 часов (красный)
+    canvas.drawCircle(Offset(centerX, centerY - outerRadius), 4, Paint()..color = Colors.red.withOpacity(0.5));
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

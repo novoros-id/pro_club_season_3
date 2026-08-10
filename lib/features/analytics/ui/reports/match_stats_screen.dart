@@ -16,7 +16,7 @@ class _MatchStatsScreenState extends ConsumerState<MatchStatsScreen> {
   List<Matche> _matches = [];
   bool _isLoading = true;
 
-  // 🎨 Дизайн-система (Светлая тема, как в остальном приложении)
+  // 🎨 Дизайн-система
   static const Color primaryText = Color(0xFF121212);
   static const Color accentColor = Color(0xFFBBF246);
   static const Color auxText = Color(0xFF9B9EA1);
@@ -66,8 +66,47 @@ class _MatchStatsScreenState extends ConsumerState<MatchStatsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Подсчет итогов
+    int totalGames = _matches.length;
+    int totalMinutes = 0;
+    int totalShots = 0;
+    int totalGoals = 0;
+    double totalSavePct = 0;
+    int countWithPct = 0;
+
+    for (var match in _matches) {
+      // Минуты (берем из gameDuration, если есть, иначе парсим gameTime или берем дефолт 60)
+      if (match.gameDuration != null) {
+        totalMinutes += match.gameDuration!;
+      } else if (match.gameTime != null && match.gameTime!.contains(':')) {
+        // Если в gameTime хранится что-то вроде "60:00", пробуем взять часы*60 + минуты
+        final parts = match.gameTime!.split(':');
+        if (parts.length >= 2) {
+          final h = int.tryParse(parts[0]) ?? 0;
+          final m = int.tryParse(parts[1]) ?? 0;
+          totalMinutes += (h * 60) + m;
+        } else {
+          totalMinutes += 60; // Дефолт
+        }
+      } else {
+        totalMinutes += 60; // Дефолт
+      }
+
+      // Броски и Голы
+      totalShots += (match.saves ?? 0) + (match.goalsConceded ?? 0);
+      totalGoals += (match.goalsConceded ?? 0);
+
+      // Средний процент
+      if (match.savePercentage != null) {
+        totalSavePct += match.savePercentage!;
+        countWithPct++;
+      }
+    }
+
+    final avgSavePct = countWithPct > 0 ? (totalSavePct / countWithPct).toStringAsFixed(1) : '-';
+
     return Scaffold(
-      backgroundColor: Colors.white, // ✅ Белый фон
+      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
@@ -108,12 +147,12 @@ class _MatchStatsScreenState extends ConsumerState<MatchStatsScreen> {
             ),
             child: Row(
               children: [
-                SizedBox(width: 60, child: _buildHeader('ДАТА')),
+                SizedBox(width: 50, child: _buildHeader('ДАТА')), // Уменьшили ширину даты
                 Expanded(flex: 2, child: _buildHeader('СОПЕРНИК')),
+                SizedBox(width: 50, child: _buildHeader('ВРЕМЯ', align: TextAlign.center)), // Новая колонка
                 SizedBox(width: 50, child: _buildHeader('БР.', align: TextAlign.center)),
                 SizedBox(width: 50, child: _buildHeader('ГОЛЫ', align: TextAlign.center)),
                 SizedBox(width: 50, child: _buildHeader('%', align: TextAlign.center)),
-                // ✅ Убрали колонку под крестик, теперь таблица занимает всю ширину
               ],
             ),
           ),
@@ -125,13 +164,12 @@ class _MatchStatsScreenState extends ConsumerState<MatchStatsScreen> {
               itemBuilder: (context, index) {
                 final match = _matches[index];
 
-                // Парсим счет
-                int ourScore = 0;
-                int oppScore = 0;
-                if (match.score != null && match.score!.contains(':')) {
-                  final parts = match.score!.split(':');
-                  ourScore = int.tryParse(parts[0]) ?? 0;
-                  oppScore = int.tryParse(parts[1]) ?? 0;
+                // Форматируем время для отображения
+                String timeStr = '-';
+                if (match.gameTime != null) {
+                  timeStr = match.gameTime!;
+                } else if (match.gameDuration != null) {
+                  timeStr = '${match.gameDuration}\' ';
                 }
 
                 return Container(
@@ -141,14 +179,14 @@ class _MatchStatsScreenState extends ConsumerState<MatchStatsScreen> {
                   ),
                   child: Row(
                     children: [
-                      // ДАТА
+                      // ДАТА (уменьшенный шрифт)
                       SizedBox(
-                        width: 60,
+                        width: 50,
                         child: Text(
-                          DateFormat('dd.MM.yy').format(match.date),
+                          DateFormat('dd.MM').format(match.date), // Только день и месяц
                           style: const TextStyle(
                             fontFamily: 'Unbounded',
-                            fontSize: 14,
+                            fontSize: 12, // Уменьшили размер
                             color: primaryText,
                             fontWeight: FontWeight.w600,
                           ),
@@ -169,7 +207,21 @@ class _MatchStatsScreenState extends ConsumerState<MatchStatsScreen> {
                         ),
                       ),
 
-                      // БРОСКИ (Saves + Goals Conceded)
+                      // ВРЕМЯ
+                      SizedBox(
+                        width: 50,
+                        child: Text(
+                          timeStr,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontFamily: 'Lato',
+                            fontSize: 14,
+                            color: auxText,
+                          ),
+                        ),
+                      ),
+
+                      // БРОСКИ
                       SizedBox(
                         width: 50,
                         child: Text(
@@ -183,7 +235,7 @@ class _MatchStatsScreenState extends ConsumerState<MatchStatsScreen> {
                         ),
                       ),
 
-                      // ГОЛЫ (Пропущенные)
+                      // ГОЛЫ
                       SizedBox(
                         width: 50,
                         child: Text(
@@ -207,7 +259,6 @@ class _MatchStatsScreenState extends ConsumerState<MatchStatsScreen> {
                             fontFamily: 'Unbounded',
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
-                            // Подсветка лаймом, если процент высокий (>90%)
                             color: match.savePercentage != null && match.savePercentage! > 90
                                 ? accentColor
                                 : primaryText,
@@ -218,6 +269,37 @@ class _MatchStatsScreenState extends ConsumerState<MatchStatsScreen> {
                   ),
                 );
               },
+            ),
+          ),
+
+          // --- БЛОК ИТОГО ---
+          Container(
+            padding: const EdgeInsets.all(16),
+            color: inputBg,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'ИТОГО ЗА ПЕРИОД',
+                  style: TextStyle(
+                    fontFamily: 'Unbounded',
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: primaryText,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    _buildSummaryItem('Игр:', '$totalGames'),
+                    _buildSummaryItem('Минут:', '$totalMinutes'),
+                    _buildSummaryItem('Бросков:', '$totalShots'),
+                    _buildSummaryItem('Голов:', '$totalGoals'),
+                    _buildSummaryItem('Ср. %:', '$avgSavePct%'),
+                  ],
+                ),
+              ],
             ),
           ),
         ],
@@ -233,9 +315,35 @@ class _MatchStatsScreenState extends ConsumerState<MatchStatsScreen> {
         fontFamily: 'Unbounded',
         fontSize: 12,
         fontWeight: FontWeight.bold,
-        color: auxText, // Серый цвет для заголовков
+        color: auxText,
         letterSpacing: 0.5,
       ),
+    );
+  }
+
+  Widget _buildSummaryItem(String label, String value) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontFamily: 'Lato',
+            fontSize: 12,
+            color: auxText,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: const TextStyle(
+            fontFamily: 'Unbounded',
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: primaryText,
+          ),
+        ),
+      ],
     );
   }
 }

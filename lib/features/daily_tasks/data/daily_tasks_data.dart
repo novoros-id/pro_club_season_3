@@ -4,11 +4,17 @@ import '../models/daily_task.dart';
 import '../models/daily_task_stats.dart';
 import '../logic/daily_task_date.dart';
 
+class DailyTaskAccessException implements Exception {
+  const DailyTaskAccessException();
+
+  @override
+  String toString() =>
+      'DailyTaskAccessException: task not found, unavailable, or owned by another goalkeeper';
+}
+
 class DailyTasksData {
   final AppDatabase db;
   const DailyTasksData(this.db);
-
-  Future<Goalkeeper?> currentGoalkeeper() => db.getCurrentGoalkeeper();
 
   Future<List<DailyTaskItem>> tasksForDate(
     int goalkeeperId,
@@ -43,58 +49,110 @@ class DailyTasksData {
         .toList();
   }
 
-  Future<int> createTask(DailyTasksCompanion task) =>
-      db.into(db.dailyTasks).insert(task);
+  Future<int> createTask({
+    required int goalkeeperId,
+    required String title,
+    String? description,
+    bool enabled = true,
+    String? uuid,
+    DateTime? createdAt,
+  }) => db
+      .into(db.dailyTasks)
+      .insert(
+        DailyTasksCompanion.insert(
+          uuid: uuid == null ? const Value.absent() : Value(uuid),
+          goalkeeperId: goalkeeperId,
+          title: title,
+          description: Value(description),
+          isEnabled: Value(enabled),
+          createdAt: createdAt == null
+              ? const Value.absent()
+              : Value(createdAt),
+        ),
+      );
 
   Future<void> updateTask(
-    int id, {
+    int goalkeeperId,
+    int taskId, {
     required String title,
     String? description,
   }) async {
-    await (db.update(db.dailyTasks)..where((t) => t.id.equals(id))).write(
-      DailyTasksCompanion(
-        title: Value(title),
-        description: Value(description),
-        updatedAt: Value(DateTime.now()),
-      ),
-    );
+    final changed =
+        await (db.update(db.dailyTasks)..where(
+              (task) =>
+                  task.id.equals(taskId) &
+                  task.goalkeeperId.equals(goalkeeperId) &
+                  task.deletedAt.isNull(),
+            ))
+            .write(
+              DailyTasksCompanion(
+                title: Value(title),
+                description: Value(description),
+                updatedAt: Value(DateTime.now()),
+              ),
+            );
+    if (changed == 0) throw const DailyTaskAccessException();
   }
 
-  Future<void> setEnabled(int id, bool enabled) async {
-    await (db.update(db.dailyTasks)..where((t) => t.id.equals(id))).write(
-      DailyTasksCompanion(
-        isEnabled: Value(enabled),
-        updatedAt: Value(DateTime.now()),
-      ),
-    );
+  Future<void> setEnabled(int goalkeeperId, int taskId, bool enabled) async {
+    final changed =
+        await (db.update(db.dailyTasks)..where(
+              (task) =>
+                  task.id.equals(taskId) &
+                  task.goalkeeperId.equals(goalkeeperId) &
+                  task.deletedAt.isNull(),
+            ))
+            .write(
+              DailyTasksCompanion(
+                isEnabled: Value(enabled),
+                updatedAt: Value(DateTime.now()),
+              ),
+            );
+    if (changed == 0) throw const DailyTaskAccessException();
   }
 
-  Future<void> softDelete(int id) async {
+  Future<void> softDelete(int goalkeeperId, int taskId) async {
     final now = DateTime.now();
-    await (db.update(db.dailyTasks)..where((t) => t.id.equals(id))).write(
-      DailyTasksCompanion(deletedAt: Value(now), updatedAt: Value(now)),
-    );
+    final changed =
+        await (db.update(db.dailyTasks)..where(
+              (task) =>
+                  task.id.equals(taskId) &
+                  task.goalkeeperId.equals(goalkeeperId) &
+                  task.deletedAt.isNull(),
+            ))
+            .write(
+              DailyTasksCompanion(deletedAt: Value(now), updatedAt: Value(now)),
+            );
+    if (changed == 0) throw const DailyTaskAccessException();
   }
 
-  Future<void> complete(int taskId, DateTime date) async {
+  Future<void> complete(int goalkeeperId, int taskId, DateTime date) async {
     final day = normalizeOccurrenceDate(date);
-    await db
-        .into(db.dailyTaskCompletions)
-        .insert(
-          DailyTaskCompletionsCompanion.insert(
-            taskId: taskId,
-            occurrenceDate: day,
-          ),
-          mode: InsertMode.insertOrIgnore,
-        );
+    await db.transaction(() async {
+      await _requireCompletableTask(goalkeeperId: goalkeeperId, taskId: taskId);
+      await db
+          .into(db.dailyTaskCompletions)
+          .insert(
+            DailyTaskCompletionsCompanion.insert(
+              taskId: taskId,
+              occurrenceDate: day,
+            ),
+            mode: InsertMode.insertOrIgnore,
+          );
+    });
   }
 
-  Future<void> uncomplete(int taskId, DateTime date) async {
+  Future<void> uncomplete(int goalkeeperId, int taskId, DateTime date) async {
     final day = normalizeOccurrenceDate(date);
-    await (db.delete(
-          db.dailyTaskCompletions,
-        )..where((c) => c.taskId.equals(taskId) & c.occurrenceDate.equals(day)))
-        .go();
+    await db.transaction(() async {
+      await _requireCompletableTask(goalkeeperId: goalkeeperId, taskId: taskId);
+      await (db.delete(db.dailyTaskCompletions)..where(
+            (completion) =>
+                completion.taskId.equals(taskId) &
+                completion.occurrenceDate.equals(day),
+          ))
+          .go();
+    });
   }
 
   Future<DailyTaskStats> stats(int goalkeeperId, DateTime date) async {
@@ -104,9 +162,20 @@ class DailyTasksData {
     final daysWithCompletions = <DailyTaskDayStats>[];
     final today = normalizeOccurrenceDate(date);
     final firstDay = today.subtract(const Duration(days: 2));
-    final completions = await (db.select(
-      db.dailyTaskCompletions,
-    )..where((c) => c.occurrenceDate.isBetweenValues(firstDay, today))).get();
+    final completionQuery = db.select(db.dailyTaskCompletions).join([
+      innerJoin(
+        db.dailyTasks,
+        db.dailyTasks.id.equalsExp(db.dailyTaskCompletions.taskId) &
+            db.dailyTasks.goalkeeperId.equals(goalkeeperId),
+      ),
+    ]);
+    completionQuery.where(
+      db.dailyTaskCompletions.occurrenceDate.isBetweenValues(firstDay, today),
+    );
+    final completionRows = await completionQuery.get();
+    final completions = completionRows
+        .map((row) => row.readTable(db.dailyTaskCompletions))
+        .toList();
     final completionsByDay = <DateTime, List<DailyTaskCompletion>>{};
     for (final completion in completions) {
       completionsByDay
@@ -155,5 +224,21 @@ class DailyTasksData {
       completedToday: completedToday,
       recentDays: daysWithCompletions,
     );
+  }
+
+  Future<void> _requireCompletableTask({
+    required int goalkeeperId,
+    required int taskId,
+  }) async {
+    final task =
+        await (db.select(db.dailyTasks)..where(
+              (task) =>
+                  task.id.equals(taskId) &
+                  task.goalkeeperId.equals(goalkeeperId) &
+                  task.isEnabled.equals(true) &
+                  task.deletedAt.isNull(),
+            ))
+            .getSingleOrNull();
+    if (task == null) throw const DailyTaskAccessException();
   }
 }

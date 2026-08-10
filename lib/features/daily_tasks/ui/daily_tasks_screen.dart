@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../registration/logic/goalkeepers_controller.dart';
 import '../logic/daily_tasks_logic.dart';
 import '../models/daily_task_stats.dart';
 import 'daily_tasks_styles.dart';
@@ -12,6 +13,7 @@ class DailyTasksScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(dailyTasksControllerProvider);
+    final goalkeeper = ref.watch(currentGoalkeeperProvider);
     final controller = ref.read(dailyTasksControllerProvider.notifier);
     final l10n = AppLocalizations.of(context)!;
     return Scaffold(
@@ -37,108 +39,183 @@ class DailyTasksScreen extends ConsumerWidget {
               ),
               child: const Icon(Icons.add),
             ),
-      body: state.isLoading
-          ? const Center(
-              child: CircularProgressIndicator(color: DailyTasksStyles.accent),
-            )
-          : state.error != null
-          ? _Message(text: l10n.dailyTasksLoadError)
-          : state.goalkeeperId == null
-          ? _Message(text: l10n.dailyTasksNoGoalkeeper)
-          : RefreshIndicator(
-              color: DailyTasksStyles.dark,
-              backgroundColor: DailyTasksStyles.accent,
-              onRefresh: controller.refresh,
-              child: ListView(
-                padding: const EdgeInsets.all(16),
-                children: [
-                  _StatsCard(stats: state.stats, l10n: l10n),
-                  const SizedBox(height: 16),
-                  if (state.tasks.isEmpty)
-                    _Message(text: l10n.dailyTasksEmpty)
-                  else
-                    ...state.tasks.map(
-                      (item) => Container(
-                        margin: const EdgeInsets.only(bottom: 12),
-                        decoration: BoxDecoration(
-                          color: item.isCompleted
-                              ? DailyTasksStyles.fieldBackground
-                              : Colors.white,
-                          borderRadius: BorderRadius.circular(15),
-                          border: Border.all(
-                            color: DailyTasksStyles.accent,
-                            width: 1.2,
-                          ),
-                        ),
-                        child: Material(
-                          color: Colors.transparent,
-                          child: ListTile(
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 5,
-                            ),
-                            leading: Checkbox(
-                              value: item.isCompleted,
-                              fillColor: WidgetStateProperty.resolveWith(
-                                (states) =>
-                                    states.contains(WidgetState.selected)
-                                    ? DailyTasksStyles.accent
-                                    : Colors.transparent,
-                              ),
-                              checkColor: DailyTasksStyles.dark,
-                              side: const BorderSide(
-                                color: DailyTasksStyles.dark,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(5),
-                              ),
-                              onChanged: (value) => controller.setCompleted(
-                                item.task.id,
-                                value ?? false,
-                              ),
-                            ),
-                            title: Text(
-                              item.task.title,
-                              style: TextStyle(
-                                fontFamily: 'Lato',
-                                fontSize: 16,
-                                color: item.isCompleted
-                                    ? DailyTasksStyles.secondaryText
-                                    : DailyTasksStyles.dark,
-                                decoration: item.isCompleted
-                                    ? TextDecoration.lineThrough
-                                    : null,
-                              ),
-                            ),
-                            subtitle:
-                                item.task.description == null ||
-                                    item.task.description!.trim().isEmpty
-                                ? null
-                                : Text(
-                                    item.task.description!,
-                                    style: DailyTasksStyles.helper,
-                                  ),
-                            trailing: IconButton(
-                              icon: const Icon(Icons.more_vert),
-                              color: DailyTasksStyles.dark,
-                              onPressed: () => context.push(
-                                '/daily-tasks/edit/${item.task.id}',
-                                extra: item.task,
-                              ),
-                            ),
-                            onTap: () => context.push(
-                              '/daily-tasks/edit/${item.task.id}',
-                              extra: item.task,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
+      body: Column(
+        children: [
+          if (goalkeeper != null)
+            _GoalkeeperHeader(
+              name: '${goalkeeper.firstName} ${goalkeeper.lastName}',
             ),
+          Expanded(
+            child: state.isLoading
+                ? const Center(
+                    child: CircularProgressIndicator(
+                      color: DailyTasksStyles.accent,
+                    ),
+                  )
+                : state.error != null
+                ? _Message(text: l10n.dailyTasksLoadError)
+                : state.goalkeeperId == null
+                ? _NoGoalkeeper(l10n: l10n)
+                : RefreshIndicator(
+                    color: DailyTasksStyles.dark,
+                    backgroundColor: DailyTasksStyles.accent,
+                    onRefresh: controller.refresh,
+                    child: ListView(
+                      padding: const EdgeInsets.all(16),
+                      children: [
+                        _StatsCard(stats: state.stats, l10n: l10n),
+                        const SizedBox(height: 16),
+                        if (state.tasks.isEmpty)
+                          _Message(text: l10n.dailyTasksEmpty)
+                        else
+                          ...state.tasks.map(
+                            (item) => Container(
+                              margin: const EdgeInsets.only(bottom: 12),
+                              decoration: BoxDecoration(
+                                color: item.isCompleted
+                                    ? DailyTasksStyles.fieldBackground
+                                    : Colors.white,
+                                borderRadius: BorderRadius.circular(15),
+                                border: Border.all(
+                                  color: DailyTasksStyles.accent,
+                                  width: 1.2,
+                                ),
+                              ),
+                              child: Material(
+                                color: Colors.transparent,
+                                child: ListTile(
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 5,
+                                  ),
+                                  leading: Checkbox(
+                                    value: item.isCompleted,
+                                    fillColor: WidgetStateProperty.resolveWith(
+                                      (states) =>
+                                          states.contains(WidgetState.selected)
+                                          ? DailyTasksStyles.accent
+                                          : Colors.transparent,
+                                    ),
+                                    checkColor: DailyTasksStyles.dark,
+                                    side: const BorderSide(
+                                      color: DailyTasksStyles.dark,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(5),
+                                    ),
+                                    onChanged: (value) =>
+                                        controller.setCompleted(
+                                          item.task.id,
+                                          value ?? false,
+                                        ),
+                                  ),
+                                  title: Text(
+                                    item.task.title,
+                                    style: TextStyle(
+                                      fontFamily: 'Lato',
+                                      fontSize: 16,
+                                      color: item.isCompleted
+                                          ? DailyTasksStyles.secondaryText
+                                          : DailyTasksStyles.dark,
+                                      decoration: item.isCompleted
+                                          ? TextDecoration.lineThrough
+                                          : null,
+                                    ),
+                                  ),
+                                  subtitle:
+                                      item.task.description == null ||
+                                          item.task.description!.trim().isEmpty
+                                      ? null
+                                      : Text(
+                                          item.task.description!,
+                                          style: DailyTasksStyles.helper,
+                                        ),
+                                  trailing: IconButton(
+                                    icon: const Icon(Icons.more_vert),
+                                    color: DailyTasksStyles.dark,
+                                    onPressed: () => context.push(
+                                      '/daily-tasks/edit/${item.task.id}',
+                                      extra: item.task,
+                                    ),
+                                  ),
+                                  onTap: () => context.push(
+                                    '/daily-tasks/edit/${item.task.id}',
+                                    extra: item.task,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+          ),
+        ],
+      ),
     );
   }
+}
+
+class _GoalkeeperHeader extends StatelessWidget {
+  final String name;
+  const _GoalkeeperHeader({required this.name});
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+    child: Row(
+      children: [
+        CircleAvatar(
+          radius: 18,
+          backgroundColor: DailyTasksStyles.accent.withValues(alpha: 0.25),
+          child: Text(
+            name
+                .split(' ')
+                .where((part) => part.isNotEmpty)
+                .take(2)
+                .map((part) => part[0])
+                .join(),
+            style: DailyTasksStyles.body,
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            AppLocalizations.of(context)!.dailyTasksForGoalkeeper(name),
+            style: DailyTasksStyles.body,
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+class _NoGoalkeeper extends StatelessWidget {
+  final AppLocalizations l10n;
+  const _NoGoalkeeper({required this.l10n});
+
+  @override
+  Widget build(BuildContext context) => Center(
+    child: Padding(
+      padding: const EdgeInsets.all(32),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            l10n.dailyTasksNoGoalkeeper,
+            textAlign: TextAlign.center,
+            style: DailyTasksStyles.body,
+          ),
+          const SizedBox(height: 16),
+          FilledButton(
+            onPressed: () => context.push('/registration'),
+            style: DailyTasksStyles.primaryButton,
+            child: Text(l10n.dailyTasksChooseGoalkeeper),
+          ),
+        ],
+      ),
+    ),
+  );
 }
 
 class _Message extends StatelessWidget {
