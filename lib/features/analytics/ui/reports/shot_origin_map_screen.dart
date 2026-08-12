@@ -21,9 +21,21 @@ class _ShotOriginMapScreenState extends ConsumerState<ShotOriginMapScreen> {
   static const Color primaryText = Color(0xFF121212);
   static const Color accentColor = Color(0xFFBBF246);
   static const Color auxText = Color(0xFF9B9EA1);
+  static const Color inputBg = Color(0xFFF2F2F7);
 
   // Пропорции картинки поля pole.png (2617x2094)
   static const double aspectRatio = 2094 / 2617;
+
+  // Цвета для типов бросков на карте
+  static const Map<int, Color> shotColors = {
+    1: Colors.red,       //  Прямой бросок
+    2: Colors.green,     // 🟢 Бросок с передачи
+    3: Colors.blue,      //  Добивание
+    4: Colors.orange,    // 🟠 Закрывание обзора
+    5: Colors.grey,      // (Не показываем на карте)
+    6: Colors.grey,      // (Не показываем на карте)
+    7: Colors.yellow, //  Атака из-за ворот
+  };
 
   static const Map<int, String> goalTypeNames = {
     1: 'Прямой бросок',
@@ -34,6 +46,9 @@ class _ShotOriginMapScreenState extends ConsumerState<ShotOriginMapScreen> {
     6: 'Буллит',
     7: 'Атака из-за ворот',
   };
+
+  // Список ID типов, которые отображаем на карте
+  static const List<int> visibleOnMap = [1, 2, 3, 4, 7];
 
   @override
   void initState() {
@@ -60,11 +75,8 @@ class _ShotOriginMapScreenState extends ConsumerState<ShotOriginMapScreen> {
     setState(() { _isLoading = true; });
 
     final db = ref.read(databaseProvider);
-
-    // 1. Получаем все игры вратаря
     final allMatches = await db.getMatchesByGoalkeeper(filters.selectedGoalkeeper!.id);
 
-    // 2. Фильтруем игры по дате
     final filteredMatches = allMatches.where((m) {
       return m.date.isAfter(filters.startDate!.subtract(const Duration(days: 1))) &&
           m.date.isBefore(filters.endDate!.add(const Duration(days: 1)));
@@ -72,7 +84,6 @@ class _ShotOriginMapScreenState extends ConsumerState<ShotOriginMapScreen> {
 
     _matchesMap = { for (var m in filteredMatches) m.id: m };
 
-    // 3. Загружаем голы для каждой игры
     List<Goal> loadedGoals = [];
     for (var match in filteredMatches) {
       final goals = await db.getGoalsByMatch(match.id);
@@ -85,11 +96,27 @@ class _ShotOriginMapScreenState extends ConsumerState<ShotOriginMapScreen> {
     });
   }
 
+  // Подсчет статистики по типам
+  Map<int, int> _getStats() {
+    Map<int, int> stats = {};
+    // Инициализируем все типы нулями
+    for (int i = 1; i <= 7; i++) {
+      stats[i] = 0;
+    }
+    // Считаем
+    for (var goal in _allGoals) {
+      if (stats.containsKey(goal.goalTypeId)) {
+        stats[goal.goalTypeId] = stats[goal.goalTypeId]! + 1;
+      }
+    }
+    return stats;
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Динамические размеры как в Wizard для поля
     final double containerWidth = MediaQuery.of(context).size.width - 32;
     final double containerHeight = containerWidth * aspectRatio;
+    final stats = _getStats();
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -112,45 +139,41 @@ class _ShotOriginMapScreenState extends ConsumerState<ShotOriginMapScreen> {
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : _allGoals.isEmpty
-          ? const Center(
-        child: Padding(
-          padding: EdgeInsets.all(24),
-          child: Text(
-            'Нет данных о бросках\nза выбранный период.',
-            textAlign: TextAlign.center,
-            style: TextStyle(fontFamily: 'Lato', color: auxText),
-          ),
-        ),
-      )
           : SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Легенда (можно добавить позже, если нужно)
+            // Легенда карты
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: const Color(0xFFF2F2F7),
+                color: inputBg,
                 borderRadius: BorderRadius.circular(15),
               ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 12,
-                    height: 12,
-                    decoration: const BoxDecoration(
-                      color: Color(0xFF1E88E5), // Синий цвет для бросков
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  const Text(
-                    'Место броска',
-                    style: TextStyle(fontSize: 12, fontFamily: 'Lato'),
-                  ),
-                ],
+              child: Wrap(
+                spacing: 12,
+                runSpacing: 8,
+                children: visibleOnMap.map((typeId) {
+                  return Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 12,
+                        height: 12,
+                        decoration: BoxDecoration(
+                          color: shotColors[typeId],
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        goalTypeNames[typeId]!,
+                        style: const TextStyle(fontSize: 12, fontFamily: 'Lato'),
+                      ),
+                    ],
+                  );
+                }).toList(),
               ),
             ),
 
@@ -164,7 +187,7 @@ class _ShotOriginMapScreenState extends ConsumerState<ShotOriginMapScreen> {
                     width: containerWidth,
                     height: containerHeight,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF2F2F7),
+                      color: inputBg,
                       borderRadius: BorderRadius.circular(15),
                       border: Border.all(color: Colors.grey.shade300),
                     ),
@@ -178,13 +201,13 @@ class _ShotOriginMapScreenState extends ConsumerState<ShotOriginMapScreen> {
                     ),
                   ),
 
-                  // Точки бросков
+                  // Точки бросков (только выбранные типы)
                   ..._allGoals.map((goal) {
-                    // Используем fromZoneX/Y для места броска
+                    if (!visibleOnMap.contains(goal.goalTypeId)) return const SizedBox.shrink();
                     if (goal.fromZoneX == null || goal.fromZoneY == null) return const SizedBox.shrink();
 
                     return Positioned(
-                      left: goal.fromZoneX! * containerWidth - 8, // -8 это половина ширины точки (16/2)
+                      left: goal.fromZoneX! * containerWidth - 8,
                       top: goal.fromZoneY! * containerHeight - 8,
                       child: GestureDetector(
                         onTap: () => _showGoalDetails(goal),
@@ -192,7 +215,7 @@ class _ShotOriginMapScreenState extends ConsumerState<ShotOriginMapScreen> {
                           width: 16,
                           height: 16,
                           decoration: BoxDecoration(
-                            color: const Color(0xFF1E88E5), // Синий цвет
+                            color: shotColors[goal.goalTypeId],
                             shape: BoxShape.circle,
                             border: Border.all(color: Colors.white, width: 2),
                             boxShadow: const [
@@ -207,15 +230,69 @@ class _ShotOriginMapScreenState extends ConsumerState<ShotOriginMapScreen> {
               ),
             ),
 
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
 
-            Text(
-              'ВСЕГО БРОСКОВ: ${_allGoals.length}',
-              style: const TextStyle(
+            // Таблица статистики
+            const Text(
+              'СТАТИСТИКА БРОСКОВ',
+              style: TextStyle(
                 fontFamily: 'Unbounded',
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
                 color: primaryText,
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            Container(
+              decoration: BoxDecoration(
+                color: inputBg,
+                borderRadius: BorderRadius.circular(15),
+              ),
+              child: Column(
+                children: List.generate(7, (index) {
+                  final typeId = index + 1;
+                  final count = stats[typeId] ?? 0;
+                  final isLast = typeId == 7;
+
+                  return Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    decoration: BoxDecoration(
+                      border: !isLast ? Border(bottom: BorderSide(color: Colors.grey.shade300)) : null,
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              width: 10,
+                              height: 10,
+                              decoration: BoxDecoration(
+                                color: shotColors[typeId],
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Text(
+                              goalTypeNames[typeId]!,
+                              style: const TextStyle(fontFamily: 'Lato', fontSize: 14, color: primaryText),
+                            ),
+                          ],
+                        ),
+                        Text(
+                          '$count',
+                          style: const TextStyle(
+                            fontFamily: 'Unbounded',
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: primaryText,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
               ),
             ),
           ],

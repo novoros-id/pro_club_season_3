@@ -16,7 +16,7 @@ class _MatchStatsScreenState extends ConsumerState<MatchStatsScreen> {
   List<Matche> _matches = [];
   bool _isLoading = true;
 
-  // 🎨 Дизайн-система
+  //  Дизайн-система
   static const Color primaryText = Color(0xFF121212);
   static const Color accentColor = Color(0xFFBBF246);
   static const Color auxText = Color(0xFF9B9EA1);
@@ -75,21 +75,20 @@ class _MatchStatsScreenState extends ConsumerState<MatchStatsScreen> {
     int countWithPct = 0;
 
     for (var match in _matches) {
-      // Минуты (берем из gameDuration, если есть, иначе парсим gameTime или берем дефолт 60)
+      // Минуты
       if (match.gameDuration != null) {
         totalMinutes += match.gameDuration!;
       } else if (match.gameTime != null && match.gameTime!.contains(':')) {
-        // Если в gameTime хранится что-то вроде "60:00", пробуем взять часы*60 + минуты
         final parts = match.gameTime!.split(':');
         if (parts.length >= 2) {
           final h = int.tryParse(parts[0]) ?? 0;
           final m = int.tryParse(parts[1]) ?? 0;
           totalMinutes += (h * 60) + m;
         } else {
-          totalMinutes += 60; // Дефолт
+          totalMinutes += 60;
         }
       } else {
-        totalMinutes += 60; // Дефолт
+        totalMinutes += 60;
       }
 
       // Броски и Голы
@@ -147,9 +146,9 @@ class _MatchStatsScreenState extends ConsumerState<MatchStatsScreen> {
             ),
             child: Row(
               children: [
-                SizedBox(width: 50, child: _buildHeader('ДАТА')), // Уменьшили ширину даты
+                SizedBox(width: 50, child: _buildHeader('ДАТА')),
                 Expanded(flex: 2, child: _buildHeader('СОПЕРНИК')),
-                SizedBox(width: 50, child: _buildHeader('ВРЕМЯ', align: TextAlign.center)), // Новая колонка
+                SizedBox(width: 50, child: _buildHeader('ВРЕМЯ', align: TextAlign.center)),
                 SizedBox(width: 50, child: _buildHeader('БР.', align: TextAlign.center)),
                 SizedBox(width: 50, child: _buildHeader('ГОЛЫ', align: TextAlign.center)),
                 SizedBox(width: 50, child: _buildHeader('%', align: TextAlign.center)),
@@ -164,7 +163,6 @@ class _MatchStatsScreenState extends ConsumerState<MatchStatsScreen> {
               itemBuilder: (context, index) {
                 final match = _matches[index];
 
-                // Форматируем время для отображения
                 String timeStr = '-';
                 if (match.gameTime != null) {
                   timeStr = match.gameTime!;
@@ -179,14 +177,14 @@ class _MatchStatsScreenState extends ConsumerState<MatchStatsScreen> {
                   ),
                   child: Row(
                     children: [
-                      // ДАТА (уменьшенный шрифт)
+                      // ДАТА
                       SizedBox(
                         width: 50,
                         child: Text(
-                          DateFormat('dd.MM').format(match.date), // Только день и месяц
+                          DateFormat('dd.MM').format(match.date),
                           style: const TextStyle(
                             fontFamily: 'Unbounded',
-                            fontSize: 12, // Уменьшили размер
+                            fontSize: 12,
                             color: primaryText,
                             fontWeight: FontWeight.w600,
                           ),
@@ -249,11 +247,11 @@ class _MatchStatsScreenState extends ConsumerState<MatchStatsScreen> {
                         ),
                       ),
 
-                      // % ОТРАЖЕНИЙ
+                      // % ОТРАЖЕНИЙ (✅ ИЗМЕНЕНО НА toStringAsFixed(1))
                       SizedBox(
                         width: 50,
                         child: Text(
-                          '${match.savePercentage?.toStringAsFixed(0) ?? '-'}%',
+                          '${match.savePercentage?.toStringAsFixed(1) ?? '-'}',
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontFamily: 'Unbounded',
