@@ -31,6 +31,10 @@ class GoalkeepersController extends Notifier<List<Goalkeeper>> {
     state = keepers;
   }
 
+  Future<void> refresh() async {
+    await _loadGoalkeepers();
+  }
+
   Future<void> addGoalkeeper({
     required String firstName,
     required String lastName,
