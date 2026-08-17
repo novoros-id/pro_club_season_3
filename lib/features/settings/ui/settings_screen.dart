@@ -1,27 +1,152 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:share_plus/share_plus.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../core/providers/settings_provider.dart';
+import '../../../core/providers/sync_provider.dart';
 import '../logic/settings_controller.dart';
+import '../../../core/database/app_database.dart';
+import '../../../core/database/database_provider.dart';
+import '../../registration/logic/goalkeepers_controller.dart';
 
-class SettingsScreen extends ConsumerWidget {
+class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends ConsumerState<SettingsScreen> {
+  // Выносим цвета сюда, чтобы они были видны во всем классе
+  static const Color darkBg = Color(0xFF121212);
+  static const Color accentGreen = Color(0xFFBBF246);
+  static const Color fieldBg = Color(0xFFF2F2F7);
+  static const Color textColor = Color(0xFF121212);
+  static const Color secondaryText = Color(0xFF9B9EA1);
+
+  // Ключ для кнопки экспорта, чтобы знать её позицию на экране (для iOS Share Sheet)
+  final GlobalKey _exportButtonKey = GlobalKey();
+
+  Future<void> _onExportPressed() async {
+    final db = ref.read(databaseProvider);
+    final syncService = ref.read(syncServiceProvider);
+
+    final keepers = await db.getAllGoalkeepers();
+
+    if (keepers.isEmpty) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Нет сохраненных вратарей')),
+      );
+      return;
+    }
+
+    final selectedKeeper = await showDialog<Goalkeeper>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        title: const Text(
+          'Выберите вратаря',
+          style: TextStyle(fontFamily: 'Unbounded', fontWeight: FontWeight.bold, color: darkBg),
+        ),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: ListView.builder(
+            shrinkWrap: true,
+            itemCount: keepers.length,
+            itemBuilder: (context, index) {
+              final keeper = keepers[index];
+              return ListTile(
+                title: Text('${keeper.firstName} ${keeper.lastName}', style: const TextStyle(fontFamily: 'Lato')),
+                subtitle: Text(keeper.hand == 'left' ? 'Левша' : 'Правша', style: const TextStyle(color: secondaryText)),
+                onTap: () => Navigator.pop(context, keeper),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+
+    if (selectedKeeper != null && mounted) {
+      // Показываем лоадер
+      showDialog(context: context, barrierDismissible: false, builder: (_) => const Center(child: CircularProgressIndicator()));
+
+      try {
+        // 1. Экспортируем данные и получаем путь к файлу
+        final filePath = await syncService.exportData(selectedKeeper.id);
+
+        if (filePath != null && mounted) {
+          Navigator.pop(context); // Закрываем лоадер
+
+          // 2. Вычисляем позицию кнопки для iOS (sharePositionOrigin)
+          final RenderBox? box = _exportButtonKey.currentContext?.findRenderObject() as RenderBox?;
+          Rect? sharePositionOrigin;
+
+          if (box != null) {
+            final offset = box.localToGlobal(Offset.zero);
+            sharePositionOrigin = Rect.fromLTWH(offset.dx, offset.dy, box.size.width, box.size.height);
+          }
+
+          // 3. Шарим файл с указанием позиции (критично для iOS)
+          await Share.shareXFiles(
+            [XFile(filePath)],
+            text: 'Резервная копия данных вратаря ${selectedKeeper.firstName}',
+            sharePositionOrigin: sharePositionOrigin,
+          );
+        } else {
+          if (mounted) Navigator.pop(context);
+        }
+      } catch (e) {
+        if (mounted) {
+          Navigator.pop(context);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Ошибка: $e'), backgroundColor: Colors.red),
+          );
+        }
+      }
+    }
+  }
+
+  Future<void> _onImportPressed() async {
+    final syncService = ref.read(syncServiceProvider);
+
+    // ✅ ПОЛУЧАЕМ ДОСТУП К КОНТРОЛЛЕРУ ВРАТАРЕЙ
+    final goalkeepersNotifier = ref.read(goalkeepersControllerProvider.notifier);
+
+    if (!mounted) return;
+
+    // Показываем лоадер
+    showDialog(context: context, barrierDismissible: false, builder: (_) => const Center(child: CircularProgressIndicator()));
+
+    try {
+      await syncService.importData();
+
+      if (mounted) {
+        Navigator.pop(context); // Закрываем лоадер
+
+        // ✅ ВЫЗЫВАЕМ ОБНОВЛЕНИЕ СПИСКА ВРАТАРЕЙ
+        await goalkeepersNotifier.refresh();
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Данные успешно загружены!'), backgroundColor: darkBg),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Ошибка импорта: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final controller = ref.watch(settingsControllerProvider);
     final themeMode = ref.watch(themeModeProvider);
-    final soundEnabled = ref.watch(soundEnabledProvider);
-    final volume = ref.watch(volumeProvider);
-    final locale = ref.watch(localeProvider);
-
-    // Цвета из гайда
-    const Color darkBg = Color(0xFF121212);
-    const Color accentGreen = Color(0xFFBBF246);
-    const Color fieldBg = Color(0xFFF2F2F7);
-    const Color textColor = Color(0xFF121212);
-    const Color secondaryText = Color(0xFF9B9EA1);
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -34,12 +159,7 @@ class SettingsScreen extends ConsumerWidget {
         ),
         title: Text(
           l10n.settingsTitle.toUpperCase(),
-          style: const TextStyle(
-            fontFamily: 'Unbounded',
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: darkBg,
-          ),
+          style: const TextStyle(fontFamily: 'Unbounded', fontSize: 20, fontWeight: FontWeight.bold, color: darkBg),
         ),
         centerTitle: true,
       ),
@@ -52,115 +172,83 @@ class SettingsScreen extends ConsumerWidget {
             title: themeMode == ThemeMode.light ? l10n.themeLight : l10n.themeDark,
             trailing: Switch(
               value: themeMode == ThemeMode.dark,
-              activeColor: Colors.white,
-              activeTrackColor: accentGreen,
+              activeThumbColor: Colors.white,
+              activeTrackColor: accentGreen.withValues(alpha: 1.0),
               inactiveThumbColor: secondaryText,
-              inactiveTrackColor: fieldBg,
+              inactiveTrackColor: fieldBg.withValues(alpha: 1.0),
               onChanged: (v) => controller.toggleTheme(v),
             ),
           ),
+          const SizedBox(height: 24),
 
-          const SizedBox(height: 16),
-
-          // --- ЗВУК ---
-          _SettingsTile(
-            icon: Icons.volume_up_outlined,
-            title: l10n.soundEnabled,
-            trailing: Switch(
-              value: soundEnabled,
-              activeColor: Colors.white,
-              activeTrackColor: accentGreen,
-              inactiveThumbColor: secondaryText,
-              inactiveTrackColor: fieldBg,
-              onChanged: controller.setSound,
+          // --- ЗАГОЛОВОК РАЗДЕЛА ДАННЫХ ---
+          const Padding(
+            padding: EdgeInsets.only(left: 8, bottom: 12),
+            child: Text(
+              'УПРАВЛЕНИЕ ДАННЫМИ',
+              style: TextStyle(fontFamily: 'Unbounded', fontSize: 14, fontWeight: FontWeight.bold, color: secondaryText, letterSpacing: 1),
             ),
           ),
 
-          const SizedBox(height: 16),
-
-          // --- ГРОМКОСТЬ ---
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: fieldBg,
-              borderRadius: BorderRadius.circular(15),
-              border: Border.all(color: accentGreen.withOpacity(0.3)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Icon(Icons.graphic_eq_outlined, color: darkBg, size: 20),
-                    const SizedBox(width: 12),
-                    Text(
-                      l10n.volume,
-                      style: const TextStyle(
-                        fontFamily: 'Lato',
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: textColor,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                SliderTheme(
-                  data: SliderThemeData(
-                    activeTrackColor: accentGreen,
-                    inactiveTrackColor: Colors.grey.shade300,
-                    thumbColor: darkBg,
-                    overlayColor: accentGreen.withOpacity(0.2),
-                    trackHeight: 6,
-                    thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
-                  ),
-                  child: Slider(
-                    value: volume,
-                    onChanged: controller.setVolume,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 16),
-
-          // --- ЯЗЫК (BottomSheet) ---
+          // --- ВЫГРУЗКА ---
           InkWell(
-            onTap: () => _showLanguageSheet(context, ref, controller),
+            onTap: _onExportPressed,
+            borderRadius: BorderRadius.circular(15),
+            child: Container(
+              key: _exportButtonKey, // <--- ВАЖНО: Привязываем ключ здесь
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: fieldBg,
+                borderRadius: BorderRadius.circular(15),
+                border: Border.all(color: accentGreen.withValues(alpha: 0.3)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.upload_file_outlined, color: darkBg, size: 24),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Выгрузить данные', style: TextStyle(fontFamily: 'Lato', fontSize: 16, fontWeight: FontWeight.bold, color: textColor)),
+                        const SizedBox(height: 4),
+                        Text('Сохранить резервную копию', style: TextStyle(fontFamily: 'Lato', fontSize: 12, color: secondaryText)),
+                      ],
+                    ),
+                  ),
+                  const Icon(Icons.keyboard_arrow_right, color: darkBg),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // --- ЗАГРУЗКА ---
+          InkWell(
+            onTap: _onImportPressed,
             borderRadius: BorderRadius.circular(15),
             child: Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: fieldBg,
                 borderRadius: BorderRadius.circular(15),
-                border: Border.all(color: accentGreen.withOpacity(0.3)),
+                border: Border.all(color: accentGreen.withValues(alpha: 0.3)),
               ),
               child: Row(
                 children: [
-                  Icon(Icons.language_outlined, color: darkBg, size: 20),
-                  const SizedBox(width: 12),
+                  const Icon(Icons.download_for_offline_outlined, color: darkBg, size: 24),
+                  const SizedBox(width: 16),
                   Expanded(
-                    child: Text(
-                      l10n.language,
-                      style: const TextStyle(
-                        fontFamily: 'Lato',
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: textColor,
-                      ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Загрузить данные', style: TextStyle(fontFamily: 'Lato', fontSize: 16, fontWeight: FontWeight.bold, color: textColor)),
+                        const SizedBox(height: 4),
+                        Text('Восстановить из файла', style: TextStyle(fontFamily: 'Lato', fontSize: 12, color: secondaryText)),
+                      ],
                     ),
                   ),
-                  Text(
-                    locale.languageCode == 'ru' ? 'Русский' : 'English',
-                    style: TextStyle(
-                      fontFamily: 'Lato',
-                      fontSize: 14,
-                      color: secondaryText,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  const Icon(Icons.keyboard_arrow_down, color: darkBg),
+                  const Icon(Icons.keyboard_arrow_right, color: darkBg),
                 ],
               ),
             ),
@@ -169,113 +257,30 @@ class SettingsScreen extends ConsumerWidget {
       ),
     );
   }
-
-  void _showLanguageSheet(BuildContext context, WidgetRef ref, SettingsController controller) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) {
-        final currentLang = ref.read(localeProvider).languageCode;
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
-                  'ВЫБЕРИТЕ ЯЗЫК',
-                  style: TextStyle(
-                    fontFamily: 'Unbounded',
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF121212),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                ListTile(
-                  leading: Radio<String>(
-                    value: 'ru',
-                    groupValue: currentLang,
-                    activeColor: const Color(0xFFBBF246),
-                    onChanged: (v) {
-                      if (v != null) controller.setLanguage(v);
-                      Navigator.pop(ctx);
-                    },
-                  ),
-                  title: const Text('Русский', style: TextStyle(fontFamily: 'Lato')),
-                  onTap: () {
-                    controller.setLanguage('ru');
-                    Navigator.pop(ctx);
-                  },
-                ),
-                ListTile(
-                  leading: Radio<String>(
-                    value: 'en',
-                    groupValue: currentLang,
-                    activeColor: const Color(0xFFBBF246),
-                    onChanged: (v) {
-                      if (v != null) controller.setLanguage(v);
-                      Navigator.pop(ctx);
-                    },
-                  ),
-                  title: const Text('English', style: TextStyle(fontFamily: 'Lato')),
-                  onTap: () {
-                    controller.setLanguage('en');
-                    Navigator.pop(ctx);
-                  },
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
 }
 
-// Вспомогательный виджет для плитки настроек
+// Виджет плитки настроек
 class _SettingsTile extends StatelessWidget {
   final IconData icon;
   final String title;
   final Widget trailing;
-
-  const _SettingsTile({
-    required this.icon,
-    required this.title,
-    required this.trailing,
-  });
+  const _SettingsTile({required this.icon, required this.title, required this.trailing});
 
   @override
   Widget build(BuildContext context) {
-    const Color darkBg = Color(0xFF121212);
-    const Color fieldBg = Color(0xFFF2F2F7);
-    const Color textColor = Color(0xFF121212);
-    const Color accentGreen = Color(0xFFBBF246);
-
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: fieldBg,
+        color: _SettingsScreenState.fieldBg,
         borderRadius: BorderRadius.circular(15),
-        border: Border.all(color: accentGreen.withOpacity(0.3)),
+        border: Border.all(color: _SettingsScreenState.accentGreen.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
-          Icon(icon, color: darkBg, size: 20),
+          Icon(icon, color: _SettingsScreenState.darkBg, size: 20),
           const SizedBox(width: 12),
           Expanded(
-            child: Text(
-              title,
-              style: const TextStyle(
-                fontFamily: 'Lato',
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: textColor,
-              ),
-            ),
+            child: Text(title, style: const TextStyle(fontFamily: 'Lato', fontSize: 16, fontWeight: FontWeight.bold, color: _SettingsScreenState.textColor)),
           ),
           trailing,
         ],

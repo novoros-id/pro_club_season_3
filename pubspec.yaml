@@ -51,7 +51,8 @@ dependencies:
   path: ^1.8.3
   uuid: ^4.2.1
   flutter_svg: ^2.3.0
-
+  share_plus: ^7.2.1      # Для отправки файла (Экспорт)
+  file_picker: ^8.0.0     # Для выбора файла (Импорт)
 
 dev_dependencies:
   flutter_test:
