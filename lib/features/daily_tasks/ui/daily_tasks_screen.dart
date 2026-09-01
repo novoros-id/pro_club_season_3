@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../registration/logic/goalkeepers_controller.dart';
 import '../logic/daily_tasks_logic.dart';
@@ -41,6 +42,10 @@ class DailyTasksScreen extends ConsumerWidget {
             ),
       body: Column(
         children: [
+          _DateSelector(
+            date: state.date,
+            onDateSelected: controller.selectDate,
+          ),
           if (goalkeeper != null)
             _GoalkeeperHeader(
               name: '${goalkeeper.firstName} ${goalkeeper.lastName}',
@@ -149,6 +154,67 @@ class DailyTasksScreen extends ConsumerWidget {
                       ],
                     ),
                   ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DateSelector extends StatelessWidget {
+  final DateTime date;
+  final Future<void> Function(DateTime date) onDateSelected;
+
+  const _DateSelector({required this.date, required this.onDateSelected});
+
+  @override
+  Widget build(BuildContext context) {
+    final dateFormat = DateFormat('dd.MM.yyyy');
+    final dayFormat = DateFormat(
+      'EEEE',
+      Localizations.localeOf(context).toString(),
+    );
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+      child: Row(
+        children: [
+          Expanded(
+            child: InkWell(
+              onTap: () async {
+                final picked = await showDatePicker(
+                  context: context,
+                  initialDate: date,
+                  firstDate: DateTime(2020),
+                  lastDate: DateTime(2100),
+                );
+                if (picked != null && picked != date) {
+                  await onDateSelected(picked);
+                }
+              },
+              child: Row(
+                children: [
+                  Flexible(
+                    child: Text(
+                      '${dayFormat.format(date)}, ${dateFormat.format(date)}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontFamily: 'Unbounded',
+                        fontSize: 16,
+                        color: DailyTasksStyles.secondaryText,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  const Icon(
+                    Icons.calendar_today,
+                    color: DailyTasksStyles.secondaryText,
+                    size: 20,
+                  ),
+                ],
+              ),
+            ),
           ),
         ],
       ),

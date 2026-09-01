@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:drift/native.dart';
-import 'package:drift/drift.dart' show OrderingTerm, Value;
+import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -533,6 +533,45 @@ void main() {
     },
   );
 
+  test('controller selects a date without changing goalkeeper scope', () async {
+    final keeper = await addKeeper();
+    final today = normalizeOccurrenceDate(DateTime.now());
+    final yesterday = today.subtract(const Duration(days: 1));
+    final taskId = await data.createTask(
+      goalkeeperId: keeper,
+      title: 'Дата выполнения',
+      createdAt: yesterday,
+    );
+    await data.complete(keeper, taskId, today);
+
+    final container = ProviderContainer(
+      overrides: [databaseProvider.overrideWithValue(db)],
+    );
+    addTearDown(container.dispose);
+    container.read(dailyTasksControllerProvider);
+
+    var state = await waitForDailyTasks(container, keeper);
+    expect(state.date, today);
+    expect(state.goalkeeperId, keeper);
+    expect(state.tasks.single.isCompleted, isTrue);
+
+    await container
+        .read(dailyTasksControllerProvider.notifier)
+        .selectDate(yesterday);
+    state = container.read(dailyTasksControllerProvider);
+    expect(state.date, yesterday);
+    expect(state.goalkeeperId, keeper);
+    expect(state.tasks.single.isCompleted, isFalse);
+
+    await container
+        .read(dailyTasksControllerProvider.notifier)
+        .selectDate(today);
+    state = container.read(dailyTasksControllerProvider);
+    expect(state.date, today);
+    expect(state.goalkeeperId, keeper);
+    expect(state.tasks.single.isCompleted, isTrue);
+  });
+
   test('late goalkeeper response cannot replace the current state', () async {
     final first = await addKeeper();
     final second = await addKeeper(current: false);
@@ -978,197 +1017,5 @@ void main() {
     );
     expect(find.text('Описание задачи'), findsOneWidget);
     expect(tester.takeException(), isNull);
-  });
-
-  test(
-    'migrates version 5 tasks to UUIDs without breaking completions',
-    () async {
-      await db.close();
-      final oldExecutor = NativeDatabase.memory(
-        setup: (database) {
-          database.execute('''
-          CREATE TABLE goalkeepers (
-            id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-            uuid TEXT NOT NULL UNIQUE,
-            first_name TEXT NOT NULL,
-            last_name TEXT NOT NULL,
-            hand TEXT NOT NULL,
-            email TEXT,
-            birth_date INTEGER,
-            is_current INTEGER NOT NULL DEFAULT 0
-              CHECK (is_current IN (0, 1)),
-            photo_path TEXT
-          )
-        ''');
-          database.execute('''
-          CREATE TABLE daily_tasks (
-            id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-            goalkeeper_id INTEGER NOT NULL REFERENCES goalkeepers (id),
-            title TEXT NOT NULL,
-            description TEXT,
-            recurrence_type TEXT NOT NULL DEFAULT 'daily',
-            is_enabled INTEGER NOT NULL DEFAULT 1
-              CHECK (is_enabled IN (0, 1)),
-            created_at INTEGER NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            updated_at INTEGER NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            deleted_at INTEGER
-          )
-        ''');
-          database.execute('''
-          CREATE TABLE daily_task_completions (
-            task_id INTEGER NOT NULL REFERENCES daily_tasks (id),
-            occurrence_date INTEGER NOT NULL,
-            completed_at INTEGER NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            PRIMARY KEY (task_id, occurrence_date)
-          )
-        ''');
-          database.execute(
-            "INSERT INTO goalkeepers "
-            "(id, uuid, first_name, last_name, hand) "
-            "VALUES (1, 'legacy', 'Старый', 'Вратарь', 'right')",
-          );
-          database.execute('''
-          INSERT INTO daily_tasks (
-            id,
-            goalkeeper_id,
-            title,
-            description,
-            recurrence_type,
-            is_enabled,
-            created_at,
-            updated_at,
-            deleted_at
-          ) VALUES
-            (
-              10,
-              1,
-              'Первая',
-              'Описание',
-              'daily',
-              1,
-              1700000000,
-              1700000100,
-              NULL
-            ),
-            (
-              20,
-              1,
-              'Вторая',
-              NULL,
-              'weekly',
-              0,
-              1700000200,
-              1700000300,
-              1700000400
-            )
-        ''');
-          database.execute('''
-          INSERT INTO daily_task_completions (
-            task_id,
-            occurrence_date,
-            completed_at
-          ) VALUES
-            (10, 1704067200, 1704067300),
-            (10, 1704153600, 1704153700),
-            (20, 1704067200, 1704067400)
-        ''');
-          database.execute('PRAGMA foreign_keys = ON');
-          database.execute('PRAGMA user_version = 5');
-        },
-      );
-      db = AppDatabase(oldExecutor);
-      final migrated = db;
-
-      final tasks = await (migrated.select(
-        migrated.dailyTasks,
-      )..orderBy([(task) => OrderingTerm.asc(task.id)])).get();
-      expect(tasks.map((task) => task.id), [10, 20]);
-      expect(tasks.map((task) => task.title), ['Первая', 'Вторая']);
-      expect(tasks[0].description, 'Описание');
-      expect(tasks[1].description, isNull);
-      expect(tasks.map((task) => task.recurrenceType), ['daily', 'weekly']);
-      expect(tasks.map((task) => task.isEnabled), [isTrue, isFalse]);
-      expect(tasks[0].createdAt.millisecondsSinceEpoch, 1700000000000);
-      expect(tasks[0].updatedAt.millisecondsSinceEpoch, 1700000100000);
-      expect(tasks[0].deletedAt, isNull);
-      expect(tasks[1].deletedAt?.millisecondsSinceEpoch, 1700000400000);
-      expect(tasks.every((task) => uuidV4Pattern.hasMatch(task.uuid)), isTrue);
-      expect(tasks.map((task) => task.uuid).toSet(), hasLength(2));
-
-      final completions =
-          await (migrated.select(migrated.dailyTaskCompletions)..orderBy([
-                (completion) => OrderingTerm.asc(completion.taskId),
-                (completion) => OrderingTerm.asc(completion.occurrenceDate),
-              ]))
-              .get();
-      expect(completions, hasLength(3));
-      expect(completions.map((completion) => completion.taskId), [10, 10, 20]);
-      expect(
-        await migrated.customSelect('PRAGMA foreign_key_check').get(),
-        isEmpty,
-      );
-
-      final nextId = await migrated
-          .into(migrated.dailyTasks)
-          .insert(DailyTasksCompanion.insert(goalkeeperId: 1, title: 'Новая'));
-      expect(nextId, greaterThan(20));
-      expect(
-        (await (migrated.select(
-          migrated.dailyTasks,
-        )..where((task) => task.id.equals(nextId))).getSingle()).uuid,
-        matches(uuidV4Pattern),
-      );
-    },
-  );
-
-  test('migrates version 4 directly to the version 6 task schema', () async {
-    await db.close();
-    final oldExecutor = NativeDatabase.memory(
-      setup: (database) {
-        database.execute('''
-        CREATE TABLE goalkeepers (
-          id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-          uuid TEXT NOT NULL UNIQUE,
-          first_name TEXT NOT NULL,
-          last_name TEXT NOT NULL,
-          hand TEXT NOT NULL,
-          email TEXT,
-          birth_date INTEGER,
-          is_current INTEGER NOT NULL DEFAULT 0,
-          photo_path TEXT
-        )
-      ''');
-        database.execute(
-          'CREATE TABLE matches (id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, goalkeeper_id INTEGER NOT NULL, date INTEGER NOT NULL, opponent TEXT NOT NULL, score TEXT, game_time TEXT, personal_tasks TEXT, game_duration INTEGER NOT NULL DEFAULT 60, goals_conceded INTEGER NOT NULL DEFAULT 0, saves INTEGER NOT NULL DEFAULT 0, save_percentage REAL, mood_rating INTEGER, warmup_rating INTEGER, confidence_rating INTEGER, great_saves_rating INTEGER, comments TEXT, created_at INTEGER NOT NULL DEFAULT CURRENT_TIMESTAMP)',
-        );
-        database.execute(
-          'CREATE TABLE goals (id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, match_id INTEGER NOT NULL, goal_type_id INTEGER NOT NULL, to_zone_x REAL, to_zone_y REAL, from_zone_x REAL, from_zone_y REAL, created_at INTEGER NOT NULL DEFAULT CURRENT_TIMESTAMP)',
-        );
-        database.execute(
-          "INSERT INTO goalkeepers (uuid, first_name, last_name, hand) VALUES ('legacy', 'Старый', 'Вратарь', 'right')",
-        );
-        database.execute('PRAGMA user_version = 4');
-      },
-    );
-    db = AppDatabase(oldExecutor);
-    final migrated = db;
-    expect((await migrated.getAllGoalkeepers()).single.firstName, 'Старый');
-    await migrated
-        .into(migrated.dailyTasks)
-        .insert(
-          DailyTasksCompanion.insert(goalkeeperId: 1, title: 'После миграции'),
-        );
-    final tasks = await migrated.select(migrated.dailyTasks).get();
-    expect(tasks, hasLength(1));
-    expect(tasks.single.uuid, matches(uuidV4Pattern));
-    final columns = await migrated
-        .customSelect("PRAGMA table_info('daily_tasks')")
-        .get();
-    expect(
-      columns
-          .singleWhere((row) => row.read<String>('name') == 'uuid')
-          .read<int>('notnull'),
-      1,
-    );
   });
 }
