@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import '../../../core/database/app_database.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../registration/logic/goalkeepers_controller.dart';
 import '../logic/daily_tasks_logic.dart';
@@ -16,6 +17,7 @@ class DailyTasksScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(dailyTasksControllerProvider);
     final goalkeeper = ref.watch(currentGoalkeeperProvider);
+    final goalkeepers = ref.watch(goalkeepersControllerProvider);
     final controller = ref.read(dailyTasksControllerProvider.notifier);
     final l10n = AppLocalizations.of(context)!;
     return Scaffold(
@@ -47,10 +49,15 @@ class DailyTasksScreen extends ConsumerWidget {
             date: state.date,
             onDateSelected: controller.selectDate,
           ),
-          if (goalkeeper != null)
-            _GoalkeeperHeader(
-              name: '${goalkeeper.firstName} ${goalkeeper.lastName}',
-            ),
+          _GoalkeeperSelector(
+            goalkeepers: goalkeepers,
+            selectedGoalkeeper: goalkeeper,
+            enabled: !state.isLoading,
+            onSelected: (goalkeeperId) => ref
+                .read(goalkeepersControllerProvider.notifier)
+                .makeCurrent(goalkeeperId),
+          ),
+          const SizedBox(height: 8),
           Expanded(
             child: state.isLoading
                 ? const Center(
@@ -128,9 +135,6 @@ class DailyTasksScreen extends ConsumerWidget {
                                       color: item.isCompleted
                                           ? DailyTasksStyles.secondaryText
                                           : DailyTasksStyles.dark,
-                                      decoration: item.isCompleted
-                                          ? TextDecoration.lineThrough
-                                          : null,
                                     ),
                                   ),
                                   subtitle:
@@ -232,36 +236,98 @@ class _DateSelector extends StatelessWidget {
   }
 }
 
-class _GoalkeeperHeader extends StatelessWidget {
-  final String name;
-  const _GoalkeeperHeader({required this.name});
+class _GoalkeeperSelector extends StatelessWidget {
+  final List<Goalkeeper> goalkeepers;
+  final Goalkeeper? selectedGoalkeeper;
+  final bool enabled;
+  final Future<void> Function(int goalkeeperId) onSelected;
+
+  const _GoalkeeperSelector({
+    required this.goalkeepers,
+    required this.selectedGoalkeeper,
+    required this.enabled,
+    required this.onSelected,
+  });
 
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-    child: Row(
-      children: [
-        CircleAvatar(
-          radius: 18,
-          backgroundColor: DailyTasksStyles.accent.withValues(alpha: 0.25),
-          child: Text(
-            name
-                .split(' ')
-                .where((part) => part.isNotEmpty)
-                .take(2)
-                .map((part) => part[0])
-                .join(),
-            style: DailyTasksStyles.body,
-          ),
+    padding: const EdgeInsets.symmetric(horizontal: 16),
+    child: Card(
+      key: const Key('dailyTasksGoalkeeperSelector'),
+      elevation: 2,
+      shadowColor: Colors.black.withValues(alpha: 0.05),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: const BoxDecoration(
+                color: Color(0xFFF5F5F5),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.person,
+                color: DailyTasksStyles.dark,
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: goalkeepers.isEmpty
+                  ? Text(
+                      AppLocalizations.of(context)!.dailyTasksNoGoalkeeper,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontFamily: 'Unbounded',
+                        fontSize: 16,
+                        color: DailyTasksStyles.secondaryText,
+                      ),
+                    )
+                  : DropdownButtonHideUnderline(
+                      child: DropdownButton<Goalkeeper>(
+                        key: const Key('dailyTasksGoalkeeperDropdown'),
+                        isExpanded: true,
+                        value: selectedGoalkeeper,
+                        style: const TextStyle(
+                          fontFamily: 'Unbounded',
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: DailyTasksStyles.dark,
+                        ),
+                        icon: const Icon(
+                          Icons.arrow_drop_down,
+                          color: DailyTasksStyles.accent,
+                        ),
+                        items: goalkeepers
+                            .map(
+                              (goalkeeper) => DropdownMenuItem<Goalkeeper>(
+                                value: goalkeeper,
+                                child: Text(
+                                  '${goalkeeper.firstName} ${goalkeeper.lastName}',
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            )
+                            .toList(),
+                        onChanged: enabled
+                            ? (goalkeeper) async {
+                                if (goalkeeper == null ||
+                                    goalkeeper.id == selectedGoalkeeper?.id) {
+                                  return;
+                                }
+                                await onSelected(goalkeeper.id);
+                              }
+                            : null,
+                      ),
+                    ),
+            ),
+          ],
         ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Text(
-            AppLocalizations.of(context)!.dailyTasksForGoalkeeper(name),
-            style: DailyTasksStyles.body,
-          ),
-        ),
-      ],
+      ),
     ),
   );
 }

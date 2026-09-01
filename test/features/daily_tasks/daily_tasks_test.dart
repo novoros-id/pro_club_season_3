@@ -61,13 +61,17 @@ void main() {
 
   tearDown(() => db.close());
 
-  Future<int> addKeeper({bool current = true}) => db
+  Future<int> addKeeper({
+    bool current = true,
+    String firstName = 'Иван',
+    String lastName = 'Иванов',
+  }) => db
       .into(db.goalkeepers)
       .insert(
         GoalkeepersCompanion.insert(
           uuid: const Uuid().v4(),
-          firstName: 'Иван',
-          lastName: 'Иванов',
+          firstName: firstName,
+          lastName: lastName,
           hand: 'right',
           isCurrent: Value(current),
         ),
@@ -884,6 +888,145 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets(
+    'goalkeeper selector switches scope and preserves date and completion',
+    (tester) async {
+      tester.view.physicalSize = const Size(320, 700);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+      final first = await addKeeper(firstName: 'Dmitriy', lastName: 'Grishaev');
+      final second = await addKeeper(
+        current: false,
+        firstName: 'Stas',
+        lastName: 'Grishaev',
+      );
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [databaseProvider.overrideWithValue(db)],
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const DailyTasksScreen(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final container = ProviderScope.containerOf(
+        tester.element(find.byType(DailyTasksScreen)),
+      );
+      final controller = container.read(dailyTasksControllerProvider.notifier);
+      final selectedDate = DateTime(2026, 9, 1);
+      await controller.selectDate(selectedDate);
+      var state = await waitForDailyTasks(container, first);
+      final firstSystemTask = state.tasks.first.task;
+      await controller.setCompleted(firstSystemTask.id, true);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Dmitriy Grishaev'), findsOneWidget);
+      expect(
+        find.byKey(const Key('dailyTasksGoalkeeperSelector')),
+        findsOneWidget,
+      );
+      expect(find.textContaining('Tasks for'), findsNothing);
+      expect(state.date, selectedDate);
+
+      await tester.tap(find.byKey(const Key('dailyTasksGoalkeeperDropdown')));
+      await tester.pumpAndSettle();
+      expect(find.text('Dmitriy Grishaev'), findsWidgets);
+      expect(find.text('Stas Grishaev'), findsOneWidget);
+      await tester.tap(find.text('Stas Grishaev'));
+      await tester.pumpAndSettle();
+
+      state = await waitForDailyTasks(container, second);
+      expect(container.read(currentGoalkeeperProvider)?.id, second);
+      expect(state.goalkeeperId, second);
+      expect(state.date, selectedDate);
+      expect(state.tasks.where((item) => item.task.isSystem), hasLength(8));
+      expect(state.tasks.first.isCompleted, isFalse);
+      expect(state.stats.completedToday, 0);
+
+      await tester.tap(find.byKey(const Key('dailyTasksGoalkeeperDropdown')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Dmitriy Grishaev').last);
+      await tester.pumpAndSettle();
+
+      state = await waitForDailyTasks(container, first);
+      expect(state.date, selectedDate);
+      expect(state.tasks.first.isCompleted, isTrue);
+      expect(state.stats.completedToday, 1);
+      final systemTasks = await db.select(db.dailyTasks).get();
+      expect(
+        systemTasks.where(
+          (task) => task.isSystem && task.goalkeeperId == first,
+        ),
+        hasLength(8),
+      );
+      expect(
+        systemTasks.where(
+          (task) => task.isSystem && task.goalkeeperId == second,
+        ),
+        hasLength(8),
+      );
+      final currentKeepers = (await db.getAllGoalkeepers()).where(
+        (goalkeeper) => goalkeeper.isCurrent,
+      );
+      expect(currentKeepers, hasLength(1));
+      expect(currentKeepers.single.id, first);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets('add button creates a task for the selected goalkeeper', (
+    tester,
+  ) async {
+    await addKeeper(firstName: 'Dmitriy', lastName: 'Grishaev');
+    final second = await addKeeper(
+      current: false,
+      firstName: 'Stas',
+      lastName: 'Grishaev',
+    );
+    final router = GoRouter(
+      routes: [
+        GoRoute(path: '/', builder: (_, _) => const DailyTasksScreen()),
+        GoRoute(
+          path: '/daily-tasks/new',
+          builder: (_, _) => const DailyTaskEditScreen(),
+        ),
+      ],
+    );
+    addTearDown(router.dispose);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [databaseProvider.overrideWithValue(db)],
+        child: MaterialApp.router(
+          routerConfig: router,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('dailyTasksGoalkeeperDropdown')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Stas Grishaev'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byType(FloatingActionButton));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextFormField).first, 'Задача Стаса');
+    await tester.tap(find.text('Save'));
+    await tester.pumpAndSettle();
+
+    final task = (await db.select(db.dailyTasks).get()).singleWhere(
+      (task) => !task.isSystem,
+    );
+    expect(task.title, 'Задача Стаса');
+    expect(task.goalkeeperId, second);
+  });
+
   test('task created today is not counted in yesterday total', () async {
     final keeper = await addKeeper();
     final today = normalizeOccurrenceDate(DateTime.now());
@@ -1216,7 +1359,8 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Tasks for Иван Иванов'), findsOneWidget);
+    expect(find.text('Иван Иванов'), findsOneWidget);
+    expect(find.textContaining('Tasks for'), findsNothing);
     await tester.scrollUntilVisible(
       find.text('Задача с длинным названием для проверки карточки'),
       300,
