@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 import '../../../core/database/app_database.dart';
 import '../models/daily_task.dart';
 import '../models/daily_task_stats.dart';
+import '../models/built_in_daily_task.dart';
 import '../logic/daily_task_date.dart';
 
 class DailyTaskAccessException implements Exception {
@@ -22,12 +23,19 @@ class DailyTasksData {
   ) async {
     final day = normalizeOccurrenceDate(date);
     final tasks =
-        await (db.select(db.dailyTasks)..where(
-              (t) =>
-                  t.goalkeeperId.equals(goalkeeperId) &
-                  t.isEnabled.equals(true) &
-                  t.deletedAt.isNull(),
-            ))
+        await (db.select(db.dailyTasks)
+              ..where(
+                (t) =>
+                    t.goalkeeperId.equals(goalkeeperId) &
+                    t.isEnabled.equals(true) &
+                    t.deletedAt.isNull(),
+              )
+              ..orderBy([
+                (t) => OrderingTerm.desc(t.isSystem),
+                (t) => OrderingTerm.asc(t.sortOrder),
+                (t) => OrderingTerm.asc(t.createdAt),
+                (t) => OrderingTerm.asc(t.id),
+              ]))
             .get();
     if (tasks.isEmpty) return [];
     final taskIds = tasks.map((task) => task.id).toList();
@@ -47,6 +55,25 @@ class DailyTasksData {
           ),
         )
         .toList();
+  }
+
+  Future<void> ensureDefaultTasks(int goalkeeperId) async {
+    await db.transaction(() async {
+      for (final definition in builtInDailyTasks) {
+        await db
+            .into(db.dailyTasks)
+            .insert(
+              DailyTasksCompanion.insert(
+                goalkeeperId: goalkeeperId,
+                title: definition.title,
+                isSystem: const Value(true),
+                systemKey: Value(definition.key),
+                sortOrder: Value(definition.sortOrder),
+              ),
+              mode: InsertMode.insertOrIgnore,
+            );
+      }
+    });
   }
 
   Future<int> createTask({
@@ -82,6 +109,7 @@ class DailyTasksData {
               (task) =>
                   task.id.equals(taskId) &
                   task.goalkeeperId.equals(goalkeeperId) &
+                  task.isSystem.equals(false) &
                   task.deletedAt.isNull(),
             ))
             .write(
@@ -100,6 +128,7 @@ class DailyTasksData {
               (task) =>
                   task.id.equals(taskId) &
                   task.goalkeeperId.equals(goalkeeperId) &
+                  task.isSystem.equals(false) &
                   task.deletedAt.isNull(),
             ))
             .write(
@@ -118,6 +147,7 @@ class DailyTasksData {
               (task) =>
                   task.id.equals(taskId) &
                   task.goalkeeperId.equals(goalkeeperId) &
+                  task.isSystem.equals(false) &
                   task.deletedAt.isNull(),
             ))
             .write(

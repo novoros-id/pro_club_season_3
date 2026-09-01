@@ -78,9 +78,17 @@ class DailyTasks extends Table {
   TextColumn get recurrenceType =>
       text().withDefault(const Constant('daily'))();
   BoolColumn get isEnabled => boolean().withDefault(const Constant(true))();
+  BoolColumn get isSystem => boolean().withDefault(const Constant(false))();
+  TextColumn get systemKey => text().nullable()();
+  IntColumn get sortOrder => integer().withDefault(const Constant(1000))();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get deletedAt => dateTime().nullable()();
+
+  @override
+  List<Set<Column>> get uniqueKeys => [
+    {goalkeeperId, systemKey},
+  ];
 }
 
 class DailyTaskCompletions extends Table {
@@ -101,7 +109,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 8;
 
   @override
   MigrationStrategy get migration =>

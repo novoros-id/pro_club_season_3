@@ -98,6 +98,7 @@ class DailyTasksController extends Notifier<DailyTasksState> {
     required int revision,
   }) async {
     try {
+      await _data.ensureDefaultTasks(goalkeeperId);
       final results = await Future.wait<Object>([
         _data.tasksForDate(goalkeeperId, date),
         _data.stats(goalkeeperId, date),

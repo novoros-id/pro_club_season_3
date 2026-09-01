@@ -174,4 +174,31 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get dailyTasksNoCompletedStatistics =>
       'Статистики выполненных задач пока нет';
+
+  @override
+  String get dailyTaskBuiltInWellbeingDiary => 'Заполнить дневник самочувствия';
+
+  @override
+  String get dailyTaskBuiltInMorningRoutine => 'Утренние процедуры';
+
+  @override
+  String get dailyTaskBuiltInPreTrainingWarmup =>
+      'Разминка перед тренировкой/игрой';
+
+  @override
+  String get dailyTaskBuiltInReactionCoordination =>
+      'Упражнения на реакцию и координацию';
+
+  @override
+  String get dailyTaskBuiltInMobility =>
+      'Мобильность: тазобедренные, голеностоп, спина';
+
+  @override
+  String get dailyTaskBuiltInReading => 'Чтение книги';
+
+  @override
+  String get dailyTaskBuiltInPhoneBeforeSleep => 'Убрать телефон за час до сна';
+
+  @override
+  String get dailyTaskBuiltInSleepOnTime => 'Сон: лечь вовремя';
 }

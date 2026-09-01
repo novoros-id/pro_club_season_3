@@ -14,6 +14,7 @@ import 'package:goalkeeper_trainer/features/daily_tasks/logic/daily_task_date.da
 import 'package:goalkeeper_trainer/features/daily_tasks/logic/daily_tasks_logic.dart';
 import 'package:goalkeeper_trainer/features/daily_tasks/models/daily_task.dart';
 import 'package:goalkeeper_trainer/features/daily_tasks/models/daily_task_stats.dart';
+import 'package:goalkeeper_trainer/features/daily_tasks/models/built_in_daily_task.dart';
 import 'package:goalkeeper_trainer/features/daily_tasks/ui/daily_task_edit_screen.dart';
 import 'package:goalkeeper_trainer/features/daily_tasks/ui/daily_tasks_screen.dart';
 import 'package:goalkeeper_trainer/features/registration/logic/goalkeepers_controller.dart';
@@ -161,6 +162,94 @@ void main() {
 
     expect(await data.tasksForDate(first, DateTime.now()), hasLength(1));
     expect(await data.tasksForDate(second, DateTime.now()), hasLength(1));
+  });
+
+  test('default tasks are idempotent, keyed, and ordered', () async {
+    final keeper = await addKeeper();
+
+    await data.ensureDefaultTasks(keeper);
+    await data.ensureDefaultTasks(keeper);
+
+    final tasks = await data.tasksForDate(keeper, DateTime.now());
+    expect(tasks, hasLength(8));
+    expect(tasks.every((item) => item.task.isSystem), isTrue);
+    expect(
+      tasks.map((item) => item.task.systemKey),
+      builtInDailyTasks.map((definition) => definition.key),
+    );
+    expect(
+      tasks.map((item) => item.task.title),
+      builtInDailyTasks.map((definition) => definition.title),
+    );
+
+    await data.createTask(goalkeeperId: keeper, title: 'Пользовательская');
+    final tasksWithCustom = await data.tasksForDate(keeper, DateTime.now());
+    expect(tasksWithCustom.take(8).every((item) => item.task.isSystem), isTrue);
+    expect(tasksWithCustom.last.task.title, 'Пользовательская');
+  });
+
+  test('system tasks cannot be edited, disabled, or deleted', () async {
+    final keeper = await addKeeper();
+    await data.ensureDefaultTasks(keeper);
+    final task = (await data.tasksForDate(keeper, DateTime.now())).first.task;
+
+    await expectAccessDenied(
+      () => data.updateTask(keeper, task.id, title: 'Подмена'),
+    );
+    await expectAccessDenied(() => data.setEnabled(keeper, task.id, false));
+    await expectAccessDenied(() => data.softDelete(keeper, task.id));
+
+    final stored = await taskById(task.id);
+    expect(stored.title, builtInDailyTasks.first.title);
+    expect(stored.isEnabled, isTrue);
+    expect(stored.deletedAt, isNull);
+  });
+
+  test(
+    'system completion is date-specific and included in statistics',
+    () async {
+      final keeper = await addKeeper();
+      await data.ensureDefaultTasks(keeper);
+      final date = normalizeOccurrenceDate(DateTime.now());
+      final nextDate = date.add(const Duration(days: 1));
+      final task = (await data.tasksForDate(keeper, date))[1].task;
+
+      await data.complete(keeper, task.id, date);
+
+      expect((await data.tasksForDate(keeper, date))[1].isCompleted, isTrue);
+      expect(
+        (await data.tasksForDate(keeper, nextDate))[1].isCompleted,
+        isFalse,
+      );
+      final stats = await data.stats(keeper, date);
+      expect(stats.totalTasksToday, 8);
+      expect(stats.completedToday, 1);
+      expect(stats.recentDays.single.totalCount, 8);
+    },
+  );
+
+  test('system tasks and completions are isolated by goalkeeper', () async {
+    final first = await addKeeper();
+    final second = await addKeeper(current: false);
+    await data.ensureDefaultTasks(first);
+    await data.ensureDefaultTasks(second);
+    final date = normalizeOccurrenceDate(DateTime.now());
+    final firstTasks = await data.tasksForDate(first, date);
+    final secondTasks = await data.tasksForDate(second, date);
+
+    expect(firstTasks, hasLength(8));
+    expect(secondTasks, hasLength(8));
+    expect(
+      firstTasks
+          .map((item) => item.task.id)
+          .toSet()
+          .intersection(secondTasks.map((item) => item.task.id).toSet()),
+      isEmpty,
+    );
+
+    await data.complete(first, firstTasks.first.task.id, date);
+    expect((await data.tasksForDate(first, date)).first.isCompleted, isTrue);
+    expect((await data.tasksForDate(second, date)).first.isCompleted, isFalse);
   });
 
   test('cross-owner update is rejected and preserves owner and UUID', () async {
@@ -508,7 +597,12 @@ void main() {
           .makeCurrent(first);
       container.read(dailyTasksControllerProvider);
       var state = await waitForDailyTasks(container, first);
-      expect(state.tasks.map((item) => item.task.title), ['Задача А']);
+      expect(
+        state.tasks
+            .where((item) => !item.task.isSystem)
+            .map((item) => item.task.title),
+        ['Задача А'],
+      );
 
       await container
           .read(goalkeepersControllerProvider.notifier)
@@ -521,7 +615,12 @@ void main() {
       );
 
       state = await waitForDailyTasks(container, second);
-      expect(state.tasks.map((item) => item.task.title), ['Задача Б']);
+      expect(
+        state.tasks
+            .where((item) => !item.task.isSystem)
+            .map((item) => item.task.title),
+        ['Задача Б'],
+      );
 
       await container
           .read(dailyTasksControllerProvider.notifier)
@@ -553,7 +652,10 @@ void main() {
     var state = await waitForDailyTasks(container, keeper);
     expect(state.date, today);
     expect(state.goalkeeperId, keeper);
-    expect(state.tasks.single.isCompleted, isTrue);
+    expect(
+      state.tasks.singleWhere((item) => item.task.id == taskId).isCompleted,
+      isTrue,
+    );
 
     await container
         .read(dailyTasksControllerProvider.notifier)
@@ -561,7 +663,10 @@ void main() {
     state = container.read(dailyTasksControllerProvider);
     expect(state.date, yesterday);
     expect(state.goalkeeperId, keeper);
-    expect(state.tasks.single.isCompleted, isFalse);
+    expect(
+      state.tasks.singleWhere((item) => item.task.id == taskId).isCompleted,
+      isFalse,
+    );
 
     await container
         .read(dailyTasksControllerProvider.notifier)
@@ -569,7 +674,10 @@ void main() {
     state = container.read(dailyTasksControllerProvider);
     expect(state.date, today);
     expect(state.goalkeeperId, keeper);
-    expect(state.tasks.single.isCompleted, isTrue);
+    expect(
+      state.tasks.singleWhere((item) => item.task.id == taskId).isCompleted,
+      isTrue,
+    );
   });
 
   test('late goalkeeper response cannot replace the current state', () async {
@@ -602,13 +710,23 @@ void main() {
         .read(goalkeepersControllerProvider.notifier)
         .makeCurrent(second);
     var state = await waitForDailyTasks(container, second);
-    expect(state.tasks.map((item) => item.task.title), ['Быстрая Б']);
+    expect(
+      state.tasks
+          .where((item) => !item.task.isSystem)
+          .map((item) => item.task.title),
+      ['Быстрая Б'],
+    );
 
     gate.complete();
     await Future<void>.delayed(const Duration(milliseconds: 20));
     state = container.read(dailyTasksControllerProvider);
     expect(state.goalkeeperId, second);
-    expect(state.tasks.map((item) => item.task.title), ['Быстрая Б']);
+    expect(
+      state.tasks
+          .where((item) => !item.task.isSystem)
+          .map((item) => item.task.title),
+      ['Быстрая Б'],
+    );
   });
 
   test('rapid A to B to A switch keeps the last scope', () async {
@@ -629,7 +747,12 @@ void main() {
 
     final state = await waitForDailyTasks(container, first);
     expect(state.goalkeeperId, first);
-    expect(state.tasks.map((item) => item.task.title), ['Задача А']);
+    expect(
+      state.tasks
+          .where((item) => !item.task.isSystem)
+          .map((item) => item.task.title),
+      ['Задача А'],
+    );
   });
 
   test('controller skips task queries without an active goalkeeper', () async {
@@ -687,6 +810,32 @@ void main() {
     expect((await taskById(foreignTask)).title, 'Чужая');
   });
 
+  test('controller cannot mutate a system task', () async {
+    final keeper = await addKeeper();
+    final container = ProviderContainer(
+      overrides: [databaseProvider.overrideWithValue(db)],
+    );
+    addTearDown(container.dispose);
+    container.read(dailyTasksControllerProvider);
+    final state = await waitForDailyTasks(container, keeper);
+    expect(state.tasks.where((item) => item.task.isSystem), hasLength(8));
+    final task = state.tasks.first.task;
+    final controller = container.read(dailyTasksControllerProvider.notifier);
+
+    await expectLater(
+      controller.updateTask(task.id, title: 'Подмена'),
+      throwsA(isA<DailyTaskAccessException>()),
+    );
+    await expectLater(
+      controller.setEnabled(task.id, false),
+      throwsA(isA<DailyTaskAccessException>()),
+    );
+    await expectLater(
+      controller.deleteTask(task.id),
+      throwsA(isA<DailyTaskAccessException>()),
+    );
+  });
+
   testWidgets('statistics uses localized metrics and compact day cards', (
     tester,
   ) async {
@@ -728,8 +877,9 @@ void main() {
     expect(find.text('Выполнено\nсегодня'), findsOneWidget);
     expect(find.text('Активные\nзадачи'), findsOneWidget);
     expect(find.text('Процент\nсегодня'), findsOneWidget);
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1/1'), findsNWidgets(3));
+    expect(find.text('1'), findsOneWidget);
+    expect(find.text('1/1'), findsNWidgets(2));
+    expect(find.text('1/9'), findsOneWidget);
     expect(find.byType(LinearProgressIndicator), findsNothing);
     expect(tester.takeException(), isNull);
   });
@@ -797,11 +947,18 @@ void main() {
     const description = 'Длинное описание без сохранения при вводе';
     await tester.enterText(find.byType(TextFormField).at(1), description);
     await tester.pump();
-    expect((await db.select(db.dailyTasks).get()).single.description, isNull);
+    expect(
+      (await db.select(db.dailyTasks).get())
+          .singleWhere((task) => !task.isSystem)
+          .description,
+      isNull,
+    );
 
     await tester.tap(find.text('Save'));
     await tester.pumpAndSettle();
-    final updated = (await db.select(db.dailyTasks).get()).single;
+    final updated = (await db.select(db.dailyTasks).get()).singleWhere(
+      (task) => !task.isSystem,
+    );
     expect(updated.id, taskId);
     expect(updated.goalkeeperId, keeper);
     expect(updated.description, description);
@@ -880,7 +1037,9 @@ void main() {
       await tester.tap(find.text('Save'));
       await tester.pumpAndSettle();
 
-      final saved = (await db.select(db.dailyTasks).get()).single;
+      final saved = (await db.select(db.dailyTasks).get()).singleWhere(
+        (task) => !task.isSystem,
+      );
       expect(saved.goalkeeperId, keeper);
       expect(saved.title, 'Новая задача');
       expect(saved.description, description);
@@ -918,14 +1077,18 @@ void main() {
 
       expect(titleController.text, 'Изменённый заголовок');
       expect(descriptionController.text, 'Изменённое\nописание');
-      var stored = (await db.select(db.dailyTasks).get()).single;
+      var stored = (await db.select(db.dailyTasks).get()).singleWhere(
+        (task) => !task.isSystem,
+      );
       expect(stored.title, 'Исходный заголовок');
       expect(stored.description, 'Исходное описание');
 
       await tester.tap(find.text('Save'));
       await tester.pumpAndSettle();
 
-      stored = (await db.select(db.dailyTasks).get()).single;
+      stored = (await db.select(db.dailyTasks).get()).singleWhere(
+        (task) => !task.isSystem,
+      );
       expect(stored.id, taskId);
       expect(stored.title, 'Изменённый заголовок');
       expect(stored.description, 'Изменённое\nописание');
@@ -948,7 +1111,9 @@ void main() {
     await tester.tap(find.text('Cancel'));
     await tester.pumpAndSettle();
 
-    final stored = (await db.select(db.dailyTasks).get()).single;
+    final stored = (await db.select(db.dailyTasks).get()).singleWhere(
+      (task) => !task.isSystem,
+    );
     expect(stored.title, 'Без изменений');
     expect(stored.description, 'Старое описание');
   });
@@ -990,6 +1155,47 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('system task has no edit, disable, or delete controls', (
+    tester,
+  ) async {
+    final keeper = await addKeeper();
+    await data.ensureDefaultTasks(keeper);
+    final task = (await data.tasksForDate(keeper, DateTime.now())).first.task;
+
+    await pumpTaskForm(tester, task: task);
+
+    expect(
+      tester
+          .widgetList<EditableText>(find.byType(EditableText))
+          .every((field) => field.readOnly),
+      isTrue,
+    );
+    expect(find.byType(Switch), findsNothing);
+    expect(find.text('Save'), findsNothing);
+    expect(find.text('Delete'), findsNothing);
+  });
+
+  testWidgets('system task list has no edit menu and uses Russian titles', (
+    tester,
+  ) async {
+    await addKeeper();
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [databaseProvider.overrideWithValue(db)],
+        child: MaterialApp(
+          locale: const Locale('ru'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const DailyTasksScreen(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Заполнить дневник самочувствия'), findsOneWidget);
+    expect(find.byIcon(Icons.more_vert), findsNothing);
+  });
+
   testWidgets('task list renders without overflow', (tester) async {
     final keeper = await addKeeper();
     await data.createTask(
@@ -1011,6 +1217,11 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Tasks for Иван Иванов'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('Задача с длинным названием для проверки карточки'),
+      300,
+      scrollable: find.byType(Scrollable).last,
+    );
     expect(
       find.text('Задача с длинным названием для проверки карточки'),
       findsOneWidget,

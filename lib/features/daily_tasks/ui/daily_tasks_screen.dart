@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../registration/logic/goalkeepers_controller.dart';
 import '../logic/daily_tasks_logic.dart';
+import '../models/built_in_daily_task.dart';
 import '../models/daily_task_stats.dart';
 import 'daily_tasks_styles.dart';
 
@@ -115,7 +116,12 @@ class DailyTasksScreen extends ConsumerWidget {
                                         ),
                                   ),
                                   title: Text(
-                                    item.task.title,
+                                    item.task.isSystem
+                                        ? builtInDailyTaskTitle(
+                                            l10n,
+                                            item.task.systemKey,
+                                          )
+                                        : item.task.title,
                                     style: TextStyle(
                                       fontFamily: 'Lato',
                                       fontSize: 16,
@@ -135,18 +141,22 @@ class DailyTasksScreen extends ConsumerWidget {
                                           item.task.description!,
                                           style: DailyTasksStyles.helper,
                                         ),
-                                  trailing: IconButton(
-                                    icon: const Icon(Icons.more_vert),
-                                    color: DailyTasksStyles.dark,
-                                    onPressed: () => context.push(
-                                      '/daily-tasks/edit/${item.task.id}',
-                                      extra: item.task,
-                                    ),
-                                  ),
-                                  onTap: () => context.push(
-                                    '/daily-tasks/edit/${item.task.id}',
-                                    extra: item.task,
-                                  ),
+                                  trailing: item.task.isSystem
+                                      ? null
+                                      : IconButton(
+                                          icon: const Icon(Icons.more_vert),
+                                          color: DailyTasksStyles.dark,
+                                          onPressed: () => context.push(
+                                            '/daily-tasks/edit/${item.task.id}',
+                                            extra: item.task,
+                                          ),
+                                        ),
+                                  onTap: item.task.isSystem
+                                      ? null
+                                      : () => context.push(
+                                          '/daily-tasks/edit/${item.task.id}',
+                                          extra: item.task,
+                                        ),
                                 ),
                               ),
                             ),

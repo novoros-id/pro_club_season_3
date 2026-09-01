@@ -66,5 +66,13 @@
   "dailyTasksCompletionPercentLabel": "Процент\nсегодня",
   "dailyTasksRecentCompletedDays": "Последние выполненные дни",
   "dailyTasksLastSevenDays": "Последние выполненные дни",
-  "dailyTasksNoCompletedStatistics": "Статистики выполненных задач пока нет"
+  "dailyTasksNoCompletedStatistics": "Статистики выполненных задач пока нет",
+  "dailyTaskBuiltInWellbeingDiary": "Заполнить дневник самочувствия",
+  "dailyTaskBuiltInMorningRoutine": "Утренние процедуры",
+  "dailyTaskBuiltInPreTrainingWarmup": "Разминка перед тренировкой/игрой",
+  "dailyTaskBuiltInReactionCoordination": "Упражнения на реакцию и координацию",
+  "dailyTaskBuiltInMobility": "Мобильность: тазобедренные, голеностоп, спина",
+  "dailyTaskBuiltInReading": "Чтение книги",
+  "dailyTaskBuiltInPhoneBeforeSleep": "Убрать телефон за час до сна",
+  "dailyTaskBuiltInSleepOnTime": "Сон: лечь вовремя"
 }
