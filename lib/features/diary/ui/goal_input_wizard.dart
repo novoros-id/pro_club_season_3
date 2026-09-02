@@ -37,7 +37,10 @@ class _GoalInputWizardState extends ConsumerState<GoalInputWizard> {
   String? _debugColorCode;
 
   // Флаг для отображения отладочной сетки
-  bool _showDebugGrid = true;
+  bool _showDebugGrid = false;
+
+  // Сетка на шаге "Откуда" выключена по умолчанию
+  bool _showFromZoneGrid = false;
 
   //  Дизайн-система
   static const Color primaryText = Color(0xFF121212);
@@ -464,7 +467,7 @@ class _GoalInputWizardState extends ConsumerState<GoalInputWizard> {
 
   // ШАГ 3: Откуда бросок
   Widget _buildFromZoneStep() {
-    final double containerWidth = MediaQuery.of(context).size.width - 32;
+    final double containerWidth = MediaQuery.of(context).size.width;
     final double containerHeight = containerWidth * (1097 / 1055); // ✅ ОБНОВЛЁННЫЕ ПРОПОРЦИИ
 
     return Column(
@@ -477,8 +480,13 @@ class _GoalInputWizardState extends ConsumerState<GoalInputWizard> {
               const Text('Отметь откуда был бросок', style: TextStyle(fontFamily: 'Unbounded', fontSize: 14, fontWeight: FontWeight.w600, color: primaryText)),
               const SizedBox(width: 8),
               IconButton(
-                icon: Icon(_showDebugGrid ? Icons.grid_on : Icons.grid_off, color: _showDebugGrid ? accentColor : auxText),
-                onPressed: () => setState(() => _showDebugGrid = !_showDebugGrid),
+                icon: Icon(
+                  _showFromZoneGrid ? Icons.grid_on : Icons.grid_off,
+                  color: _showFromZoneGrid ? accentColor : auxText,
+                ),
+                onPressed: () => setState(
+                      () => _showFromZoneGrid = !_showFromZoneGrid,
+                ),
                 tooltip: 'Показать/скрыть сетку зон',
               ),
             ],
@@ -527,7 +535,9 @@ class _GoalInputWizardState extends ConsumerState<GoalInputWizard> {
                   children: [
                     Positioned.fill(
                       child: Image.asset(
-                        'assets/images/pole.png',
+                        _showFromZoneGrid
+                            ? 'assets/images/pole_zones.png'
+                            : 'assets/images/pole.png',
                         fit: BoxFit.contain,
                         alignment: Alignment.center,
                       ),
@@ -587,7 +597,7 @@ class _GoalInputWizardState extends ConsumerState<GoalInputWizard> {
           ),
         ),
         Padding(
-          padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
+          padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
           child: Text(
             'Здесь отмечаешь место, откуда пробили или забили гол '
                 '(на нашей половине площадки).',

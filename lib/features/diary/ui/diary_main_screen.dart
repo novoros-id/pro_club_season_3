@@ -868,8 +868,8 @@ class _DiaryMainScreenState extends ConsumerState<DiaryMainScreen> {
 
                     // ✅ ИЗМЕНЕНИЕ: Иконка теперь кликабельна
                     leading: InkWell(
-                      onTap: () => _navigateToGoalList(match), // Открывает форму ввода голов
-                      borderRadius: BorderRadius.circular(24), // Скругление области нажатия под круг
+                      onTap: () => _navigateToGoalList(match),
+                      borderRadius: BorderRadius.circular(24),
                       child: Container(
                         width: 48,
                         height: 48,
@@ -878,9 +878,9 @@ class _DiaryMainScreenState extends ConsumerState<DiaryMainScreen> {
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(
-                          Icons.sports_hockey, // Или Icons.hockey_stick, если есть такая иконка
-                          color: Color(0xFF121212),
-                          size: 24,
+                          Icons.edit_outlined,
+                          color: Color(0xFF3AAE9F),
+                          size: 26,
                         ),
                       ),
                     ),
@@ -890,8 +890,12 @@ class _DiaryMainScreenState extends ConsumerState<DiaryMainScreen> {
                       style: const TextStyle(fontFamily: 'Unbounded', fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF121212)),
                     ),
                     subtitle: Text(
-                      match.score != null ? 'Счёт: ${match.score} | Время: ${match.gameTime ?? "60:00"}' : 'Время: ${match.gameTime ?? "60:00"}',
-                      style: const TextStyle(fontFamily: 'Lato', fontSize: 14, color: Color(0xFF9B9EA1)),
+                      '${DateFormat('dd.MM.yyyy').format(match.date)} | Счёт: ${match.score ?? "0:0"}',
+                      style: const TextStyle(
+                        fontFamily: 'Lato',
+                        fontSize: 14,
+                        color: Color(0xFF9B9EA1),
+                      ),
                     ),
                     trailing: PopupMenuButton<String>(
                       onSelected: (value) {
