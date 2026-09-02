@@ -415,6 +415,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No completed task statistics yet'**
   String get dailyTasksNoCompletedStatistics;
+
+  /// No description provided for @dailyTaskBuiltInWellbeingDiary.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete the wellbeing diary'**
+  String get dailyTaskBuiltInWellbeingDiary;
+
+  /// No description provided for @dailyTaskBuiltInMorningRoutine.
+  ///
+  /// In en, this message translates to:
+  /// **'Morning routine'**
+  String get dailyTaskBuiltInMorningRoutine;
+
+  /// No description provided for @dailyTaskBuiltInPreTrainingWarmup.
+  ///
+  /// In en, this message translates to:
+  /// **'Warm up before training/game'**
+  String get dailyTaskBuiltInPreTrainingWarmup;
+
+  /// No description provided for @dailyTaskBuiltInReactionCoordination.
+  ///
+  /// In en, this message translates to:
+  /// **'Reaction and coordination exercises'**
+  String get dailyTaskBuiltInReactionCoordination;
+
+  /// No description provided for @dailyTaskBuiltInMobility.
+  ///
+  /// In en, this message translates to:
+  /// **'Mobility: hips, ankles, back'**
+  String get dailyTaskBuiltInMobility;
+
+  /// No description provided for @dailyTaskBuiltInReading.
+  ///
+  /// In en, this message translates to:
+  /// **'Read a book'**
+  String get dailyTaskBuiltInReading;
+
+  /// No description provided for @dailyTaskBuiltInPhoneBeforeSleep.
+  ///
+  /// In en, this message translates to:
+  /// **'Put the phone away an hour before sleep'**
+  String get dailyTaskBuiltInPhoneBeforeSleep;
+
+  /// No description provided for @dailyTaskBuiltInSleepOnTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep: go to bed on time'**
+  String get dailyTaskBuiltInSleepOnTime;
 }
 
 class _AppLocalizationsDelegate

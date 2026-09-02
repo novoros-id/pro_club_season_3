@@ -173,4 +173,31 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get dailyTasksNoCompletedStatistics =>
       'No completed task statistics yet';
+
+  @override
+  String get dailyTaskBuiltInWellbeingDiary => 'Complete the wellbeing diary';
+
+  @override
+  String get dailyTaskBuiltInMorningRoutine => 'Morning routine';
+
+  @override
+  String get dailyTaskBuiltInPreTrainingWarmup =>
+      'Warm up before training/game';
+
+  @override
+  String get dailyTaskBuiltInReactionCoordination =>
+      'Reaction and coordination exercises';
+
+  @override
+  String get dailyTaskBuiltInMobility => 'Mobility: hips, ankles, back';
+
+  @override
+  String get dailyTaskBuiltInReading => 'Read a book';
+
+  @override
+  String get dailyTaskBuiltInPhoneBeforeSleep =>
+      'Put the phone away an hour before sleep';
+
+  @override
+  String get dailyTaskBuiltInSleepOnTime => 'Sleep: go to bed on time';
 }

@@ -5,6 +5,7 @@ import '../../../core/database/app_database.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../registration/logic/goalkeepers_controller.dart';
 import '../logic/daily_tasks_logic.dart';
+import '../models/built_in_daily_task.dart';
 import 'daily_tasks_styles.dart';
 
 class DailyTaskEditScreen extends ConsumerStatefulWidget {
@@ -126,6 +127,7 @@ class _DailyTaskEditScreenState extends ConsumerState<DailyTaskEditScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final editing = widget.task != null;
+    final readOnly = widget.task?.isSystem ?? false;
     ref.watch(currentGoalkeeperProvider);
     final hasValidOwner = _hasValidOwner();
     return Scaffold(
@@ -150,7 +152,10 @@ class _DailyTaskEditScreenState extends ConsumerState<DailyTaskEditScreen> {
                     ),
                     const SizedBox(height: 16),
                     TextFormField(
-                      initialValue: _title,
+                      initialValue: readOnly
+                          ? builtInDailyTaskTitle(l10n, widget.task!.systemKey)
+                          : _title,
+                      readOnly: readOnly,
                       keyboardType: TextInputType.text,
                       textInputAction: TextInputAction.next,
                       autocorrect: false,
@@ -167,6 +172,7 @@ class _DailyTaskEditScreenState extends ConsumerState<DailyTaskEditScreen> {
                     const SizedBox(height: 12),
                     TextFormField(
                       initialValue: _description,
+                      readOnly: readOnly,
                       keyboardType: TextInputType.multiline,
                       textInputAction: TextInputAction.newline,
                       autocorrect: false,
@@ -178,34 +184,36 @@ class _DailyTaskEditScreenState extends ConsumerState<DailyTaskEditScreen> {
                       ),
                       onSaved: (value) => _description = value ?? '',
                     ),
-                    SwitchListTile(
-                      contentPadding: EdgeInsets.zero,
-                      title: Text(
-                        l10n.dailyTasksActive,
-                        style: DailyTasksStyles.body,
+                    if (!readOnly)
+                      SwitchListTile(
+                        contentPadding: EdgeInsets.zero,
+                        title: Text(
+                          l10n.dailyTasksActive,
+                          style: DailyTasksStyles.body,
+                        ),
+                        value: _enabled,
+                        activeThumbColor: DailyTasksStyles.dark,
+                        activeTrackColor: DailyTasksStyles.accent,
+                        inactiveThumbColor: DailyTasksStyles.secondaryText,
+                        inactiveTrackColor: DailyTasksStyles.fieldBackground,
+                        onChanged: (value) => setState(() => _enabled = value),
                       ),
-                      value: _enabled,
-                      activeThumbColor: DailyTasksStyles.dark,
-                      activeTrackColor: DailyTasksStyles.accent,
-                      inactiveThumbColor: DailyTasksStyles.secondaryText,
-                      inactiveTrackColor: DailyTasksStyles.fieldBackground,
-                      onChanged: (value) => setState(() => _enabled = value),
-                    ),
-                    const SizedBox(height: 16),
-                    FilledButton(
-                      onPressed: _saving ? null : _save,
-                      style: DailyTasksStyles.primaryButton,
-                      child: _saving
-                          ? const SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: DailyTasksStyles.accent,
-                              ),
-                            )
-                          : Text(l10n.save),
-                    ),
+                    if (!readOnly) const SizedBox(height: 16),
+                    if (!readOnly)
+                      FilledButton(
+                        onPressed: _saving ? null : _save,
+                        style: DailyTasksStyles.primaryButton,
+                        child: _saving
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: DailyTasksStyles.accent,
+                                ),
+                              )
+                            : Text(l10n.save),
+                      ),
                     TextButton(
                       onPressed: _saving ? null : () => context.pop(),
                       style: TextButton.styleFrom(
@@ -217,7 +225,7 @@ class _DailyTaskEditScreenState extends ConsumerState<DailyTaskEditScreen> {
                       ),
                       child: Text(l10n.cancel),
                     ),
-                    if (editing)
+                    if (editing && !readOnly)
                       TextButton(
                         onPressed: _saving ? null : _delete,
                         style: TextButton.styleFrom(

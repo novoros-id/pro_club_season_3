@@ -66,5 +66,13 @@
   "dailyTasksCompletionPercentLabel": "Completion\ntoday",
   "dailyTasksRecentCompletedDays": "Recent completed days",
   "dailyTasksLastSevenDays": "Recent completed days",
-  "dailyTasksNoCompletedStatistics": "No completed task statistics yet"
+  "dailyTasksNoCompletedStatistics": "No completed task statistics yet",
+  "dailyTaskBuiltInWellbeingDiary": "Complete the wellbeing diary",
+  "dailyTaskBuiltInMorningRoutine": "Morning routine",
+  "dailyTaskBuiltInPreTrainingWarmup": "Warm up before training/game",
+  "dailyTaskBuiltInReactionCoordination": "Reaction and coordination exercises",
+  "dailyTaskBuiltInMobility": "Mobility: hips, ankles, back",
+  "dailyTaskBuiltInReading": "Read a book",
+  "dailyTaskBuiltInPhoneBeforeSleep": "Put the phone away an hour before sleep",
+  "dailyTaskBuiltInSleepOnTime": "Sleep: go to bed on time"
 }

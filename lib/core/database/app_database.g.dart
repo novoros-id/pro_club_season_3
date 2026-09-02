@@ -2276,6 +2276,44 @@ class $DailyTasksTable extends DailyTasks
     ),
     defaultValue: const Constant(true),
   );
+  static const VerificationMeta _isSystemMeta = const VerificationMeta(
+    'isSystem',
+  );
+  @override
+  late final GeneratedColumn<bool> isSystem = GeneratedColumn<bool>(
+    'is_system',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_system" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _systemKeyMeta = const VerificationMeta(
+    'systemKey',
+  );
+  @override
+  late final GeneratedColumn<String> systemKey = GeneratedColumn<String>(
+    'system_key',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _sortOrderMeta = const VerificationMeta(
+    'sortOrder',
+  );
+  @override
+  late final GeneratedColumn<int> sortOrder = GeneratedColumn<int>(
+    'sort_order',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1000),
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -2320,6 +2358,9 @@ class $DailyTasksTable extends DailyTasks
     description,
     recurrenceType,
     isEnabled,
+    isSystem,
+    systemKey,
+    sortOrder,
     createdAt,
     updatedAt,
     deletedAt,
@@ -2388,6 +2429,24 @@ class $DailyTasksTable extends DailyTasks
         isEnabled.isAcceptableOrUnknown(data['is_enabled']!, _isEnabledMeta),
       );
     }
+    if (data.containsKey('is_system')) {
+      context.handle(
+        _isSystemMeta,
+        isSystem.isAcceptableOrUnknown(data['is_system']!, _isSystemMeta),
+      );
+    }
+    if (data.containsKey('system_key')) {
+      context.handle(
+        _systemKeyMeta,
+        systemKey.isAcceptableOrUnknown(data['system_key']!, _systemKeyMeta),
+      );
+    }
+    if (data.containsKey('sort_order')) {
+      context.handle(
+        _sortOrderMeta,
+        sortOrder.isAcceptableOrUnknown(data['sort_order']!, _sortOrderMeta),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -2411,6 +2470,10 @@ class $DailyTasksTable extends DailyTasks
 
   @override
   Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {goalkeeperId, systemKey},
+  ];
   @override
   DailyTask map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
@@ -2443,6 +2506,18 @@ class $DailyTasksTable extends DailyTasks
         DriftSqlType.bool,
         data['${effectivePrefix}is_enabled'],
       )!,
+      isSystem: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_system'],
+      )!,
+      systemKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}system_key'],
+      ),
+      sortOrder: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sort_order'],
+      )!,
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -2472,6 +2547,9 @@ class DailyTask extends DataClass implements Insertable<DailyTask> {
   final String? description;
   final String recurrenceType;
   final bool isEnabled;
+  final bool isSystem;
+  final String? systemKey;
+  final int sortOrder;
   final DateTime createdAt;
   final DateTime updatedAt;
   final DateTime? deletedAt;
@@ -2483,6 +2561,9 @@ class DailyTask extends DataClass implements Insertable<DailyTask> {
     this.description,
     required this.recurrenceType,
     required this.isEnabled,
+    required this.isSystem,
+    this.systemKey,
+    required this.sortOrder,
     required this.createdAt,
     required this.updatedAt,
     this.deletedAt,
@@ -2499,6 +2580,11 @@ class DailyTask extends DataClass implements Insertable<DailyTask> {
     }
     map['recurrence_type'] = Variable<String>(recurrenceType);
     map['is_enabled'] = Variable<bool>(isEnabled);
+    map['is_system'] = Variable<bool>(isSystem);
+    if (!nullToAbsent || systemKey != null) {
+      map['system_key'] = Variable<String>(systemKey);
+    }
+    map['sort_order'] = Variable<int>(sortOrder);
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
     if (!nullToAbsent || deletedAt != null) {
@@ -2518,6 +2604,11 @@ class DailyTask extends DataClass implements Insertable<DailyTask> {
           : Value(description),
       recurrenceType: Value(recurrenceType),
       isEnabled: Value(isEnabled),
+      isSystem: Value(isSystem),
+      systemKey: systemKey == null && nullToAbsent
+          ? const Value.absent()
+          : Value(systemKey),
+      sortOrder: Value(sortOrder),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
       deletedAt: deletedAt == null && nullToAbsent
@@ -2539,6 +2630,9 @@ class DailyTask extends DataClass implements Insertable<DailyTask> {
       description: serializer.fromJson<String?>(json['description']),
       recurrenceType: serializer.fromJson<String>(json['recurrenceType']),
       isEnabled: serializer.fromJson<bool>(json['isEnabled']),
+      isSystem: serializer.fromJson<bool>(json['isSystem']),
+      systemKey: serializer.fromJson<String?>(json['systemKey']),
+      sortOrder: serializer.fromJson<int>(json['sortOrder']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
       deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
@@ -2555,6 +2649,9 @@ class DailyTask extends DataClass implements Insertable<DailyTask> {
       'description': serializer.toJson<String?>(description),
       'recurrenceType': serializer.toJson<String>(recurrenceType),
       'isEnabled': serializer.toJson<bool>(isEnabled),
+      'isSystem': serializer.toJson<bool>(isSystem),
+      'systemKey': serializer.toJson<String?>(systemKey),
+      'sortOrder': serializer.toJson<int>(sortOrder),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
       'deletedAt': serializer.toJson<DateTime?>(deletedAt),
@@ -2569,6 +2666,9 @@ class DailyTask extends DataClass implements Insertable<DailyTask> {
     Value<String?> description = const Value.absent(),
     String? recurrenceType,
     bool? isEnabled,
+    bool? isSystem,
+    Value<String?> systemKey = const Value.absent(),
+    int? sortOrder,
     DateTime? createdAt,
     DateTime? updatedAt,
     Value<DateTime?> deletedAt = const Value.absent(),
@@ -2580,6 +2680,9 @@ class DailyTask extends DataClass implements Insertable<DailyTask> {
     description: description.present ? description.value : this.description,
     recurrenceType: recurrenceType ?? this.recurrenceType,
     isEnabled: isEnabled ?? this.isEnabled,
+    isSystem: isSystem ?? this.isSystem,
+    systemKey: systemKey.present ? systemKey.value : this.systemKey,
+    sortOrder: sortOrder ?? this.sortOrder,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
@@ -2599,6 +2702,9 @@ class DailyTask extends DataClass implements Insertable<DailyTask> {
           ? data.recurrenceType.value
           : this.recurrenceType,
       isEnabled: data.isEnabled.present ? data.isEnabled.value : this.isEnabled,
+      isSystem: data.isSystem.present ? data.isSystem.value : this.isSystem,
+      systemKey: data.systemKey.present ? data.systemKey.value : this.systemKey,
+      sortOrder: data.sortOrder.present ? data.sortOrder.value : this.sortOrder,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
@@ -2615,6 +2721,9 @@ class DailyTask extends DataClass implements Insertable<DailyTask> {
           ..write('description: $description, ')
           ..write('recurrenceType: $recurrenceType, ')
           ..write('isEnabled: $isEnabled, ')
+          ..write('isSystem: $isSystem, ')
+          ..write('systemKey: $systemKey, ')
+          ..write('sortOrder: $sortOrder, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt')
@@ -2631,6 +2740,9 @@ class DailyTask extends DataClass implements Insertable<DailyTask> {
     description,
     recurrenceType,
     isEnabled,
+    isSystem,
+    systemKey,
+    sortOrder,
     createdAt,
     updatedAt,
     deletedAt,
@@ -2646,6 +2758,9 @@ class DailyTask extends DataClass implements Insertable<DailyTask> {
           other.description == this.description &&
           other.recurrenceType == this.recurrenceType &&
           other.isEnabled == this.isEnabled &&
+          other.isSystem == this.isSystem &&
+          other.systemKey == this.systemKey &&
+          other.sortOrder == this.sortOrder &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
           other.deletedAt == this.deletedAt);
@@ -2659,6 +2774,9 @@ class DailyTasksCompanion extends UpdateCompanion<DailyTask> {
   final Value<String?> description;
   final Value<String> recurrenceType;
   final Value<bool> isEnabled;
+  final Value<bool> isSystem;
+  final Value<String?> systemKey;
+  final Value<int> sortOrder;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<DateTime?> deletedAt;
@@ -2670,6 +2788,9 @@ class DailyTasksCompanion extends UpdateCompanion<DailyTask> {
     this.description = const Value.absent(),
     this.recurrenceType = const Value.absent(),
     this.isEnabled = const Value.absent(),
+    this.isSystem = const Value.absent(),
+    this.systemKey = const Value.absent(),
+    this.sortOrder = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
@@ -2682,6 +2803,9 @@ class DailyTasksCompanion extends UpdateCompanion<DailyTask> {
     this.description = const Value.absent(),
     this.recurrenceType = const Value.absent(),
     this.isEnabled = const Value.absent(),
+    this.isSystem = const Value.absent(),
+    this.systemKey = const Value.absent(),
+    this.sortOrder = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
@@ -2695,6 +2819,9 @@ class DailyTasksCompanion extends UpdateCompanion<DailyTask> {
     Expression<String>? description,
     Expression<String>? recurrenceType,
     Expression<bool>? isEnabled,
+    Expression<bool>? isSystem,
+    Expression<String>? systemKey,
+    Expression<int>? sortOrder,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<DateTime>? deletedAt,
@@ -2707,6 +2834,9 @@ class DailyTasksCompanion extends UpdateCompanion<DailyTask> {
       if (description != null) 'description': description,
       if (recurrenceType != null) 'recurrence_type': recurrenceType,
       if (isEnabled != null) 'is_enabled': isEnabled,
+      if (isSystem != null) 'is_system': isSystem,
+      if (systemKey != null) 'system_key': systemKey,
+      if (sortOrder != null) 'sort_order': sortOrder,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (deletedAt != null) 'deleted_at': deletedAt,
@@ -2721,6 +2851,9 @@ class DailyTasksCompanion extends UpdateCompanion<DailyTask> {
     Value<String?>? description,
     Value<String>? recurrenceType,
     Value<bool>? isEnabled,
+    Value<bool>? isSystem,
+    Value<String?>? systemKey,
+    Value<int>? sortOrder,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
     Value<DateTime?>? deletedAt,
@@ -2733,6 +2866,9 @@ class DailyTasksCompanion extends UpdateCompanion<DailyTask> {
       description: description ?? this.description,
       recurrenceType: recurrenceType ?? this.recurrenceType,
       isEnabled: isEnabled ?? this.isEnabled,
+      isSystem: isSystem ?? this.isSystem,
+      systemKey: systemKey ?? this.systemKey,
+      sortOrder: sortOrder ?? this.sortOrder,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       deletedAt: deletedAt ?? this.deletedAt,
@@ -2763,6 +2899,15 @@ class DailyTasksCompanion extends UpdateCompanion<DailyTask> {
     if (isEnabled.present) {
       map['is_enabled'] = Variable<bool>(isEnabled.value);
     }
+    if (isSystem.present) {
+      map['is_system'] = Variable<bool>(isSystem.value);
+    }
+    if (systemKey.present) {
+      map['system_key'] = Variable<String>(systemKey.value);
+    }
+    if (sortOrder.present) {
+      map['sort_order'] = Variable<int>(sortOrder.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -2785,6 +2930,9 @@ class DailyTasksCompanion extends UpdateCompanion<DailyTask> {
           ..write('description: $description, ')
           ..write('recurrenceType: $recurrenceType, ')
           ..write('isEnabled: $isEnabled, ')
+          ..write('isSystem: $isSystem, ')
+          ..write('systemKey: $systemKey, ')
+          ..write('sortOrder: $sortOrder, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt')
@@ -3129,7 +3277,7 @@ final class $$GoalkeepersTableReferences
     _$AppDatabase db,
   ) => MultiTypedResultKey.fromTable(
     db.matches,
-    aliasName: $_aliasNameGenerator(db.goalkeepers.id, db.matches.goalkeeperId),
+    aliasName: 'goalkeepers__id__matches__goalkeeper_id',
   );
 
   $$MatchesTableProcessedTableManager get matchesRefs {
@@ -3147,10 +3295,7 @@ final class $$GoalkeepersTableReferences
   static MultiTypedResultKey<$DailyTasksTable, List<DailyTask>>
   _dailyTasksRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
     db.dailyTasks,
-    aliasName: $_aliasNameGenerator(
-      db.goalkeepers.id,
-      db.dailyTasks.goalkeeperId,
-    ),
+    aliasName: 'goalkeepers__id__daily_tasks__goalkeeper_id',
   );
 
   $$DailyTasksTableProcessedTableManager get dailyTasksRefs {
@@ -3614,9 +3759,7 @@ final class $$MatchesTableReferences
   $$MatchesTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
   static $GoalkeepersTable _goalkeeperIdTable(_$AppDatabase db) =>
-      db.goalkeepers.createAlias(
-        $_aliasNameGenerator(db.matches.goalkeeperId, db.goalkeepers.id),
-      );
+      db.goalkeepers.createAlias('matches__goalkeeper_id__goalkeepers__id');
 
   $$GoalkeepersTableProcessedTableManager get goalkeeperId {
     final $_column = $_itemColumn<int>('goalkeeper_id')!;
@@ -3636,7 +3779,7 @@ final class $$MatchesTableReferences
     _$AppDatabase db,
   ) => MultiTypedResultKey.fromTable(
     db.goals,
-    aliasName: $_aliasNameGenerator(db.matches.id, db.goals.matchId),
+    aliasName: 'matches__id__goals__match_id',
   );
 
   $$GoalsTableProcessedTableManager get goalsRefs {
@@ -4255,8 +4398,8 @@ final class $$GoalsTableReferences
     extends BaseReferences<_$AppDatabase, $GoalsTable, Goal> {
   $$GoalsTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
-  static $MatchesTable _matchIdTable(_$AppDatabase db) => db.matches
-      .createAlias($_aliasNameGenerator(db.goals.matchId, db.matches.id));
+  static $MatchesTable _matchIdTable(_$AppDatabase db) =>
+      db.matches.createAlias('goals__match_id__matches__id');
 
   $$MatchesTableProcessedTableManager get matchId {
     final $_column = $_itemColumn<int>('match_id')!;
@@ -4638,6 +4781,9 @@ typedef $$DailyTasksTableCreateCompanionBuilder =
       Value<String?> description,
       Value<String> recurrenceType,
       Value<bool> isEnabled,
+      Value<bool> isSystem,
+      Value<String?> systemKey,
+      Value<int> sortOrder,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
       Value<DateTime?> deletedAt,
@@ -4651,6 +4797,9 @@ typedef $$DailyTasksTableUpdateCompanionBuilder =
       Value<String?> description,
       Value<String> recurrenceType,
       Value<bool> isEnabled,
+      Value<bool> isSystem,
+      Value<String?> systemKey,
+      Value<int> sortOrder,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
       Value<DateTime?> deletedAt,
@@ -4661,9 +4810,7 @@ final class $$DailyTasksTableReferences
   $$DailyTasksTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
   static $GoalkeepersTable _goalkeeperIdTable(_$AppDatabase db) =>
-      db.goalkeepers.createAlias(
-        $_aliasNameGenerator(db.dailyTasks.goalkeeperId, db.goalkeepers.id),
-      );
+      db.goalkeepers.createAlias('daily_tasks__goalkeeper_id__goalkeepers__id');
 
   $$GoalkeepersTableProcessedTableManager get goalkeeperId {
     final $_column = $_itemColumn<int>('goalkeeper_id')!;
@@ -4686,10 +4833,7 @@ final class $$DailyTasksTableReferences
   _dailyTaskCompletionsRefsTable(_$AppDatabase db) =>
       MultiTypedResultKey.fromTable(
         db.dailyTaskCompletions,
-        aliasName: $_aliasNameGenerator(
-          db.dailyTasks.id,
-          db.dailyTaskCompletions.taskId,
-        ),
+        aliasName: 'daily_tasks__id__daily_task_completions__task_id',
       );
 
   $$DailyTaskCompletionsTableProcessedTableManager
@@ -4744,6 +4888,21 @@ class $$DailyTasksTableFilterComposer
 
   ColumnFilters<bool> get isEnabled => $composableBuilder(
     column: $table.isEnabled,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isSystem => $composableBuilder(
+    column: $table.isSystem,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get systemKey => $composableBuilder(
+    column: $table.systemKey,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get sortOrder => $composableBuilder(
+    column: $table.sortOrder,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -4850,6 +5009,21 @@ class $$DailyTasksTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<bool> get isSystem => $composableBuilder(
+    column: $table.isSystem,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get systemKey => $composableBuilder(
+    column: $table.systemKey,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get sortOrder => $composableBuilder(
+    column: $table.sortOrder,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -4919,6 +5093,15 @@ class $$DailyTasksTableAnnotationComposer
 
   GeneratedColumn<bool> get isEnabled =>
       $composableBuilder(column: $table.isEnabled, builder: (column) => column);
+
+  GeneratedColumn<bool> get isSystem =>
+      $composableBuilder(column: $table.isSystem, builder: (column) => column);
+
+  GeneratedColumn<String> get systemKey =>
+      $composableBuilder(column: $table.systemKey, builder: (column) => column);
+
+  GeneratedColumn<int> get sortOrder =>
+      $composableBuilder(column: $table.sortOrder, builder: (column) => column);
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -5017,6 +5200,9 @@ class $$DailyTasksTableTableManager
                 Value<String?> description = const Value.absent(),
                 Value<String> recurrenceType = const Value.absent(),
                 Value<bool> isEnabled = const Value.absent(),
+                Value<bool> isSystem = const Value.absent(),
+                Value<String?> systemKey = const Value.absent(),
+                Value<int> sortOrder = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<DateTime?> deletedAt = const Value.absent(),
@@ -5028,6 +5214,9 @@ class $$DailyTasksTableTableManager
                 description: description,
                 recurrenceType: recurrenceType,
                 isEnabled: isEnabled,
+                isSystem: isSystem,
+                systemKey: systemKey,
+                sortOrder: sortOrder,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
@@ -5041,6 +5230,9 @@ class $$DailyTasksTableTableManager
                 Value<String?> description = const Value.absent(),
                 Value<String> recurrenceType = const Value.absent(),
                 Value<bool> isEnabled = const Value.absent(),
+                Value<bool> isSystem = const Value.absent(),
+                Value<String?> systemKey = const Value.absent(),
+                Value<int> sortOrder = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<DateTime?> deletedAt = const Value.absent(),
@@ -5052,6 +5244,9 @@ class $$DailyTasksTableTableManager
                 description: description,
                 recurrenceType: recurrenceType,
                 isEnabled: isEnabled,
+                isSystem: isSystem,
+                systemKey: systemKey,
+                sortOrder: sortOrder,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
@@ -5177,10 +5372,8 @@ final class $$DailyTaskCompletionsTableReferences
     super.$_typedResult,
   );
 
-  static $DailyTasksTable _taskIdTable(_$AppDatabase db) =>
-      db.dailyTasks.createAlias(
-        $_aliasNameGenerator(db.dailyTaskCompletions.taskId, db.dailyTasks.id),
-      );
+  static $DailyTasksTable _taskIdTable(_$AppDatabase db) => db.dailyTasks
+      .createAlias('daily_task_completions__task_id__daily_tasks__id');
 
   $$DailyTasksTableProcessedTableManager get taskId {
     final $_column = $_itemColumn<int>('task_id')!;
