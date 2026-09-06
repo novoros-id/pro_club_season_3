@@ -1,23 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_localizations/flutter_localizations.dart'; // <--- ВАЖНО: Добавь этот импорт
 import 'core/router/app_router.dart';
 import 'core/database/database_provider.dart';
 import 'l10n/app_localizations.dart';
-import 'core/services/storage_service.dart'; // Импорт сервиса
+import 'core/services/storage_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await StorageService().init();
 
-  // Инициализируем провайдеры
   final container = ProviderContainer();
-
-  // Получаем экземпляр базы данных
   final db = container.read(databaseProvider);
 
-  // Проверяем наличие вратарей
   final keepers = await db.getAllGoalkeepers();
   final hasKeepers = keepers.isNotEmpty;
 
@@ -50,12 +47,27 @@ class _GoalkeeperAppState extends State<GoalkeeperApp> {
   Widget build(BuildContext context) {
     return MaterialApp.router(
       title: 'Goalkeeper Trainer',
+
+      // ✅ ЖЕСТКО ЗАДАЕМ РУССКИЙ ЯЗЫК
+      locale: const Locale('ru'),
+
       theme: ThemeData(
         primarySwatch: Colors.blue,
-        fontFamily: 'Lato', // Основной шрифт
+        fontFamily: 'Lato',
       ),
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: AppLocalizations.supportedLocales,
+
+      // ✅ УКАЗЫВАЕМ ДЕЛЕГАТЫ И ПОДДЕРЖИВАЕМЫЕ ЛОКАЛИ
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('ru'),
+        Locale('en'), // Можно оставить английский в списке, но locale выше переопределит его
+      ],
+
       routerConfig: _router,
     );
   }
