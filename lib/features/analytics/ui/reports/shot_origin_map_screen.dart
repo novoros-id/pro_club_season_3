@@ -23,18 +23,18 @@ class _ShotOriginMapScreenState extends ConsumerState<ShotOriginMapScreen> {
   static const Color auxText = Color(0xFF9B9EA1);
   static const Color inputBg = Color(0xFFF2F2F7);
 
-  // Пропорции картинки поля pole.png (2617x2094)
-  static const double aspectRatio = 2094 / 2617;
+  // ✅ ИЗМЕНЕНО: Пропорции теперь как в GoalInputWizard (1097 / 1055)
+  static const double aspectRatio = 1097 / 1055;
 
   // Цвета для типов бросков на карте
   static const Map<int, Color> shotColors = {
-    1: Colors.red,       //  Прямой бросок
+    1: Colors.red,       // 🔴 Прямой бросок
     2: Colors.green,     // 🟢 Бросок с передачи
-    3: Colors.blue,      //  Добивание
+    3: Colors.blue,      // 🔵 Добивание
     4: Colors.orange,    // 🟠 Закрывание обзора
     5: Colors.grey,      // (Не показываем на карте)
     6: Colors.grey,      // (Не показываем на карте)
-    7: Colors.yellow, //  Атака из-за ворот
+    7: Colors.yellow, // 🟡 Атака из-за ворот
   };
 
   static const Map<int, String> goalTypeNames = {
@@ -99,11 +99,9 @@ class _ShotOriginMapScreenState extends ConsumerState<ShotOriginMapScreen> {
   // Подсчет статистики по типам
   Map<int, int> _getStats() {
     Map<int, int> stats = {};
-    // Инициализируем все типы нулями
     for (int i = 1; i <= 7; i++) {
       stats[i] = 0;
     }
-    // Считаем
     for (var goal in _allGoals) {
       if (stats.containsKey(goal.goalTypeId)) {
         stats[goal.goalTypeId] = stats[goal.goalTypeId]! + 1;
@@ -115,6 +113,7 @@ class _ShotOriginMapScreenState extends ConsumerState<ShotOriginMapScreen> {
   @override
   Widget build(BuildContext context) {
     final double containerWidth = MediaQuery.of(context).size.width - 32;
+    // ✅ Высота теперь рассчитывается по новым пропорциям
     final double containerHeight = containerWidth * aspectRatio;
     final stats = _getStats();
 
@@ -194,14 +193,16 @@ class _ShotOriginMapScreenState extends ConsumerState<ShotOriginMapScreen> {
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(15),
                       child: Image.asset(
-                        'assets/images/pole.png',
+                        // ✅ ИСПОЛЬЗУЕМ ТУ ЖЕ КАРТИНКУ, ЧТО В РЕГИСТРАЦИИ (pole_zones.png или pole.png)
+                        // Если в регистрации используется pole_zones.png для фона, лучше использовать её и здесь для визуального соответствия
+                        'assets/images/pole_zones.png',
                         fit: BoxFit.contain,
                         alignment: Alignment.center,
                       ),
                     ),
                   ),
 
-                  // Точки бросков (только выбранные типы)
+                  // Точки бросков
                   ..._allGoals.map((goal) {
                     if (!visibleOnMap.contains(goal.goalTypeId)) return const SizedBox.shrink();
                     if (goal.fromZoneX == null || goal.fromZoneY == null) return const SizedBox.shrink();
@@ -321,6 +322,7 @@ class _ShotOriginMapScreenState extends ConsumerState<ShotOriginMapScreen> {
             _detailRow('Дата:', DateFormat('dd.MM.yyyy').format(match.date)),
             _detailRow('Соперник:', match.opponent),
             _detailRow('Счёт:', match.score ?? '-'),
+            _detailRow('Зона:', goal.fromZone ?? '-'), // ✅ Добавил отображение зоны
           ],
         ),
         actions: [

@@ -1,0 +1,51 @@
+{
+  "exportDate": "2026-08-18T10:00:00.000000",
+  "goalkeeper": {
+    "uuid": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "firstName": "Дмитрий",
+    "lastName": "Соколов",
+    "hand": "right",
+    "email": "sokolov.d@test.ru",
+    "birthDate": "1998-05-12"
+  },
+  "matches": [
+    {"uuid": "m1-ds-001", "date": "2026-08-10T18:00:00.000", "opponent": "Спартак", "score": "3:5", "gameTime": "60:00", "personalTasks": null, "gameDuration": 60, "goalsConceded": 5, "saves": 28, "savePercentage": 84.85, "moodRating": 3, "warmupRating": 4, "confidenceRating": 3, "greatSavesRating": 2, "comments": null},
+    {"uuid": "m2-ds-002", "date": "2026-08-12T19:30:00.000", "opponent": "Зенит", "score": "1:5", "gameTime": "60:00", "personalTasks": null, "gameDuration": 60, "goalsConceded": 5, "saves": 32, "savePercentage": 86.49, "moodRating": 2, "warmupRating": 3, "confidenceRating": 2, "greatSavesRating": 3, "comments": null},
+    {"uuid": "m3-ds-003", "date": "2026-08-14T17:00:00.000", "opponent": "Динамо", "score": "4:5", "gameTime": "60:00", "personalTasks": null, "gameDuration": 60, "goalsConceded": 5, "saves": 25, "savePercentage": 83.33, "moodRating": 4, "warmupRating": 4, "confidenceRating": 4, "greatSavesRating": 4, "comments": null},
+    {"uuid": "m4-ds-004", "date": "2026-08-16T20:00:00.000", "opponent": "ЦСКА", "score": "2:5", "gameTime": "60:00", "personalTasks": null, "gameDuration": 60, "goalsConceded": 5, "saves": 30, "savePercentage": 85.71, "moodRating": 3, "warmupRating": 3, "confidenceRating": 3, "greatSavesRating": 2, "comments": null},
+    {"uuid": "m5-ds-005", "date": "2026-08-18T18:00:00.000", "opponent": "Локомотив", "score": "3:5", "gameTime": "60:00", "personalTasks": null, "gameDuration": 60, "goalsConceded": 5, "saves": 27, "savePercentage": 84.38, "moodRating": 3, "warmupRating": 4, "confidenceRating": 3, "greatSavesRating": 3, "comments": null}
+  ],
+  "goals": [
+    {"matchUuid": "m1-ds-001", "goalTypeId": 1, "toZoneX": 0.25, "toZoneY": 0.8, "fromZoneX": 0.6, "fromZoneY": 0.5, "zone": "A1", "fromZone": "C5"},
+    {"matchUuid": "m1-ds-001", "goalTypeId": 2, "toZoneX": 0.75, "toZoneY": 0.2, "fromZoneX": 0.3, "fromZoneY": 0.4, "zone": "D4", "fromZone": "B3"},
+    {"matchUuid": "m1-ds-001", "goalTypeId": 1, "toZoneX": 0.5, "toZoneY": 0.9, "fromZoneX": 0.5, "fromZoneY": 0.2, "zone": "B1", "fromZone": "C8"},
+    {"matchUuid": "m1-ds-001", "goalTypeId": 3, "toZoneX": 0.1, "toZoneY": 0.5, "fromZoneX": 0.8, "fromZoneY": 0.5, "zone": "A3", "fromZone": "D5"},
+    {"matchUuid": "m1-ds-001", "goalTypeId": 4, "toZoneX": 0.9, "toZoneY": 0.5, "fromZoneX": 0.2, "fromZoneY": 0.6, "zone": "D3", "fromZone": "A6"},
+
+    {"matchUuid": "m2-ds-002", "goalTypeId": 2, "toZoneX": 0.3, "toZoneY": 0.3, "fromZoneX": 0.7, "fromZoneY": 0.7, "zone": "B4", "fromZone": "C2"},
+    {"matchUuid": "m2-ds-002", "goalTypeId": 1, "toZoneX": 0.6, "toZoneY": 0.8, "fromZoneX": 0.4, "fromZoneY": 0.3, "zone": "C1", "fromZone": "B7"},
+    {"matchUuid": "m2-ds-002", "goalTypeId": 3, "toZoneX": 0.4, "toZoneY": 0.1, "fromZoneX": 0.6, "fromZoneY": 0.9, "zone": "B5", "fromZone": "C1"},
+    {"matchUuid": "m2-ds-002", "goalTypeId": 4, "toZoneX": 0.8, "toZoneY": 0.6, "fromZoneX": 0.2, "fromZoneY": 0.4, "zone": "D2", "fromZone": "A4"},
+    {"matchUuid": "m2-ds-002", "goalTypeId": 1, "toZoneX": 0.2, "toZoneY": 0.7, "fromZoneX": 0.8, "fromZoneY": 0.3, "zone": "A2", "fromZone": "D8"},
+
+    {"matchUuid": "m3-ds-003", "goalTypeId": 1, "toZoneX": 0.5, "toZoneY": 0.5, "fromZoneX": 0.5, "fromZoneY": 0.5, "zone": "B2", "fromZone": "C5"},
+    {"matchUuid": "m3-ds-003", "goalTypeId": 2, "toZoneX": 0.15, "toZoneY": 0.85, "fromZoneX": 0.85, "fromZoneY": 0.15, "zone": "A1", "fromZone": "D9"},
+    {"matchUuid": "m3-ds-003", "goalTypeId": 3, "toZoneX": 0.85, "toZoneY": 0.15, "fromZoneX": 0.15, "fromZoneY": 0.85, "zone": "D4", "fromZone": "A1"},
+    {"matchUuid": "m3-ds-003", "goalTypeId": 4, "toZoneX": 0.45, "toZoneY": 0.95, "fromZoneX": 0.55, "fromZoneY": 0.05, "zone": "B1", "fromZone": "C9"},
+    {"matchUuid": "m3-ds-003", "goalTypeId": 1, "toZoneX": 0.55, "toZoneY": 0.05, "fromZoneX": 0.45, "fromZoneY": 0.95, "zone": "C5", "fromZone": "B1"},
+
+    {"matchUuid": "m4-ds-004", "goalTypeId": 2, "toZoneX": 0.35, "toZoneY": 0.65, "fromZoneX": 0.65, "fromZoneY": 0.35, "zone": "B3", "fromZone": "C7"},
+    {"matchUuid": "m4-ds-004", "goalTypeId": 3, "toZoneX": 0.65, "toZoneY": 0.35, "fromZoneX": 0.35, "fromZoneY": 0.65, "zone": "C7", "fromZone": "B3"},
+    {"matchUuid": "m4-ds-004", "goalTypeId": 1, "toZoneX": 0.25, "toZoneY": 0.25, "fromZoneX": 0.75, "fromZoneY": 0.75, "zone": "A4", "fromZone": "D6"},
+    {"matchUuid": "m4-ds-004", "goalTypeId": 4, "toZoneX": 0.75, "toZoneY": 0.75, "fromZoneX": 0.25, "fromZoneY": 0.25, "zone": "D6", "fromZone": "A4"},
+    {"matchUuid": "m4-ds-004", "goalTypeId": 1, "toZoneX": 0.5, "toZoneY": 0.8, "fromZoneX": 0.5, "fromZoneY": 0.2, "zone": "B1", "fromZone": "C8"},
+
+    {"matchUuid": "m5-ds-005", "goalTypeId": 3, "toZoneX": 0.1, "toZoneY": 0.9, "fromZoneX": 0.9, "fromZoneY": 0.1, "zone": "A1", "fromZone": "D9"},
+    {"matchUuid": "m5-ds-005", "goalTypeId": 2, "toZoneX": 0.9, "toZoneY": 0.1, "fromZoneX": 0.1, "fromZoneY": 0.9, "zone": "D4", "fromZone": "A1"},
+    {"matchUuid": "m5-ds-005", "goalTypeId": 1, "toZoneX": 0.4, "toZoneY": 0.4, "fromZoneX": 0.6, "fromZoneY": 0.6, "zone": "B4", "fromZone": "C6"},
+    {"matchUuid": "m5-ds-005", "goalTypeId": 4, "toZoneX": 0.6, "toZoneY": 0.6, "fromZoneX": 0.4, "fromZoneY": 0.4, "zone": "C6", "fromZone": "B4"},
+    {"matchUuid": "m5-ds-005", "goalTypeId": 1, "toZoneX": 0.5, "toZoneY": 0.5, "fromZoneX": 0.5, "fromZoneY": 0.5, "zone": "B2", "fromZone": "C5"}
+  ],
+  "tasks": [],
+  "completions": []
+}
