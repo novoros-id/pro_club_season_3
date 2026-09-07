@@ -67,6 +67,43 @@
   "dailyTasksRecentCompletedDays": "Recent completed days",
   "dailyTasksLastSevenDays": "Recent completed days",
   "dailyTasksNoCompletedStatistics": "No completed task statistics yet",
+  "dailyTasksProgressTitle": "Day progress",
+  "dailyTasksProgressCompletedToday": "{percent}% completed today",
+  "@dailyTasksProgressCompletedToday": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "dailyTasksProgressCompletedForDay": "{percent}% completed for the day",
+  "@dailyTasksProgressCompletedForDay": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "dailyTasksProgressNoTasks": "No active tasks for this day",
+  "dailyTasksProgressCompletedState": "a clean sheet for the day",
+  "dailyTasksProgress0Message1": "The empty ice is waiting — lace up and get started.",
+  "dailyTasksProgress0Message2": "Zero on the scoreboard. Time for the first step.",
+  "dailyTasksProgress0Message3": "A goalkeeper's journey starts with one move. Let's go!",
+  "dailyTasksProgress20Message1": "The first step is done — the ice is moving.",
+  "dailyTasksProgress20Message2": "Warmed up? It only gets more interesting.",
+  "dailyTasksProgress20Message3": "First task in the net. Mark it down.",
+  "dailyTasksProgress40Message1": "You're heading the right way — keep the pace.",
+  "dailyTasksProgress40Message2": "Almost halfway — the opponent is feeling the pressure.",
+  "dailyTasksProgress40Message3": "You've picked up speed, now don't slow down.",
+  "dailyTasksProgress60Message1": "Decide what kind of goalkeeper you want to be — and go.",
+  "dailyTasksProgress60Message2": "Past the halfway mark — character is tested here.",
+  "dailyTasksProgress60Message3": "It's clear who came to work. Keep going.",
+  "dailyTasksProgress80Message1": "Just a little left — a great day to grow.",
+  "dailyTasksProgress80Message2": "One final push for today's clean sheet.",
+  "dailyTasksProgress80Message3": "You've almost locked down the day. Finish strong.",
+  "dailyTasksProgress100Message1": "Clean sheet! Great job — do it again tomorrow.",
+  "dailyTasksProgress100Message2": "One hundred percent — that's character. Keep it up!",
+  "dailyTasksProgress100Message3": "Every puck stopped, every task completed.",
   "dailyTaskBuiltInWellbeingDiary": "Complete the wellbeing diary",
   "dailyTaskBuiltInMorningRoutine": "Morning routine",
   "dailyTaskBuiltInPreTrainingWarmup": "Warm up before training/game",

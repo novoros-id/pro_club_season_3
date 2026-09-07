@@ -840,7 +840,7 @@ void main() {
     );
   });
 
-  testWidgets('statistics uses localized metrics and compact day cards', (
+  testWidgets('day progress replaces statistics on a compact viewport', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(320, 568);
@@ -878,12 +878,12 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Выполнено\nсегодня'), findsOneWidget);
-    expect(find.text('Активные\nзадачи'), findsOneWidget);
-    expect(find.text('Процент\nсегодня'), findsOneWidget);
-    expect(find.text('1'), findsOneWidget);
-    expect(find.text('1/1'), findsNWidgets(2));
-    expect(find.text('1/9'), findsOneWidget);
+    expect(find.text('ПРОГРЕСС ДНЯ'), findsOneWidget);
+    expect(find.text('11% выполнено сегодня'), findsOneWidget);
+    expect(find.byKey(const Key('dailyProgressCard')), findsOneWidget);
+    expect(find.byKey(const Key('dailyProgressSegment0')), findsOneWidget);
+    expect(find.byKey(const Key('dailyProgressSegment9')), findsOneWidget);
+    expect(find.text('СТАТИСТИКА'), findsNothing);
     expect(find.byType(LinearProgressIndicator), findsNothing);
     expect(tester.takeException(), isNull);
   });
@@ -903,6 +903,16 @@ void main() {
         firstName: 'Stas',
         lastName: 'Grishaev',
       );
+      final selectedDate = DateTime(2026, 9, 1);
+      await data.ensureDefaultTasks(first);
+      await data.ensureDefaultTasks(second);
+      await db
+          .update(db.dailyTasks)
+          .write(
+            DailyTasksCompanion(
+              createdAt: Value(selectedDate.subtract(const Duration(days: 1))),
+            ),
+          );
       await tester.pumpWidget(
         ProviderScope(
           overrides: [databaseProvider.overrideWithValue(db)],
@@ -918,7 +928,6 @@ void main() {
         tester.element(find.byType(DailyTasksScreen)),
       );
       final controller = container.read(dailyTasksControllerProvider.notifier);
-      final selectedDate = DateTime(2026, 9, 1);
       await controller.selectDate(selectedDate);
       var state = await waitForDailyTasks(container, first);
       final firstSystemTask = state.tasks.first.task;
