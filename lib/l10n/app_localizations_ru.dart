@@ -176,6 +176,95 @@ class AppLocalizationsRu extends AppLocalizations {
       'Статистики выполненных задач пока нет';
 
   @override
+  String get dailyTasksProgressTitle => 'Прогресс дня';
+
+  @override
+  String dailyTasksProgressCompletedToday(int percent) {
+    return '$percent% выполнено сегодня';
+  }
+
+  @override
+  String dailyTasksProgressCompletedForDay(int percent) {
+    return '$percent% выполнено за день';
+  }
+
+  @override
+  String get dailyTasksProgressNoTasks => 'Нет активных задач на этот день';
+
+  @override
+  String get dailyTasksProgressCompletedState => 'день закрыт на ноль';
+
+  @override
+  String get dailyTasksProgress0Message1 =>
+      'Пустой лёд ждёт — надевай коньки и начинай.';
+
+  @override
+  String get dailyTasksProgress0Message2 =>
+      'Ноль на табло. Время для первого шага.';
+
+  @override
+  String get dailyTasksProgress0Message3 =>
+      'Путь вратаря начинается с одного движения. Поехали!';
+
+  @override
+  String get dailyTasksProgress20Message1 =>
+      'Первый шаг сделан — лёд тронулся.';
+
+  @override
+  String get dailyTasksProgress20Message2 =>
+      'Размялся? Дальше только интереснее.';
+
+  @override
+  String get dailyTasksProgress20Message3 =>
+      'Первая задача — в воротах. Так и запишем.';
+
+  @override
+  String get dailyTasksProgress40Message1 =>
+      'Идёшь в правильном направлении — держи темп.';
+
+  @override
+  String get dailyTasksProgress40Message2 =>
+      'Уже почти половина — соперник напрягся.';
+
+  @override
+  String get dailyTasksProgress40Message3 => 'Разогнался, теперь не тормози.';
+
+  @override
+  String get dailyTasksProgress60Message1 =>
+      'Реши, каким вратарём хочешь быть — и вперёд.';
+
+  @override
+  String get dailyTasksProgress60Message2 =>
+      'Экватор позади — характер проверяется здесь.';
+
+  @override
+  String get dailyTasksProgress60Message3 =>
+      'Видно, кто пришёл работать. Продолжай.';
+
+  @override
+  String get dailyTasksProgress80Message1 =>
+      'Осталось чуть-чуть — отличный день для роста.';
+
+  @override
+  String get dailyTasksProgress80Message2 => 'Финальный рывок к сухарю дня.';
+
+  @override
+  String get dailyTasksProgress80Message3 =>
+      'Почти закрыл день на замок. Дожимай.';
+
+  @override
+  String get dailyTasksProgress100Message1 =>
+      'Сухарь! Красавец, повтори завтра.';
+
+  @override
+  String get dailyTasksProgress100Message2 =>
+      'Сто процентов — вот это характер. Так держать!';
+
+  @override
+  String get dailyTasksProgress100Message3 =>
+      'Все шайбы отбиты, все задачи взяты.';
+
+  @override
   String get dailyTaskBuiltInWellbeingDiary => 'Заполнить дневник самочувствия';
 
   @override

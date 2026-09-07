@@ -3,12 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../core/database/app_database.dart';
+import '../../../core/ui/app_date_picker_theme.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../registration/logic/goalkeepers_controller.dart';
 import '../logic/daily_tasks_logic.dart';
 import '../models/built_in_daily_task.dart';
-import '../models/daily_task_stats.dart';
 import 'daily_tasks_styles.dart';
+import 'widgets/daily_progress_card.dart';
 
 class DailyTasksScreen extends ConsumerWidget {
   const DailyTasksScreen({super.key});
@@ -76,7 +77,11 @@ class DailyTasksScreen extends ConsumerWidget {
                     child: ListView(
                       padding: const EdgeInsets.all(16),
                       children: [
-                        _StatsCard(stats: state.stats, l10n: l10n),
+                        DailyProgressCard(
+                          stats: state.stats,
+                          goalkeeperId: state.goalkeeperId!,
+                          selectedDate: state.date,
+                        ),
                         const SizedBox(height: 16),
                         if (state.tasks.isEmpty)
                           _Message(text: l10n.dailyTasksEmpty)
@@ -201,6 +206,8 @@ class _DateSelector extends StatelessWidget {
                   initialDate: date,
                   firstDate: DateTime(2020),
                   lastDate: DateTime(2100),
+                  locale: const Locale('ru', 'RU'),
+                  builder: appDatePickerBuilder,
                 );
                 if (picked != null && picked != date) {
                   await onDateSelected(picked);
@@ -371,170 +378,6 @@ class _Message extends StatelessWidget {
         text,
         textAlign: TextAlign.center,
         style: DailyTasksStyles.body,
-      ),
-    ),
-  );
-}
-
-class _StatsCard extends StatelessWidget {
-  final DailyTaskStats stats;
-  final AppLocalizations l10n;
-  const _StatsCard({required this.stats, required this.l10n});
-  @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.all(14),
-    decoration: BoxDecoration(
-      color: DailyTasksStyles.fieldBackground,
-      borderRadius: BorderRadius.circular(15),
-      border: Border.all(color: DailyTasksStyles.accent, width: 1.2),
-    ),
-    child: Padding(
-      padding: EdgeInsets.zero,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            l10n.dailyTasksStatistics.toUpperCase(),
-            style: DailyTasksStyles.screenTitle.copyWith(fontSize: 16),
-          ),
-          const SizedBox(height: 12),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _Metric(
-                label: l10n.dailyTasksCompletedTodayLabel,
-                value: '${stats.completedToday}',
-              ),
-              _Metric(
-                label: l10n.dailyTasksActiveTasksLabel,
-                value: '${stats.remainingActiveTasksToday}',
-              ),
-              _Metric(
-                label: l10n.dailyTasksCompletionPercentLabel,
-                value: '${stats.completionPercentToday.toStringAsFixed(0)}%',
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(
-            l10n.dailyTasksRecentCompletedDays,
-            style: DailyTasksStyles.helper,
-          ),
-          if (stats.recentDays.isEmpty)
-            Text(l10n.dailyTasksNoCompletedStatistics)
-          else
-            LayoutBuilder(
-              builder: (context, constraints) {
-                const gap = 8.0;
-                final adaptiveWidth = (constraints.maxWidth - gap * 2) / 3;
-                final cardWidth = adaptiveWidth.clamp(64.0, 88.0).toDouble();
-                return SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: List.generate(stats.recentDays.length, (index) {
-                      return Padding(
-                        padding: EdgeInsets.only(
-                          right: index == stats.recentDays.length - 1 ? 0 : gap,
-                        ),
-                        child: _DayStat(
-                          day: stats.recentDays[index],
-                          width: cardWidth,
-                        ),
-                      );
-                    }),
-                  ),
-                );
-              },
-            ),
-        ],
-      ),
-    ),
-  );
-}
-
-class _Metric extends StatelessWidget {
-  final String label;
-  final String value;
-  const _Metric({required this.label, required this.value});
-
-  @override
-  Widget build(BuildContext context) => Expanded(
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(value, style: DailyTasksStyles.screenTitle.copyWith(fontSize: 20)),
-        Text(
-          label,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          style: DailyTasksStyles.helper,
-        ),
-      ],
-    ),
-  );
-}
-
-class _DayStat extends StatelessWidget {
-  final DailyTaskDayStats day;
-  final double width;
-  const _DayStat({required this.day, required this.width});
-
-  @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(top: 8),
-    child: SizedBox(
-      width: width,
-      height: width,
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: DailyTasksStyles.accent, width: 1.2),
-        ),
-        child: Stack(
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  SizedBox(
-                    width: double.infinity,
-                    child: Text(
-                      '${day.date.day}.${day.date.month}',
-                      textAlign: TextAlign.center,
-                      style: DailyTasksStyles.screenTitle.copyWith(
-                        fontSize: (width * 0.2).clamp(14.0, 18.0),
-                        fontWeight: FontWeight.normal,
-                      ),
-                    ),
-                  ),
-                  const Spacer(),
-                  SizedBox(
-                    width: double.infinity,
-                    child: Text(
-                      '${day.completedCount}/${day.totalCount}',
-                      textAlign: TextAlign.center,
-                      style: DailyTasksStyles.screenTitle.copyWith(
-                        fontSize: (width * 0.2).clamp(14.0, 18.0),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Positioned(
-              left: 4,
-              right: 4,
-              top: width / 2,
-              child: const Divider(
-                height: 1,
-                thickness: 1,
-                color: DailyTasksStyles.accent,
-              ),
-            ),
-          ],
-        ),
       ),
     ),
   );

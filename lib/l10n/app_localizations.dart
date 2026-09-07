@@ -416,6 +416,144 @@ abstract class AppLocalizations {
   /// **'No completed task statistics yet'**
   String get dailyTasksNoCompletedStatistics;
 
+  /// No description provided for @dailyTasksProgressTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Day progress'**
+  String get dailyTasksProgressTitle;
+
+  /// No description provided for @dailyTasksProgressCompletedToday.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent}% completed today'**
+  String dailyTasksProgressCompletedToday(int percent);
+
+  /// No description provided for @dailyTasksProgressCompletedForDay.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent}% completed for the day'**
+  String dailyTasksProgressCompletedForDay(int percent);
+
+  /// No description provided for @dailyTasksProgressNoTasks.
+  ///
+  /// In en, this message translates to:
+  /// **'No active tasks for this day'**
+  String get dailyTasksProgressNoTasks;
+
+  /// No description provided for @dailyTasksProgressCompletedState.
+  ///
+  /// In en, this message translates to:
+  /// **'a clean sheet for the day'**
+  String get dailyTasksProgressCompletedState;
+
+  /// No description provided for @dailyTasksProgress0Message1.
+  ///
+  /// In en, this message translates to:
+  /// **'The empty ice is waiting — lace up and get started.'**
+  String get dailyTasksProgress0Message1;
+
+  /// No description provided for @dailyTasksProgress0Message2.
+  ///
+  /// In en, this message translates to:
+  /// **'Zero on the scoreboard. Time for the first step.'**
+  String get dailyTasksProgress0Message2;
+
+  /// No description provided for @dailyTasksProgress0Message3.
+  ///
+  /// In en, this message translates to:
+  /// **'A goalkeeper\'s journey starts with one move. Let\'s go!'**
+  String get dailyTasksProgress0Message3;
+
+  /// No description provided for @dailyTasksProgress20Message1.
+  ///
+  /// In en, this message translates to:
+  /// **'The first step is done — the ice is moving.'**
+  String get dailyTasksProgress20Message1;
+
+  /// No description provided for @dailyTasksProgress20Message2.
+  ///
+  /// In en, this message translates to:
+  /// **'Warmed up? It only gets more interesting.'**
+  String get dailyTasksProgress20Message2;
+
+  /// No description provided for @dailyTasksProgress20Message3.
+  ///
+  /// In en, this message translates to:
+  /// **'First task in the net. Mark it down.'**
+  String get dailyTasksProgress20Message3;
+
+  /// No description provided for @dailyTasksProgress40Message1.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re heading the right way — keep the pace.'**
+  String get dailyTasksProgress40Message1;
+
+  /// No description provided for @dailyTasksProgress40Message2.
+  ///
+  /// In en, this message translates to:
+  /// **'Almost halfway — the opponent is feeling the pressure.'**
+  String get dailyTasksProgress40Message2;
+
+  /// No description provided for @dailyTasksProgress40Message3.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ve picked up speed, now don\'t slow down.'**
+  String get dailyTasksProgress40Message3;
+
+  /// No description provided for @dailyTasksProgress60Message1.
+  ///
+  /// In en, this message translates to:
+  /// **'Decide what kind of goalkeeper you want to be — and go.'**
+  String get dailyTasksProgress60Message1;
+
+  /// No description provided for @dailyTasksProgress60Message2.
+  ///
+  /// In en, this message translates to:
+  /// **'Past the halfway mark — character is tested here.'**
+  String get dailyTasksProgress60Message2;
+
+  /// No description provided for @dailyTasksProgress60Message3.
+  ///
+  /// In en, this message translates to:
+  /// **'It\'s clear who came to work. Keep going.'**
+  String get dailyTasksProgress60Message3;
+
+  /// No description provided for @dailyTasksProgress80Message1.
+  ///
+  /// In en, this message translates to:
+  /// **'Just a little left — a great day to grow.'**
+  String get dailyTasksProgress80Message1;
+
+  /// No description provided for @dailyTasksProgress80Message2.
+  ///
+  /// In en, this message translates to:
+  /// **'One final push for today\'s clean sheet.'**
+  String get dailyTasksProgress80Message2;
+
+  /// No description provided for @dailyTasksProgress80Message3.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ve almost locked down the day. Finish strong.'**
+  String get dailyTasksProgress80Message3;
+
+  /// No description provided for @dailyTasksProgress100Message1.
+  ///
+  /// In en, this message translates to:
+  /// **'Clean sheet! Great job — do it again tomorrow.'**
+  String get dailyTasksProgress100Message1;
+
+  /// No description provided for @dailyTasksProgress100Message2.
+  ///
+  /// In en, this message translates to:
+  /// **'One hundred percent — that\'s character. Keep it up!'**
+  String get dailyTasksProgress100Message2;
+
+  /// No description provided for @dailyTasksProgress100Message3.
+  ///
+  /// In en, this message translates to:
+  /// **'Every puck stopped, every task completed.'**
+  String get dailyTasksProgress100Message3;
+
   /// No description provided for @dailyTaskBuiltInWellbeingDiary.
   ///
   /// In en, this message translates to:

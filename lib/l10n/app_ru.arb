@@ -67,6 +67,43 @@
   "dailyTasksRecentCompletedDays": "Последние выполненные дни",
   "dailyTasksLastSevenDays": "Последние выполненные дни",
   "dailyTasksNoCompletedStatistics": "Статистики выполненных задач пока нет",
+  "dailyTasksProgressTitle": "Прогресс дня",
+  "dailyTasksProgressCompletedToday": "{percent}% выполнено сегодня",
+  "@dailyTasksProgressCompletedToday": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "dailyTasksProgressCompletedForDay": "{percent}% выполнено за день",
+  "@dailyTasksProgressCompletedForDay": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "dailyTasksProgressNoTasks": "Нет активных задач на этот день",
+  "dailyTasksProgressCompletedState": "день закрыт на ноль",
+  "dailyTasksProgress0Message1": "Пустой лёд ждёт — надевай коньки и начинай.",
+  "dailyTasksProgress0Message2": "Ноль на табло. Время для первого шага.",
+  "dailyTasksProgress0Message3": "Путь вратаря начинается с одного движения. Поехали!",
+  "dailyTasksProgress20Message1": "Первый шаг сделан — лёд тронулся.",
+  "dailyTasksProgress20Message2": "Размялся? Дальше только интереснее.",
+  "dailyTasksProgress20Message3": "Первая задача — в воротах. Так и запишем.",
+  "dailyTasksProgress40Message1": "Идёшь в правильном направлении — держи темп.",
+  "dailyTasksProgress40Message2": "Уже почти половина — соперник напрягся.",
+  "dailyTasksProgress40Message3": "Разогнался, теперь не тормози.",
+  "dailyTasksProgress60Message1": "Реши, каким вратарём хочешь быть — и вперёд.",
+  "dailyTasksProgress60Message2": "Экватор позади — характер проверяется здесь.",
+  "dailyTasksProgress60Message3": "Видно, кто пришёл работать. Продолжай.",
+  "dailyTasksProgress80Message1": "Осталось чуть-чуть — отличный день для роста.",
+  "dailyTasksProgress80Message2": "Финальный рывок к сухарю дня.",
+  "dailyTasksProgress80Message3": "Почти закрыл день на замок. Дожимай.",
+  "dailyTasksProgress100Message1": "Сухарь! Красавец, повтори завтра.",
+  "dailyTasksProgress100Message2": "Сто процентов — вот это характер. Так держать!",
+  "dailyTasksProgress100Message3": "Все шайбы отбиты, все задачи взяты.",
   "dailyTaskBuiltInWellbeingDiary": "Заполнить дневник самочувствия",
   "dailyTaskBuiltInMorningRoutine": "Утренние процедуры",
   "dailyTaskBuiltInPreTrainingWarmup": "Разминка перед тренировкой/игрой",

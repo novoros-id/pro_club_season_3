@@ -175,6 +175,97 @@ class AppLocalizationsEn extends AppLocalizations {
       'No completed task statistics yet';
 
   @override
+  String get dailyTasksProgressTitle => 'Day progress';
+
+  @override
+  String dailyTasksProgressCompletedToday(int percent) {
+    return '$percent% completed today';
+  }
+
+  @override
+  String dailyTasksProgressCompletedForDay(int percent) {
+    return '$percent% completed for the day';
+  }
+
+  @override
+  String get dailyTasksProgressNoTasks => 'No active tasks for this day';
+
+  @override
+  String get dailyTasksProgressCompletedState => 'a clean sheet for the day';
+
+  @override
+  String get dailyTasksProgress0Message1 =>
+      'The empty ice is waiting — lace up and get started.';
+
+  @override
+  String get dailyTasksProgress0Message2 =>
+      'Zero on the scoreboard. Time for the first step.';
+
+  @override
+  String get dailyTasksProgress0Message3 =>
+      'A goalkeeper\'s journey starts with one move. Let\'s go!';
+
+  @override
+  String get dailyTasksProgress20Message1 =>
+      'The first step is done — the ice is moving.';
+
+  @override
+  String get dailyTasksProgress20Message2 =>
+      'Warmed up? It only gets more interesting.';
+
+  @override
+  String get dailyTasksProgress20Message3 =>
+      'First task in the net. Mark it down.';
+
+  @override
+  String get dailyTasksProgress40Message1 =>
+      'You\'re heading the right way — keep the pace.';
+
+  @override
+  String get dailyTasksProgress40Message2 =>
+      'Almost halfway — the opponent is feeling the pressure.';
+
+  @override
+  String get dailyTasksProgress40Message3 =>
+      'You\'ve picked up speed, now don\'t slow down.';
+
+  @override
+  String get dailyTasksProgress60Message1 =>
+      'Decide what kind of goalkeeper you want to be — and go.';
+
+  @override
+  String get dailyTasksProgress60Message2 =>
+      'Past the halfway mark — character is tested here.';
+
+  @override
+  String get dailyTasksProgress60Message3 =>
+      'It\'s clear who came to work. Keep going.';
+
+  @override
+  String get dailyTasksProgress80Message1 =>
+      'Just a little left — a great day to grow.';
+
+  @override
+  String get dailyTasksProgress80Message2 =>
+      'One final push for today\'s clean sheet.';
+
+  @override
+  String get dailyTasksProgress80Message3 =>
+      'You\'ve almost locked down the day. Finish strong.';
+
+  @override
+  String get dailyTasksProgress100Message1 =>
+      'Clean sheet! Great job — do it again tomorrow.';
+
+  @override
+  String get dailyTasksProgress100Message2 =>
+      'One hundred percent — that\'s character. Keep it up!';
+
+  @override
+  String get dailyTasksProgress100Message3 =>
+      'Every puck stopped, every task completed.';
+
+  @override
   String get dailyTaskBuiltInWellbeingDiary => 'Complete the wellbeing diary';
 
   @override
