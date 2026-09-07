@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../core/database/app_database.dart';
+import '../../../core/ui/app_date_picker_theme.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../registration/logic/goalkeepers_controller.dart';
 import '../logic/daily_tasks_logic.dart';
@@ -201,6 +202,8 @@ class _DateSelector extends StatelessWidget {
                   initialDate: date,
                   firstDate: DateTime(2020),
                   lastDate: DateTime(2100),
+                  locale: const Locale('ru', 'RU'),
+                  builder: appDatePickerBuilder,
                 );
                 if (picked != null && picked != date) {
                   await onDateSelected(picked);
