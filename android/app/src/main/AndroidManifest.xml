@@ -1,6 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application
-        android:label="pro_club_season_2"
+        android:label="Путь вратаря"
         android:name="${applicationName}"
         android:icon="@mipmap/launcher_icon">
         <activity
