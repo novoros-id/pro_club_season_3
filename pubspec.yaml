@@ -101,6 +101,8 @@ flutter:
     - assets/images/analytics.svg
     - assets/images/author.svg
     - assets/images/daily_tasks.svg
+    - assets/shot_sources.json
+    - assets/shots_zones.json
   fonts:
     - family: Unbounded
       fonts:

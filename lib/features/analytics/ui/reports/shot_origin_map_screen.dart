@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter/services.dart'; // Для загрузки assets
+import 'dart:convert'; // Для декодирования JSON
 import '../../../../core/database/database_provider.dart';
 import '../../../../core/database/app_database.dart';
 import '../../providers/analytics_filter_provider.dart';
@@ -22,6 +24,9 @@ class _ShotOriginMapScreenState extends ConsumerState<ShotOriginMapScreen> {
 
   // Выбранное значение для фильтрации (ID типа или Код зоны)
   dynamic _selectedFilter;
+
+  // Данные легенды площадки, загружаемые из JSON
+  List<Map<String, dynamic>> _rinkData = [];
 
   static const Color primaryText = Color(0xFF121212);
   static const Color accentColor = Color(0xFFBBF246);
@@ -52,41 +57,33 @@ class _ShotOriginMapScreenState extends ConsumerState<ShotOriginMapScreen> {
     7: 'Атака из-за ворот',
   };
 
-  // Рекомендации по зонам площадки (из файла откуда.xlsx)
-  static const Map<String, String> _rinkComments = {
-    'A1': 'Гол после передачи из угла за воротами (слева). Сканируй площадку, читай ситуацию и предугадывай, кто и куда откроется.',
-    'A2': 'Гол с острого угла слева — часто это твоя ошибка. Проверь: стоял ли на линии броска, стойку и надёжность выбора (overlap/RVH). С такого угла забивать не должны.',
-    'A3': 'Как с острого угла, плюс это зона решений (поперечка на дальнюю штангу). Если забивают с передач — пересмотри выбор позиции.',
-    'A4': 'Гол при атаке с угла (слева). Держи позицию на линии броска и оптимальную глубину; в позиционной атаке — быстрее перемещайся и раньше вставай под бросок.',
-    'A5': 'Гол с периферии слева (поперечка/наброс на пятак). Читай игру, быстрее занимай позицию и контролируй отскоки.',
-    'B1': 'Гол из-за ворот или по штанге (netplay). Держи щитки при угрозе заноса, играй по штанге, следи за передачей из-за ворот.',
-    'B2': 'Гол при атаке с угла (лево-центр). Держи позицию на линии и глубину, перекрывай ворота; быстрее вставай под бросок.',
-    'B3': 'Гол при атаке с угла (лево-центр). Держи позицию на линии и глубину; быстрее вставай под бросок.',
-    'B4': 'Гол при атаке с угла (лево-центр). Держи позицию на линии и глубину; быстрее вставай под бросок.',
-    'B5': 'Гол с пятака в ближнем бою (добивание, в касание). Реакции почти нет — решают расположение на линии и глубина. Держи плотность, чтобы не прошло сквозь. Это зона высокого процента — бейся за неё.',
-    'B6': 'Гол при атаке с угла (право-центр). Держи позицию на линии и глубину; быстрее вставай под бросок.',
-    'B7': 'Гол при атаке с угла (право-центр). Держи позицию на линии и глубину; быстрее вставай под бросок.',
-    'B8': 'Гол при атаке с угла (право-центр). Держи позицию на линии и глубину; быстрее вставай под бросок.',
-    'B9': 'Гол из слота — зона чистой реакции. Всё решают расположение, реакция и точность рук в шайбу. Лови и фиксируй: это самый опасный участок.',
-    'C1': 'Гол после передачи из угла за воротами (справа). Сканируй площадку, читай ситуацию и предугадывай, кто и куда откроется.',
-    'C2': 'Гол с острого угла справа — часто это твоя ошибка. Проверь: стоял ли на линии броска, стойку и надёжность выбора (overlap/RVH). С такого угла забивать не должны.',
-    'C3': 'Как с острого угла, плюс это зона решений (поперечка на дальнюю штангу). Если забивают с передач — пересмотри выбор позиции.',
-    'C4': 'Гол при атаке с угла (справа). Держи позицию на линии броска и оптимальную глубину; в позиционной атаке — быстрее перемещайся и раньше вставай под бросок.',
-    'C5': 'Гол с периферии справа (поперечка/наброс на пятак). Читай игру, быстрее занимай позицию и контролируй отскоки.',
-    'D1': 'Гол с дальней — чаще через трафик или подставление. Если прошло чисто — это ошибка. Держи высокую стойку, активно ищи шайбу, читай траекторию и контролируй отскок (лови, фиксируй или в угол).',
-    'D2': 'Гол из-за синей — это явная ошибка. Сначала проверь зрение, потом уверенность и понимание. На дальних прыгающих играй от простого — подставься под шайбу.',
-  };
-
   @override
   void initState() {
     super.initState();
-    _loadData();
+    _loadRinkComments(); // Загружаем легенду площадки
+    _loadData();         // Загружаем статистику
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _loadData();
+    // Если нужно перезагружать данные при смене фильтров, можно добавить логику здесь
+  }
+
+  // Метод загрузки комментариев из JSON (shot_sources.json)
+  Future<void> _loadRinkComments() async {
+    try {
+      final String jsonString = await rootBundle.loadString('assets/shot_sources.json');
+      final List<dynamic> data = json.decode(jsonString);
+
+      if (mounted) {
+        setState(() {
+          _rinkData = List<Map<String, dynamic>>.from(data);
+        });
+      }
+    } catch (e) {
+      debugPrint("Ошибка загрузки легенды площадки: $e");
+    }
   }
 
   Future<void> _loadData() async {
@@ -147,6 +144,23 @@ class _ShotOriginMapScreenState extends ConsumerState<ShotOriginMapScreen> {
     }
     var sortedEntries = stats.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
     return Map.fromEntries(sortedEntries);
+  }
+
+  // Получение комментария из загруженного JSON
+  String _getRinkComment(String zoneCode) {
+    if (_rinkData.isEmpty) return 'Загрузка...';
+
+    // Ищем объект в списке, где поле 'код' совпадает с zoneCode
+    final item = _rinkData.firstWhere(
+          (element) => element['код'] == zoneCode,
+      orElse: () => {},
+    );
+
+    if (item.isNotEmpty) {
+      return item['текст_для_вратаря'] ?? 'Нет описания';
+    }
+
+    return 'Нет данных для этой зоны';
   }
 
   @override
@@ -464,7 +478,8 @@ class _ShotOriginMapScreenState extends ConsumerState<ShotOriginMapScreen> {
             children: stats.entries.map((entry) {
               final zoneCode = entry.key;
               final count = entry.value;
-              final comment = _rinkComments[zoneCode] ?? 'Нет данных';
+              // ✅ Берем комментарий из загруженного JSON
+              final comment = _getRinkComment(zoneCode);
               final isSelected = _selectedFilter == zoneCode;
 
               return InkWell(
