@@ -1,7 +1,9 @@
+import 'dart:convert';
 import 'dart:math' as math;
 
 import 'package:drift/drift.dart' hide Column;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/database/app_database.dart';
@@ -41,6 +43,7 @@ class _GoalInputWizardState
 
   String? _currentZone;
   String? _fromZone;
+  Map<String, String> _zoneDescriptions = {};
 
   String? _debugColorCode;
 
@@ -109,6 +112,7 @@ class _GoalInputWizardState
     super.initState();
 
     ZoneDetector.loadZoneMap();
+    _loadZoneDescriptions();
 
     if (widget.existingGoal != null) {
       _selectedGoalTypeId =
@@ -131,6 +135,25 @@ class _GoalInputWizardState
 
       _fromZone =
           widget.existingGoal!.fromZone;
+    }
+  }
+
+  Future<void> _loadZoneDescriptions() async {
+    try {
+      final jsonString = await rootBundle.loadString('assets/shots_zones.json');
+      final zones = jsonDecode(jsonString) as List<dynamic>;
+      final codeKey = widget.hand == 'left' ? 'код_левша' : 'код_правша';
+      final descriptions = <String, String>{};
+
+      for (final zone in zones) {
+        final entry = zone as Map<String, dynamic>;
+        descriptions[entry[codeKey] as String] = entry['описание'] as String;
+      }
+
+      if (!mounted) return;
+      setState(() => _zoneDescriptions = descriptions);
+    } catch (error) {
+      debugPrint('Ошибка загрузки описаний зон: $error');
     }
   }
 
@@ -1031,6 +1054,22 @@ class _GoalInputWizardState
                   });
                 },
               ),
+
+              if (_currentZone != null &&
+                  _zoneDescriptions[_currentZone] != null) ...[
+                const SizedBox(height: 8),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    '$_currentZone - ${_zoneDescriptions[_currentZone]}',
+                    style: const TextStyle(
+                      fontFamily: 'Lato',
+                      fontSize: 14,
+                      color: auxText,
+                    ),
+                  ),
+                ),
+              ],
 
               const SizedBox(
                 height: 14,
